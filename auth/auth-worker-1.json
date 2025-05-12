@@ -1,0 +1,84 @@
+{
+  "cookies": [
+    {
+      "name": "_iidt",
+      "value": "qGdlrvTP8eR7a8Hb0QwOQsZZ7oZyJ+phaHuxttbOS7wprKlO6R4X74h1+lnWVcqDOr3uK1JbDG4HxT14+rxR59kToPpXsklrOGbcvAZ7BQZJL8FDwQ==",
+      "domain": ".fpjs.io",
+      "path": "/",
+      "expires": 1775578981.555451,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_vid_t",
+      "value": "o5droNobpsAl8hagkflbxjoNL4AwAjYMzP0sQXnjoeutAxinrT2Nl4s80ppdJwxqJUIkK0v0txum0pNoeclFL9ps1BmFJliwhcUC6UpjvtT2uN9+iw==",
+      "domain": "207.154.213.8",
+      "path": "/",
+      "expires": 1775578981,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "jwt",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NDBmNDc0OWVlMDU1YjgzNTAyMjFkMzMiLCJhY2Nlc3MiOiJhdXRoIiwiaWF0IjoxNzQ0MDQyOTgyfQ.ksw5XOXLNIEAVFGsuOgc1HqXGOi39UMO02CR8Fww_68",
+      "domain": "207.154.213.8",
+      "path": "/",
+      "expires": 1744137589.913637,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "lastActivity",
+      "value": "1744042988500",
+      "domain": "207.154.213.8",
+      "path": "/",
+      "expires": 1744137596.230571,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://207.154.213.8",
+      "localStorage": [
+        {
+          "name": "msUser_data",
+          "value": "null"
+        },
+        {
+          "name": "_vid_t",
+          "value": "o5droNobpsAl8hagkflbxjoNL4AwAjYMzP0sQXnjoeutAxinrT2Nl4s80ppdJwxqJUIkK0v0txum0pNoeclFL9ps1BmFJliwhcUC6UpjvtT2uN9+iw=="
+        },
+        {
+          "name": "visitorData",
+          "value": "{\"requestId\":\"1744042981807.QNrIYc\",\"browserName\":\"HeadlessChrome\",\"browserVersion\":\"133.0.6943\",\"confidence\":{\"revision\":\"v1.1\",\"score\":0.82},\"device\":\"Other\",\"firstSeenAt\":{\"global\":\"2025-03-14T16:24:57.662Z\",\"subscription\":\"2025-03-14T16:24:57.662Z\"},\"incognito\":true,\"ip\":\"91.150.68.254\",\"ipLocation\":{\"accuracyRadius\":100,\"city\":{\"name\":\"Belgrade\"},\"continent\":{\"code\":\"EU\",\"name\":\"Europe\"},\"country\":{\"code\":\"RS\",\"name\":\"Serbia\"},\"latitude\":44.8046,\"longitude\":20.4637,\"subdivisions\":[{\"isoCode\":\"00\",\"name\":\"Belgrade\"}],\"timezone\":\"Europe/Belgrade\"},\"lastSeenAt\":{\"global\":\"2025-04-07T16:22:49.902Z\",\"subscription\":\"2025-04-07T16:22:49.902Z\"},\"meta\":{\"version\":\"v1.1.3251+a42ac9e\"},\"os\":\"Windows\",\"osVersion\":\"10\",\"visitorFound\":true,\"visitorId\":\"gOXK10PVtC7Ps3hfMjfw\",\"expDate\":\"2025-05-07T16:23:01.559Z\"}"
+        },
+        {
+          "name": "user_data",
+          "value": "{\"_id\":\"640f4749ee055b8350221d33\",\"email\":\"superegoholdingtest@gmail.com\",\"phone_number\":\"555555\",\"name\":\"User\",\"roles\":[{\"_id\":\"5b59b07b887fd6083e431102\",\"role_id\":1,\"role_name\":\"SUPERADMIN\",\"name\":\"Super admin\",\"path\":\"/\"}],\"activationToken\":\"1G1.H7Pn7FgNJlO4\",\"is_active\":true,\"is_deleted\":false,\"is_team_lead\":false,\"board_id\":\"6228c669e17978bcaaf003f4\",\"order\":0,\"ext\":\"555\",\"ext_second\":\"\",\"ext_third\":\"\",\"ext_fourth\":\"\",\"lastLoginTime\":\"2025-04-07T16:23:02.159Z\",\"user_permissions\":{\"PREBOOK_LOAD_VIEW\":true,\"COMMENTS\":true,\"PREBOOK_LOAD_ADD\":true,\"PREBOOK_LOAD_EDIT\":true},\"twoFactorTokens\":[{\"verified\":true,\"sentToMail\":true,\"disabled\":false,\"_id\":\"67d4585ac4125c1832562d1c\",\"fingerprint\":{\"requestId\":\"1741969497654.rEziVu\",\"browserName\":\"HeadlessChrome\",\"browserVersion\":\"133.0.6943\",\"confidence\":{\"revision\":\"v1.1\",\"score\":1},\"device\":\"Other\",\"firstSeenAt\":{\"global\":\"2025-03-14T16:24:57.662Z\",\"subscription\":\"2025-03-14T16:24:57.662Z\"},\"incognito\":true,\"ip\":\"91.150.68.254\",\"ipLocation\":{\"accuracyRadius\":50,\"city\":{\"name\":\"Belgrade\"},\"continent\":{\"code\":\"EU\",\"name\":\"Europe\"},\"country\":{\"code\":\"RS\",\"name\":\"Serbia\"},\"latitude\":44.8046,\"longitude\":20.4637,\"subdivisions\":[{\"isoCode\":\"00\",\"name\":\"Belgrade\"}],\"timezone\":\"Europe/Belgrade\"},\"lastSeenAt\":{\"global\":null,\"subscription\":null},\"meta\":{\"version\":\"v1.1.3182+4db7777ad\"},\"os\":\"Windows\",\"osVersion\":\"10\",\"visitorFound\":false,\"visitorId\":\"gOXK10PVtC7Ps3hfMjfw\"},\"visitor_id\":\"gOXK10PVtC7Ps3hfMjfw\",\"secret\":\"NVKD4OTNOQ\",\"expDate\":1744561498580},{\"verified\":true,\"sentToMail\":true,\"disabled\":false,\"_id\":\"67e41838448aaa184dda52da\",\"fingerprint\":{\"requestId\":\"1743001650393.xVmStT\",\"browserName\":\"Chrome\",\"browserVersion\":\"134.0.0\",\"confidence\":{\"revision\":\"v1.1\",\"score\":1},\"device\":\"Other\",\"firstSeenAt\":{\"global\":\"2023-03-13T12:17:10.126Z\",\"subscription\":\"2023-03-13T12:17:10.126Z\"},\"incognito\":false,\"ip\":\"91.150.68.254\",\"ipLocation\":{\"accuracyRadius\":50,\"city\":{\"name\":\"Belgrade\"},\"continent\":{\"code\":\"EU\",\"name\":\"Europe\"},\"country\":{\"code\":\"RS\",\"name\":\"Serbia\"},\"latitude\":44.8046,\"longitude\":20.4637,\"subdivisions\":[{\"isoCode\":\"00\",\"name\":\"Belgrade\"}],\"timezone\":\"Europe/Belgrade\"},\"lastSeenAt\":{\"global\":\"2025-03-26T13:46:34.624Z\",\"subscription\":\"2025-03-26T13:46:34.624Z\"},\"meta\":{\"version\":\"v1.1.3213+ab3aec678\"},\"os\":\"Windows\",\"osVersion\":\"10\",\"visitorFound\":true,\"visitorId\":\"NNxUcrZO4QpHZcWdsPsa\",\"expDate\":\"2025-04-25T14:07:29.673Z\"},\"visitor_id\":\"NNxUcrZO4QpHZcWdsPsa\",\"secret\":\"IY3HARDFHY\",\"expDate\":1745593656606}],\"fm_city\":\"BG\"}"
+        },
+        {
+          "name": "user_permissions",
+          "value": "{\"COMMENTS\":true,\"SAFETY\":true,\"COLORS\":true,\"DRIVERS_ALL\":true,\"DISPATCHER_ALL\":true,\"DISPATCHER_READ\":true,\"PAYROLL\":true,\"CLAIMS\":true,\"ELD_MOVE_CALL\":true,\"ELD_ADD_CALL\":true,\"ELD_ADD_COMMENT\":true,\"ELD_EDIT_DELETE_CALL\":true,\"ELD_EDIT_TYPE_CALL\":true,\"ELD_SHIFT_CHANGE\":true,\"ELD_REMOVE_LOCKED_TRUCK\":true,\"ELD_ARCHIVE\":true,\"TRAILER_VIEW\":true,\"TRAILER_EDIT\":true,\"TRUCK_VIEW\":true,\"TRUCK_EDIT\":true,\"CLAIMS_EDIT\":true,\"NEWDRIVERS_EDIT\":true,\"NEWDRIVERS_VIEW\":true,\"CLAIMS_CLOSE\":true,\"CLAIMS_COMMENT\":true,\"MENAGE_FM_ALL\":true,\"AVAILABLE_TRUCKS_VIEW\":true,\"AVAILABLE_TRUCKS_ALL\":true,\"TRUCK_DELETE\":true,\"CLAIMS_ADD\":true,\"EMIT_LOAD_SELECTED\":true,\"DRIVERS_EDIT\":true,\"DRIVERS_VIEW\":true,\"DRIVERS_DELETE\":true,\"DRIVERS_DELETED_VIEW\":true,\"DRIVERS_ADD\":true,\"ELD_VIEW\":true,\"TRAILER_SUPER_EDIT\":true,\"ACCOUNTING_EDIT_ALL\":true,\"ACCOUNTING_VIEW_ALL\":true,\"ACCOUNTING_VIEW_UNITS\":true,\"NEWDRIVERS_DELETED\":true,\"ADD_LOAD\":true,\"PREBOOK_LOAD_ADD\":true,\"PREBOOK_LOAD_ADMIN\":true,\"PREBOOK_LOAD_EDIT\":true,\"PREBOOK_LOAD_VIEW\":true,\"PREBOOK_POSTED_TRUCKS_VIEW\":true,\"PREBOOK_POST_TRUCKS_EDIT\":true,\"PREBOOK_POST_TRUCKS_VIEW\":true,\"PREBOOK_POST_TRUCKS_ADD\":true,\"PREBOOK_POST_TRUCKS_DELETE\":true,\"PREBOOK_LOAD_DELETE\":true,\"MANAGE_APP_USERS\":true,\"RECRUIT_APP_USERS\":true,\"ADD_SHOP\":true,\"ADD_SHOP_REVIEW\":true,\"EDIT_SHOP_REVIEW\":true,\"PERMITBOOK_ADD\":true,\"PERMITBOOK_DELETE\":true,\"PERMITBOOK_EDIT\":true,\"PERMITBOOK_VIEW\":true,\"DRIVER_DOCUMENTS_VIEW\":true,\"TRUCKS_CHAT_NOTES\":true}"
+        },
+        {
+          "name": "_vid_lr",
+          "value": "[[\"rltymoXZX9nD\",\"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\"]]"
+        }
+      ]
+    },
+    {
+      "origin": "https://recaptcha.net",
+      "localStorage": [
+        {
+          "name": "rc::a",
+          "value": "OWVlMm9tZzFheHpi"
+        }
+      ]
+    }
+  ]
+}

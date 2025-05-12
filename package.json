@@ -1,0 +1,26 @@
+{
+  "name": "qa-test",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test",
+    "test:parallel": "cross-env WORKERS=4 playwright test --workers=4"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "@playwright/test": "^1.50.1",
+    "@types/mailparser": "^3.4.5",
+    "@types/node": "^22.13.0",
+    "@types/node-imap": "^0.9.3",
+    "cross-env": "^7.0.3",
+    "typescript": "^5.7.3"
+  },
+  "dependencies": {
+    "mailparser": "^3.7.2",
+    "node-imap": "^0.9.6",
+    "stream": "^0.0.3"
+  }
+}

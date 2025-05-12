@@ -1,0 +1,84 @@
+{
+  "cookies": [
+    {
+      "name": "_iidt",
+      "value": "BVFZB9WglpBtKAIIz6ZtthA0Ih8gMIgtEtkHhSjbAjz5LoR+Qf2DfgpYcz9RbS4is7v4D7cA53SbpuC/pWip1NTGVTRWHn65Jl86C6REiY1GFgVqgA==",
+      "domain": ".fpjs.io",
+      "path": "/",
+      "expires": 1775578969.671696,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_vid_t",
+      "value": "5k4/p0/v1nNlH4tlGiyu0FOHoLHxv/oB1bQr1E3I8uS6t2J3Nr1Sjzlc7Fmjm0+GDmAnRCSPg+hAic8OLHaxHQj8FuNCOo2ghg+z7VrOO0eOioraBg==",
+      "domain": "207.154.213.8",
+      "path": "/",
+      "expires": 1775578969,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "jwt",
+      "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI2NDBmNDc0OWVlMDU1YjgzNTAyMjFkMzMiLCJhY2Nlc3MiOiJhdXRoIiwiaWF0IjoxNzQ0MDQyOTcwfQ.yR3U_UK36uqZ83b2pc8Y4-yPoqL1mYcyFmeSQbHXOK8",
+      "domain": "207.154.213.8",
+      "path": "/",
+      "expires": 1744137578.072021,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "lastActivity",
+      "value": "1744042976602",
+      "domain": "207.154.213.8",
+      "path": "/",
+      "expires": 1744137584.325291,
+      "httpOnly": true,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://207.154.213.8",
+      "localStorage": [
+        {
+          "name": "msUser_data",
+          "value": "null"
+        },
+        {
+          "name": "_vid_t",
+          "value": "5k4/p0/v1nNlH4tlGiyu0FOHoLHxv/oB1bQr1E3I8uS6t2J3Nr1Sjzlc7Fmjm0+GDmAnRCSPg+hAic8OLHaxHQj8FuNCOo2ghg+z7VrOO0eOioraBg=="
+        },
+        {
+          "name": "visitorData",
+          "value": "{\"requestId\":\"1744042969892.qPG3QN\",\"browserName\":\"HeadlessChrome\",\"browserVersion\":\"133.0.6943\",\"confidence\":{\"revision\":\"v1.1\",\"score\":0.82},\"device\":\"Other\",\"firstSeenAt\":{\"global\":\"2025-03-14T16:24:57.662Z\",\"subscription\":\"2025-03-14T16:24:57.662Z\"},\"incognito\":true,\"ip\":\"91.150.68.254\",\"ipLocation\":{\"accuracyRadius\":100,\"city\":{\"name\":\"Belgrade\"},\"continent\":{\"code\":\"EU\",\"name\":\"Europe\"},\"country\":{\"code\":\"RS\",\"name\":\"Serbia\"},\"latitude\":44.8046,\"longitude\":20.4637,\"subdivisions\":[{\"isoCode\":\"00\",\"name\":\"Belgrade\"}],\"timezone\":\"Europe/Belgrade\"},\"lastSeenAt\":{\"global\":\"2025-04-07T16:14:53.987Z\",\"subscription\":\"2025-04-07T16:14:53.987Z\"},\"meta\":{\"version\":\"v1.1.3251+a42ac9e\"},\"os\":\"Windows\",\"osVersion\":\"10\",\"visitorFound\":true,\"visitorId\":\"gOXK10PVtC7Ps3hfMjfw\",\"expDate\":\"2025-05-07T16:22:49.675Z\"}"
+        },
+        {
+          "name": "user_data",
+          "value": "{\"_id\":\"640f4749ee055b8350221d33\",\"email\":\"superegoholdingtest@gmail.com\",\"phone_number\":\"555555\",\"name\":\"User\",\"roles\":[{\"_id\":\"5b59b07b887fd6083e431102\",\"role_id\":1,\"role_name\":\"SUPERADMIN\",\"name\":\"Super admin\",\"path\":\"/\"}],\"activationToken\":\"1G1.H7Pn7FgNJlO4\",\"is_active\":true,\"is_deleted\":false,\"is_team_lead\":false,\"board_id\":\"6228c669e17978bcaaf003f4\",\"order\":0,\"ext\":\"555\",\"ext_second\":\"\",\"ext_third\":\"\",\"ext_fourth\":\"\",\"lastLoginTime\":\"2025-04-07T16:22:50.263Z\",\"user_permissions\":{\"PREBOOK_LOAD_VIEW\":true,\"COMMENTS\":true,\"PREBOOK_LOAD_ADD\":true,\"PREBOOK_LOAD_EDIT\":true},\"twoFactorTokens\":[{\"verified\":true,\"sentToMail\":true,\"disabled\":false,\"_id\":\"67d4585ac4125c1832562d1c\",\"fingerprint\":{\"requestId\":\"1741969497654.rEziVu\",\"browserName\":\"HeadlessChrome\",\"browserVersion\":\"133.0.6943\",\"confidence\":{\"revision\":\"v1.1\",\"score\":1},\"device\":\"Other\",\"firstSeenAt\":{\"global\":\"2025-03-14T16:24:57.662Z\",\"subscription\":\"2025-03-14T16:24:57.662Z\"},\"incognito\":true,\"ip\":\"91.150.68.254\",\"ipLocation\":{\"accuracyRadius\":50,\"city\":{\"name\":\"Belgrade\"},\"continent\":{\"code\":\"EU\",\"name\":\"Europe\"},\"country\":{\"code\":\"RS\",\"name\":\"Serbia\"},\"latitude\":44.8046,\"longitude\":20.4637,\"subdivisions\":[{\"isoCode\":\"00\",\"name\":\"Belgrade\"}],\"timezone\":\"Europe/Belgrade\"},\"lastSeenAt\":{\"global\":null,\"subscription\":null},\"meta\":{\"version\":\"v1.1.3182+4db7777ad\"},\"os\":\"Windows\",\"osVersion\":\"10\",\"visitorFound\":false,\"visitorId\":\"gOXK10PVtC7Ps3hfMjfw\"},\"visitor_id\":\"gOXK10PVtC7Ps3hfMjfw\",\"secret\":\"NVKD4OTNOQ\",\"expDate\":1744561498580},{\"verified\":true,\"sentToMail\":true,\"disabled\":false,\"_id\":\"67e41838448aaa184dda52da\",\"fingerprint\":{\"requestId\":\"1743001650393.xVmStT\",\"browserName\":\"Chrome\",\"browserVersion\":\"134.0.0\",\"confidence\":{\"revision\":\"v1.1\",\"score\":1},\"device\":\"Other\",\"firstSeenAt\":{\"global\":\"2023-03-13T12:17:10.126Z\",\"subscription\":\"2023-03-13T12:17:10.126Z\"},\"incognito\":false,\"ip\":\"91.150.68.254\",\"ipLocation\":{\"accuracyRadius\":50,\"city\":{\"name\":\"Belgrade\"},\"continent\":{\"code\":\"EU\",\"name\":\"Europe\"},\"country\":{\"code\":\"RS\",\"name\":\"Serbia\"},\"latitude\":44.8046,\"longitude\":20.4637,\"subdivisions\":[{\"isoCode\":\"00\",\"name\":\"Belgrade\"}],\"timezone\":\"Europe/Belgrade\"},\"lastSeenAt\":{\"global\":\"2025-03-26T13:46:34.624Z\",\"subscription\":\"2025-03-26T13:46:34.624Z\"},\"meta\":{\"version\":\"v1.1.3213+ab3aec678\"},\"os\":\"Windows\",\"osVersion\":\"10\",\"visitorFound\":true,\"visitorId\":\"NNxUcrZO4QpHZcWdsPsa\",\"expDate\":\"2025-04-25T14:07:29.673Z\"},\"visitor_id\":\"NNxUcrZO4QpHZcWdsPsa\",\"secret\":\"IY3HARDFHY\",\"expDate\":1745593656606}],\"fm_city\":\"BG\"}"
+        },
+        {
+          "name": "user_permissions",
+          "value": "{\"COMMENTS\":true,\"SAFETY\":true,\"COLORS\":true,\"DRIVERS_ALL\":true,\"DISPATCHER_ALL\":true,\"DISPATCHER_READ\":true,\"PAYROLL\":true,\"CLAIMS\":true,\"ELD_MOVE_CALL\":true,\"ELD_ADD_CALL\":true,\"ELD_ADD_COMMENT\":true,\"ELD_EDIT_DELETE_CALL\":true,\"ELD_EDIT_TYPE_CALL\":true,\"ELD_SHIFT_CHANGE\":true,\"ELD_REMOVE_LOCKED_TRUCK\":true,\"ELD_ARCHIVE\":true,\"TRAILER_VIEW\":true,\"TRAILER_EDIT\":true,\"TRUCK_VIEW\":true,\"TRUCK_EDIT\":true,\"CLAIMS_EDIT\":true,\"NEWDRIVERS_EDIT\":true,\"NEWDRIVERS_VIEW\":true,\"CLAIMS_CLOSE\":true,\"CLAIMS_COMMENT\":true,\"MENAGE_FM_ALL\":true,\"AVAILABLE_TRUCKS_VIEW\":true,\"AVAILABLE_TRUCKS_ALL\":true,\"TRUCK_DELETE\":true,\"CLAIMS_ADD\":true,\"EMIT_LOAD_SELECTED\":true,\"DRIVERS_EDIT\":true,\"DRIVERS_VIEW\":true,\"DRIVERS_DELETE\":true,\"DRIVERS_DELETED_VIEW\":true,\"DRIVERS_ADD\":true,\"ELD_VIEW\":true,\"TRAILER_SUPER_EDIT\":true,\"ACCOUNTING_EDIT_ALL\":true,\"ACCOUNTING_VIEW_ALL\":true,\"ACCOUNTING_VIEW_UNITS\":true,\"NEWDRIVERS_DELETED\":true,\"ADD_LOAD\":true,\"PREBOOK_LOAD_ADD\":true,\"PREBOOK_LOAD_ADMIN\":true,\"PREBOOK_LOAD_EDIT\":true,\"PREBOOK_LOAD_VIEW\":true,\"PREBOOK_POSTED_TRUCKS_VIEW\":true,\"PREBOOK_POST_TRUCKS_EDIT\":true,\"PREBOOK_POST_TRUCKS_VIEW\":true,\"PREBOOK_POST_TRUCKS_ADD\":true,\"PREBOOK_POST_TRUCKS_DELETE\":true,\"PREBOOK_LOAD_DELETE\":true,\"MANAGE_APP_USERS\":true,\"RECRUIT_APP_USERS\":true,\"ADD_SHOP\":true,\"ADD_SHOP_REVIEW\":true,\"EDIT_SHOP_REVIEW\":true,\"PERMITBOOK_ADD\":true,\"PERMITBOOK_DELETE\":true,\"PERMITBOOK_EDIT\":true,\"PERMITBOOK_VIEW\":true,\"DRIVER_DOCUMENTS_VIEW\":true,\"TRUCKS_CHAT_NOTES\":true}"
+        },
+        {
+          "name": "_vid_lr",
+          "value": "[[\"ULTr95rNvV8H\",\"c3Z6cwLfZtSninp5/RD2nahLIPNEsNOoQCDtVuaSp0o28lbj87tMOO1U7pOzVDToUo6FplhhtkTuheAJLexI5ZakQiDzRKTOqEAgtFHi8+EYUq0VloWmWGO2RO6FxktypVSC4s1YLv0UvYWwWFeTMqaevwhMqTDs76hWILxE7oW/A22nLLXw3jlLpw3nzrgsR+ccjIWmWHC2AvadqEs161Lkk7hDNOZe7ZWkC1KYVYXpqFYguhT2neQPbrNK9srlWDiERL3DqFYgvQL2+qZYcb5E7vzxWHH9XOeXs00u/QP2nblLNOZK9tKoQCC3EqDX+UAt8ACkyfoXYbsI+snvDi2pVfuS8xV6lQeD88kzerRVvZXcPzqlPvvL5RtmuhSL0blUOvFU+s35WC79A6aFsBR3swr4he4JIOVV5J6yViC7A/aduUs270r2xPlYOOxX4JemWGGsFfaduUs26Er2xO9YOOxX4ZKmWHOsRO6Uu08380Sn1KhAMe5Q59rXViCzFfaduUs16kr2y+9YOOxX7JamWGG+RO788Vhx/VznlrJOLv0D9p25SDTqSvbSqEAgtxKg1/lALfADoYnrCmvxAKTN+VRrsEmQ0Oc7LZUojpbOADXwUevWt097sB6ext0uQZYev5TjSFSaXq7/qFYguhT2neQPbrNK9sP5WDjsV+yTplhmukTulLhLMvNEt9SoQDHtV+SLqBlxrETulLhLNPNEt8KoQDHtUuCLqAtx/Vznlb5PLv0Vp4WwSTDpUqn6plhxrETulLtNNPNEp8KoQDHoV+2LqAlm/VyvhflPMP1c5payViCsUPadulYgrFPshbBPNfNEp5W6WDjuVOOLqAkx6UTulrhILv0V4ZaoQDPtVfiF+Ugz/Vzli6gJNeZE7pa7Qy79FeKeqEAz7lD4hflIMf1c7JKmWHHtX/adu0s080Snn75YOO5X4YuoCTrqRO6Wu0gu/RXsnqhAM+5U+IX5SzX9XOWXplhx51H2nbtKMPNEp564WDjmX/iF+UMx/VztkKZYceZT9p2zSS79Fe2QqEA760r21L1KIOVf5ouoCTPvUPads08u/RXlkr5YOOZW+IX5SzfnRO6euFYgrFfil6hAM+dW+IX5SzftRO6eulYgrFTmhbBLLv0V55eoQDLzRKeUuVg470r21L5OIOVW+IX5Tjf9XOSLqAk250TulqZYcetf9p2+ViCsU+SFsEou/RXhkKhAMvNEp5KzWDjvSvbUvEog5Vb4hflMM/1c5IuoCTTtRO6Wplhx6VX2nbpWIKxQ4IWwSi79FeKSqEAy80SnkbxYOO9K9tS8QiDlVviF+U0z/Vzki6gJMOtE7pemWHHoVPadulYgrFf2nbpWIKxU9p26ViCsVfadulYgrFL2nbpWIKxT9p26ViCsUfadulYgrF/2nbtLLv0V5ZeoQDLzRKeWu1g470r21LtIIOVW+IX5SzH9XOSLqAkz60Tul6ZYce5T9p26ViCsV+KFsEou/RXlnqhAMvNEp5W9WDjuSvbUuEIg5Vb4hflJMP1c5IuoCTHoRO6Xplhx61f2nbpWIKxV7YWwSi79FeCVqEAy80SnlLJYOO9K9tS+SSDlVviF+U4y/Vzki6gJNulE7pemWHHnVvadulYgrF7lhbBKLv0V7JWoQDLzRKefuVg470r21LJMIOVW+IX5QzP9XOWLqAk76UTul6ZYceZe9p26ViCsX+2FsEou/RXml7pYOO9K9tS4SjP9XOSLqAkw71T2nbpWIKxR4IWwTi79FeOSqEAz6kr21L1MIOVX7IuoCTPvV/adulYgrFfklKhAMvNEp5a6TiDlVviF+Usz6ETul6ZYce5X7YWwSi79FeWVuVg470r21LtJM/1c5IuoCTPsVfadulYgrFfnkahAMvNEp5a+QiDlVviF+Us25kTul6ZYce5T5IWwSi79FeWSvVg47kr21LtKMP1c5IuoCTPuXvadulYgrFfml6hAMvNEp5a5SiDlVviF+Usx7UTul6ZYce5V4YWwSi79FeWUs1g470r21LtOMP1c5IuoCTPrUvadulYgrFfgkqhAMvNEp5a+TCDlVviF+Us37kTul6ZYce5T54WwSi79FeWSv1g470r21LtPNP1c5YuoCTPqX/adulYgrFfilahAMvNEp5a8SSDlUuCLqAkz6VP2nbpWIKxX4pGoQDLzRKeevlg47V/ni6gJM+lS9p26By79AaeFsEk17lH4he0fIOVV7J+4ViC5B/ad0Scu/Q+1hbAhef0V9p25TTHvSvbCqEAx517ki6gPIOVEvNP+CnHlSfvC/1Rjrw/6wfoQcfEPu4i1GWviDKeIuVQz7kjsgftHN6YJrO3rLVacL6zMuRMwiSPs3dJca7Zbss7kHWetFqbO5A5orEuk1eVXdKoD+dG4VTPxVvqUrBNr4gC9ye0fcK8Uvcn+EHHyFqbIpwlyvknkibxUMv1K9sL4WDixE7jLplhmrETulL1JM/NEsMKoQDHoVeWLqBlx/VznkLlLLv0Fp9SoQDHoVeOLqBln/VznkLJKLv0Xp4WwSTXnVviF+Qkg5VXskLMHX/NEotSoQFmkRKCFsEkz6FL4hflYOP0Q9trXViC+BPad8VhssAmkhbBYYP1K9uTeKGDsEIKFsFhhsxOkhfdWIL4J9p3sG26sA/iF5Qgg5QC1y/kffw==\"]]"
+        }
+      ]
+    },
+    {
+      "origin": "https://recaptcha.net",
+      "localStorage": [
+        {
+          "name": "rc::a",
+          "value": "NnVhZjN6MWxnZHl0bg=="
+        }
+      ]
+    }
+  ]
+}
