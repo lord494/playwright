@@ -30,3 +30,11 @@ export function generateUniqueRoleName(): string {
     return `playwright rola ${count}`;
 }
 
+export function get17RandomNumbers(): number[] {
+    return Array.from({ length: 17 }, () => Math.floor(Math.random() * 10));
+}
+
+export function get6RandomNumber(): number[] {
+    return Array.from({ length: 6 }, () => Math.floor(Math.random() * 10));
+}
+

@@ -22,10 +22,10 @@ test.beforeAll(async ({ browser }) => {
     await page.goto(Constants.trailerUrl);
     await page.waitForLoadState('networkidle');
     await company.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await page.locator('.v-text-field input').nth(6).fill(Constants.trailerName);
+    await page.locator('.v-text-field input').nth(6).fill(Constants.trailerTest);
     await page.waitForLoadState('networkidle');
     const targetRow = page.locator('tr', {
-        has: page.locator('td:nth-child(2)', { hasText: Constants.trailerName })
+        has: page.locator('td:nth-child(2)', { hasText: Constants.trailerTest })
     });
     await targetRow.locator('.mdi-file-document-multiple').click();
     await page.waitForLoadState('networkidle');
@@ -174,13 +174,13 @@ test('Dokument moze da se prebaci na Trailer', async ({ page }) => {
     await upload.selectDocumentType(upload.documentTypeField, upload.trailerType);
     await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.registrationSubtype);
     await upload.doc.last().waitFor({ state: 'visible', timeout: 10000 });
-    await upload.enterTruckNumber(upload.documentReferrerMenu.last(), Constants.trailerName, upload.trailerNumberFromMenu);
+    await upload.enterTruckNumber(upload.documentReferrerMenu.last(), Constants.trailerTest, upload.trailerNumberFromMenu);
     await page.waitForLoadState('networkidle');
     await upload.savePermitButton.click();
     await page.waitForLoadState('networkidle');
     await page.goto(Constants.trailerUrl);
     await company.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await page.locator('.v-text-field input').nth(6).fill(Constants.trailerName);
+    await page.locator('.v-text-field input').nth(6).fill(Constants.trailerTest);
     const targetRow = page.locator('tr', {
         has: page.locator('td:nth-child(2)', { hasText: '118185' })
     });
@@ -188,7 +188,7 @@ test('Dokument moze da se prebaci na Trailer', async ({ page }) => {
     await expect(document.statusColumn).toContainText(Constants.expiredStatus);
     await expect(document.statusColumn).toHaveCSS('background-color', Constants.expiredStatusColor);
     await expect(document.typeColumn).toContainText(Constants.trailerType);
-    await expect(document.companyColumn).toContainText(Constants.trailerName);
+    await expect(document.companyColumn).toContainText(Constants.trailerTest);
     await expect(document.subTypeColumn).toContainText(Constants.registrationSubtype);
 });
 
@@ -226,7 +226,7 @@ test('Korisnik moze da prebaci dokument vozaca', async ({ page }) => {
     await upload.selectDocumentType(upload.documentTypeField, upload.driverType);
     await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.othersSubtype);
     await upload.doc.last().waitFor({ state: 'visible', timeout: 10000 });
-    await upload.enterTruckNumber(upload.documentReferrerMenu.last(), Constants.test, upload.driverOption);
+    await upload.enterTruckNumber(upload.documentReferrerMenu.last(), Constants.trailerTest, upload.driverOption);
     await page.waitForLoadState('networkidle');
     await upload.savePermitButton.click();
     await page.waitForLoadState('networkidle');
@@ -241,7 +241,7 @@ test('Korisnik moze da prebaci dokument vozaca', async ({ page }) => {
     await expect(document.statusColumn).toContainText(Constants.expiredStatus);
     await expect(document.statusColumn).toHaveCSS('background-color', Constants.expiredStatusColor);
     await expect(document.typeColumn).toContainText(Constants.driverType);
-    await expect(document.companyColumn).toContainText(Constants.test);
+    await expect(document.companyColumn).toContainText(Constants.trailerTest);
     await expect(document.subTypeColumn).toContainText(Constants.otherSubtype);
 });
 

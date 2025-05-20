@@ -161,7 +161,7 @@ test.describe('Testovi sa afterAll', () => {
         await edit.selectFromMenu(edit.board, edit.b2Board);
         await page.waitForTimeout(1000);
         await edit.selectFromMenu(edit.dispatcher, edit.testPassDispatcher);
-        await edit.fillAndSelectOption(edit.substituteDispatcher, Constants.test, edit.secondSubstituteDsipatcher);
+        await edit.fillAndSelectOption(edit.substituteDispatcher, Constants.trailerTest, edit.secondSubstituteDsipatcher);
         await edit.selectFromMenu(edit.payroll, edit.secondPayroll);
         await edit.selectFromMenu(edit.trailerManager, edit.secondTrailerManager);
         await edit.fillInputField(edit.dissField, Constants.secondDiss);

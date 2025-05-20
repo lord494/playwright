@@ -212,7 +212,7 @@ export class EditDriver {
         await this.selectFromMenu(this.board, this.b1Board);
         await this.page.waitForTimeout(1000);
         await this.selectFromMenu(this.dispatcher, this.adminDispatcher);
-        await this.fillAndSelectOption(this.substituteDispatcher, Constants.test, this.adminSubstituteDispatcher);
+        await this.fillAndSelectOption(this.substituteDispatcher, Constants.trailerTest, this.adminSubstituteDispatcher);
         await this.selectFromMenu(this.payroll, this.adminPayroll);
         await this.selectFromMenu(this.trailerManager, this.adminTrailerManager);
         await this.fillInputField(this.dissField, Constants.diss);
@@ -223,7 +223,7 @@ export class EditDriver {
         await this.fillInputField(this.phone, Constants.adminPhone);
         await this.fillInputField(this.ownerPhone, Constants.ownerPhone);
         await this.fillAndSelectOption(this.truck, Constants.truckName, this.truckName);
-        await this.fillAndSelectOption(this.trailer, Constants.trailerName, this.trailerName);
+        await this.fillAndSelectOption(this.trailer, Constants.trailerTest, this.trailerName);
         await this.fillInputField(this.trailerType, Constants.firstTrailerType);
         await this.fillInputField(this.noteBox, Constants.noteFirst);
         await this.unCheckFC();

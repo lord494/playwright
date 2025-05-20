@@ -32,12 +32,12 @@ test('Korisnik moze da pretrazuje User-a po kamionu', async ({ page }) => {
 
 test('Korisnik moze da pretrazuje User-a po prikolici', async ({ page }) => {
     const dispatch = new DispatchDashboardOverview(page);
-    await dispatch.fillInputField(dispatch.trailerSearchInput, Constants.trailerName);
+    await dispatch.fillInputField(dispatch.trailerSearchInput, Constants.trailerTest);
     const trailer = page.locator('tr', {
-        has: page.locator('td:nth-child(9)', { hasText: Constants.trailerName })
+        has: page.locator('td:nth-child(9)', { hasText: Constants.trailerTest })
     });
     await trailer.first().waitFor({ state: 'visible', timeout: 10000 });
-    await expect(dispatch.trailerColumn.first()).toContainText(Constants.trailerName);
+    await expect(dispatch.trailerColumn.first()).toContainText(Constants.trailerTest);
 });
 
 test('Korisnik moze da obrise unose iz input polja', async ({ page }) => {
@@ -47,7 +47,7 @@ test('Korisnik moze da obrise unose iz input polja', async ({ page }) => {
     const trailerInputField = page.locator('.v-input__slot').last();
     await dispatch.fillInputField(dispatch.nameSearchInput, Constants.driverName);
     await dispatch.fillInputField(dispatch.truckSeachInput, Constants.truckName);
-    await dispatch.fillInputField(dispatch.trailerSearchInput, Constants.trailerName);
+    await dispatch.fillInputField(dispatch.trailerSearchInput, Constants.trailerTest);
     await page.waitForLoadState('networkidle');
     await nameInputField.click();
     await dispatch.xIconInInputField.first().click();
@@ -183,7 +183,7 @@ test('Korisnik moze da otvori truck tabelu kada klikne na ime kamiona', async ({
 
 test('Korisnik moze da otvori trailer tabelu kada klikne na ime kamiona', async ({ page }) => {
     const dispatch = new DispatchDashboardOverview(page);
-    await dispatch.fillInputField(dispatch.trailerSearchInput, Constants.trailerName);
+    await dispatch.fillInputField(dispatch.trailerSearchInput, Constants.trailerTest);
     await page.waitForLoadState("networkidle");
     const trailerName = await dispatch.trailerColumn.first().textContent();
     await dispatch.trailerColumn.first().click();

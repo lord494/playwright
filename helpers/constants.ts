@@ -31,9 +31,10 @@ export class Constants {
     static truckType = 'Truck';
 
     // ===== TRAILERS =====
-    static trailerName = '118185';
+    static trailerTest = '118185';
     static secondTrailerName = '243648';
     static trailerType = 'Trailer';
+    static rocketCompany = 'Rocket';
 
     // ===== TEST DATA =====
     static test = 'bosko';
@@ -93,6 +94,9 @@ export class Constants {
     static state = 'Serbia';
     static city = 'BG';
     static shopInfo = 'shop test';
+    static rent = 'RENT';
+    static plateNumber = '123456';
+    static available = 'available';
 
     // ===== COLORS =====
     static deliveryCity = "East Washington, PA";

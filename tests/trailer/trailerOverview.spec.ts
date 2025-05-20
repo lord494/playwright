@@ -55,10 +55,10 @@ test('Korisnik moze da pretrazuje trailer po broju trailera', async ({ page }) =
     const trailer = new TrailersPage(page);
     await page.waitForLoadState('networkidle');
     await trailer.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-    await trailer.enterTrailerName(trailer.trailerNumberFilter, Constants.trailerName);
+    await trailer.enterTrailerName(trailer.trailerNumberFilter, Constants.trailerTest);
     await page.waitForLoadState('networkidle');
     const targetRow = page.locator('tr', {
-        has: page.locator('td:nth-child(2)', { hasText: Constants.trailerName })
+        has: page.locator('td:nth-child(2)', { hasText: Constants.trailerTest })
     });
     await page.waitForLoadState('networkidle');
     await targetRow.first().waitFor({ state: 'visible', timeout: 10000 });
@@ -66,7 +66,7 @@ test('Korisnik moze da pretrazuje trailer po broju trailera', async ({ page }) =
     let found = false;
     for (let i = 0; i < count; i++) {
         const cellText = await trailer.trailerNameColumn.nth(i).textContent();
-        if (cellText?.trim() === Constants.trailerName) {
+        if (cellText?.trim() === Constants.trailerTest) {
             found = true;
             break;
         }
@@ -263,7 +263,7 @@ test('Korisnik moze da doda, edituje i brise company history', async ({ page }) 
     await expect(page.locator('text=No field history ...')).toBeVisible();
 });
 
-test.only('Korisnik moze da doda, edituje i brise repair history', async ({ page }) => {
+test('Korisnik moze da doda, edituje i brise repair history', async ({ page }) => {
     const trailer = new TrailersPage(page);
     await trailer.clickElement(trailer.repairsColumn.nth(3));
     page.on('dialog', async (dialog) => {
@@ -297,4 +297,111 @@ test.only('Korisnik moze da doda, edituje i brise repair history', async ({ page
     await expect(trailer.repairCard).toContainText('State: ' + Constants.state);
     await expect(trailer.repairCard).toContainText('City: ' + Constants.city);
     await expect(trailer.repairCard).toContainText('Shop info: ' + Constants.shopInfo);
+});
+
+test('Korisnik moze da doda, edituje i brise info', async ({ page }) => {
+    const trailer = new TrailersPage(page);
+    await trailer.clickElement(trailer.infoColumn.nth(3));
+    page.on('dialog', async (dialog) => {
+        await dialog.accept();
+    });
+    const deleteSelector = '.comments-wrapper .mdi.mdi-delete';
+    try {
+        await page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
+        while (await page.locator(deleteSelector).count() > 0) {
+            const previousCount = await page.locator(deleteSelector).count();
+            await page.locator(deleteSelector).first().click();
+            await page.waitForFunction(
+                ({ selector, prevCount }) => {
+                    return document.querySelectorAll(selector).length < prevCount;
+                },
+                { selector: deleteSelector, prevCount: previousCount }
+            );
+        }
+    } catch (e) {
+    }
+    await trailer.clickElement(trailer.cancelButton);
+    await trailer.clickElement(trailer.infoColumn.nth(3));
+    await trailer.enterNoteInInfoAndNoteModal(Constants.newStateValue);
+    await trailer.clickSaveButton();
+    await page.waitForLoadState('networkidle');
+    await trailer.clickElement(trailer.commentPencilIcon);
+    await trailer.commentInput.click();
+    await page.keyboard.press('Control+A');
+    await page.keyboard.press('Backspace');
+    await trailer.enterNoteInInfoAndNoteModal(Constants.oldStateValue);
+    await trailer.clickElement(trailer.editButton);
+    await expect(trailer.commentList).toContainText(Constants.oldStateValue);
+});
+
+test('Korisnik moze da doda, edituje i brise note', async ({ page }) => {
+    const trailer = new TrailersPage(page);
+    await trailer.clickElement(trailer.notesColumn.nth(4));
+    page.on('dialog', async (dialog) => {
+        await dialog.accept();
+    });
+    const deleteSelector = '.comments-wrapper .mdi.mdi-delete';
+    try {
+        await page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
+        while (await page.locator(deleteSelector).count() > 0) {
+            const previousCount = await page.locator(deleteSelector).count();
+            await page.locator(deleteSelector).first().click();
+            await page.waitForFunction(
+                ({ selector, prevCount }) => {
+                    return document.querySelectorAll(selector).length < prevCount;
+                },
+                { selector: deleteSelector, prevCount: previousCount }
+            );
+        }
+    } catch (e) {
+    }
+    await trailer.clickElement(trailer.cancelButton);
+    await trailer.clickElement(trailer.notesColumn.nth(4));
+    await trailer.enterNoteInInfoAndNoteModal(Constants.newStateValue);
+    await trailer.clickSaveButton();
+    await page.waitForLoadState('networkidle');
+    await trailer.clickElement(trailer.commentPencilIcon);
+    await trailer.commentInput.click();
+    await page.keyboard.press('Control+A');
+    await page.keyboard.press('Backspace');
+    await trailer.enterNoteInInfoAndNoteModal(Constants.oldStateValue);
+    await trailer.clickElement(trailer.editButton);
+    await expect(trailer.commentList).toContainText(Constants.oldStateValue);
+});
+
+test('Korisnik moze da doda, edituje i brise annual dot inspection', async ({ page }) => {
+    const trailer = new TrailersPage(page);
+    await trailer.clickElement(trailer.annualDotColumn.nth(1));
+    page.on('dialog', async (dialog) => {
+        await dialog.accept();
+    });
+    await trailer.addAnnualDotButton.waitFor({ state: 'visible', timeout: 3000 });
+    const deleteSelector = '.TrailerDotInspectionList__content .mdi.mdi-delete';
+    try {
+        await page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
+        while (await page.locator(deleteSelector).count() > 0) {
+            const previousCount = await page.locator(deleteSelector).count();
+            await page.locator(deleteSelector).first().click();
+            await page.waitForFunction(
+                ({ selector, prevCount }) => {
+                    return document.querySelectorAll(selector).length < prevCount;
+                },
+                { selector: deleteSelector, prevCount: previousCount }
+            );
+        }
+    } catch (e) {
+    }
+    await trailer.clickElement(trailer.addAnnualDotButton);
+    await trailer.enterInvoiceNumber(trailer.invoiceNumber, Constants.invoiceNumber);
+    await trailer.enterAmount(trailer.amount, Constants.amount);
+    await trailer.enterState(trailer.state, Constants.state);
+    await trailer.enterCity(trailer.city, Constants.city);
+    await trailer.enterShopInfo(trailer.shopInfo, Constants.shopInfo);
+    await trailer.clickElement(trailer.addButton.last());
+    await trailer.activeDialogbox.waitFor({ state: 'detached', timeout: 5000 });
+    await expect(trailer.annualdotInspectionModalCard).toContainText('Invoice number: ' + Constants.invoiceNumber);
+    await expect(trailer.annualdotInspectionModalCard).toContainText('Amount: ' + Constants.amount);
+    await expect(trailer.annualdotInspectionModalCard).toContainText('State: ' + Constants.state);
+    await expect(trailer.annualdotInspectionModalCard).toContainText('City: ' + Constants.city);
+    await expect(trailer.annualdotInspectionModalCard).toContainText('Shop info: ' + Constants.shopInfo);
 });

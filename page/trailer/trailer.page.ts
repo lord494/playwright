@@ -19,6 +19,10 @@ export class TrailersPage extends BasePage {
     readonly stolenStatusOption: Locator;
     readonly novaYardaOption: Locator;
     readonly trailerNameColumn: Locator;
+    readonly trailerTypeColumn: Locator;
+    readonly trailerMakeColumn: Locator;
+    readonly trailerYearColumn: Locator;
+    readonly vinNumberColumn: Locator;
     readonly companyNameColumn: Locator;
     readonly ownerNameColumn: Locator;
     readonly dealershipColumn: Locator;
@@ -66,6 +70,19 @@ export class TrailersPage extends BasePage {
     readonly city: Locator;
     readonly shopInfo: Locator;
     readonly repairCard: Locator;
+    readonly deleteIconInInfoAndNoteModal: Locator;
+    readonly cancelButton: Locator;
+    readonly commentInput: Locator;
+    readonly commentPencilIcon: Locator;
+    readonly editButton: Locator;
+    readonly commentList: Locator;
+    readonly addAnnualDotButton: Locator;
+    readonly annualdotInspectionModalCard: Locator;
+    readonly rentOrBuyColumn: Locator;
+    readonly driverPhoneColumn: Locator;
+    readonly plateColumn: Locator;
+    readonly availabilityColumn: Locator;
+    readonly thirdPartyColumn: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -85,6 +102,10 @@ export class TrailersPage extends BasePage {
         this.stolenStatusOption = page.getByRole('option', { name: 'STOLEN', exact: true });
         this.novaYardaOption = page.getByRole('option', { name: 'Nova yarda', exact: true });
         this.trailerNameColumn = page.locator('tr td:nth-child(2)');
+        this.trailerTypeColumn = page.locator('tr td:nth-child(3)');
+        this.trailerMakeColumn = page.locator('tr td:nth-child(15)');
+        this.trailerYearColumn = page.locator('tr td:nth-child(16)');
+        this.vinNumberColumn = page.locator('tr td:nth-child(17)');
         this.companyNameColumn = page.locator('tr td:nth-child(7)');
         this.ownerNameColumn = page.locator('tr td:nth-child(8)');
         this.dealershipColumn = page.locator('tr td:nth-child(9)');
@@ -132,6 +153,19 @@ export class TrailersPage extends BasePage {
         this.city = page.locator('#city');
         this.shopInfo = page.locator('#shop_info');
         this.repairCard = page.locator('.trailer-repairs__stuff');
+        this.deleteIconInInfoAndNoteModal = page.locator('.comments-wrapper .mdi.mdi-delete');
+        this.cancelButton = page.getByRole('button', { name: 'Cancel', exact: true });
+        this.commentInput = page.locator('.comments-wrapper .v-input__slot');
+        this.commentPencilIcon = page.locator('.comments-wrapper .mdi.mdi-pencil');
+        this.editButton = page.getByRole('button', { name: 'Edit', exact: true });
+        this.commentList = page.locator('.comments-wrapper .v-list-item');
+        this.addAnnualDotButton = page.getByRole('button', { name: 'Add Annual DOT inspection', exact: true });
+        this.annualdotInspectionModalCard = page.locator('.TrailerDotInspectionList__stuff');
+        this.rentOrBuyColumn = page.locator('tr td:nth-child(27)');
+        this.driverPhoneColumn = page.locator('tr td:nth-child(12)');
+        this.plateColumn = page.locator('tr td:nth-child(18)');
+        this.availabilityColumn = page.locator('tr td:nth-child(29)');
+        this.thirdPartyColumn = page.locator('tr td:nth-child(6)');
     }
 
     async selectCompanyFromMenu(companyMenu: Locator, optionFromCompanyMenu: Locator) {
@@ -211,5 +245,9 @@ export class TrailersPage extends BasePage {
 
     async enterShopInfo(shopInfoField: Locator, info: string) {
         await this.fillInputField(shopInfoField, info);
+    }
+
+    async enterNoteInInfoAndNoteModal(note: string) {
+        await this.fillInputField(this.commentInput, note);
     }
 }
