@@ -1,7 +1,6 @@
 import { Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 
-
 export class AvailableTrailersPage extends BasePage {
     readonly page: Page;
     readonly addButton: Locator;

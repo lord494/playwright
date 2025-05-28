@@ -1,8 +1,6 @@
-import { expect, Locator, Page } from "@playwright/test";
+import { Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
-import { AddAndEditLoadModal } from "../dispatchDashboard/addAndEditLoad.page";
 import { InsertPermitBookPage } from "../Content/uploadDocuments.page";
-
 
 export class TrailerDocumentPage extends BasePage {
     readonly page: Page;

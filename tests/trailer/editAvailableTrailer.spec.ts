@@ -37,14 +37,12 @@ test.beforeEach(async ({ page }) => {
     await add.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
     await trailer.enterTrailerName(trailer.trailerNumberFilter, trailerNumber);
     await page.waitForLoadState('networkidle');
-    //await page.locator('.v-progress-linear__background.primary').waitFor({ state: 'hidden', timeout: 10000 });
     const trailerCell = page.locator(`td:nth-child(1):has-text("${trailerNumber}")`);
     await expect(trailerCell).toBeVisible({ timeout: 10000 });
     const row = trailerCell.locator('xpath=ancestor::tr');
     const pencil = row.locator('.mdi.mdi-pencil');
     await expect(pencil).toBeVisible({ timeout: 10000 });
     await pencil.click();
-    //await trailer.clickElement(trailer.pencilIcon.first());
 });
 
 test('Korisnik moze da edituje trailer - In company', async ({ page }) => {

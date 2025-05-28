@@ -1,7 +1,6 @@
 import { Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 
-
 export class EditTrailersPage extends BasePage {
     readonly page: Page;
     readonly yardField: Locator;
@@ -89,7 +88,6 @@ export class EditTrailersPage extends BasePage {
         await driverMenu.waitFor();
         await driverMenu.click();
         await driverMenu.type(driverName, { delay: 30 });
-        // await this.page.locator('.v-list.v-select-list.v-sheet').waitFor({ state: 'visible', timeout: 3000 });
         await driver.waitFor({ state: 'visible', timeout: 3000 });
         await driver.click();
         await this.page.waitForTimeout(1000);
