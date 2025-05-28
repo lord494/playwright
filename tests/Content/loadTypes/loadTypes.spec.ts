@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { Constants } from '../../../helpers/constants';
-import { loadTypesPage } from '../../../page/Content/loadTypes.page';
+import { LoadTypesPage } from '../../../page/Content/loadTypes.page';
 
 test.use({ storageState: 'auth.json' });
 
@@ -9,7 +9,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('Korisnik moze da doda Load Type i da ga obrise', async ({ page }) => {
-    const type = new loadTypesPage(page);
+    const type = new LoadTypesPage(page);
     await page.waitForLoadState('networkidle');
     await type.clickElement(type.addTypeIcon);
     await type.fillBoardName(type.nameTypeField, Constants.newLoadType);
@@ -30,7 +30,7 @@ test('Korisnik moze da doda Load Type i da ga obrise', async ({ page }) => {
 });
 
 test('Name load type je obavezno polje', async ({ page }) => {
-    const type = new loadTypesPage(page);
+    const type = new LoadTypesPage(page);
     await page.waitForLoadState('networkidle');
     await type.clickElement(type.addTypeIcon);
     await type.clickAddButton();
@@ -39,7 +39,7 @@ test('Name load type je obavezno polje', async ({ page }) => {
 });
 
 test('Korisnik moze da doda Load Type, postavi is Active false i da ga obrise', async ({ page }) => {
-    const type = new loadTypesPage(page);
+    const type = new LoadTypesPage(page);
     await page.waitForLoadState('networkidle');
     await type.clickElement(type.addTypeIcon);
     await type.fillBoardName(type.nameTypeField, Constants.newLoadType);
@@ -62,7 +62,7 @@ test('Korisnik moze da doda Load Type, postavi is Active false i da ga obrise', 
 });
 
 test('Korisnik moze da doda Load Type i podesi boje pomocu slider-a i da ga obrise', async ({ page }) => {
-    const type = new loadTypesPage(page);
+    const type = new LoadTypesPage(page);
     await page.waitForLoadState('networkidle');
     await type.clickElement(type.addTypeIcon);
     await type.fillBoardName(type.nameTypeField, Constants.newLoadType);
@@ -89,7 +89,7 @@ test('Korisnik moze da doda Load Type i podesi boje pomocu slider-a i da ga obri
 });
 
 test('Korisnik moze da doda Load Type i podesi obe boje pomocu slider-a i da ga obrise', async ({ page }) => {
-    const type = new loadTypesPage(page);
+    const type = new LoadTypesPage(page);
     await page.waitForLoadState('networkidle');
     await type.clickElement(type.addTypeIcon);
     await type.fillBoardName(type.nameTypeField, Constants.newLoadType);
@@ -123,7 +123,7 @@ test('Korisnik moze da doda Load Type i podesi obe boje pomocu slider-a i da ga 
 });
 
 test('Korisnik moze da doda Load Type, izmeni boju i da ga obrise', async ({ page }) => {
-    const type = new loadTypesPage(page);
+    const type = new LoadTypesPage(page);
     await page.waitForLoadState('networkidle');
     await type.clickElement(type.addTypeIcon);
     await type.fillBoardName(type.nameTypeField, Constants.newLoadType);

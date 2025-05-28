@@ -32,7 +32,7 @@ export class TrailerInsertPermitBookPage extends BasePage {
         this.page = page;
         this.insertDocumentField = page.locator('.v-text-field--is-booted.v-file-input .v-text-field__slot');
         this.documentNameField = page.locator('.v-input.v-input--has-state .v-input__control .v-input__slot');
-        this.expiringDateField = page.locator('.v-input--is-readonly.theme--light.v-text-field .v-text-field__slot');
+        this.expiringDateField = page.locator('.v-input--is-readonly.theme--light.v-text-field .v-text-field__slot').first();
         this.documentSubtypeField = page.locator('.v-select__slot', { hasText: 'Select document subtype' });
         this.documentTypeField = page.locator('.v-select__slot', { hasText: 'Select document type' });
         this.truckType = page.getByRole('option', { name: 'Truck', exact: true });
@@ -67,8 +67,9 @@ export class TrailerInsertPermitBookPage extends BasePage {
     }
 
     async selectSubtypeFromMenu(menu: Locator, option: Locator): Promise<void> {
-        await this.selectFromMenu(menu, option);
-        await this.othersSubtype.waitFor({ state: 'hidden', timeout: 5000 });
+        await menu.waitFor({ state: 'visible', timeout: 3000 });
+        await menu.click();
+        await option.click();
     }
 
     async selectDocumentType(menu: Locator, option: Locator): Promise<void> {

@@ -32,6 +32,7 @@ export class Constants {
 
     // ===== TRAILERS =====
     static trailerTest = '118185';
+    static availableTrailer = '78965';
     static secondTrailerName = '243648';
     static trailerType = 'Trailer';
     static rocketCompany = 'Rocket';
@@ -65,6 +66,10 @@ export class Constants {
     static notVerifiedStatus = 'Not Verified';
     static newBoard = 'playwright board';
     static newLoadType = 'playwright load type';
+    static newTrailerType = 'playwright trailer type';
+    static editTrailerType = 'playwright trailer type edit';
+    static makeName = 'playwright make';
+    static newMakeName = 'playwright make edit';
     static newLoadTypeEdit = 'playwright load type Edit';
     static newBoardEdit = 'playwright board edit';
     static playwrightCompany = 'playwright company';
@@ -143,4 +148,7 @@ export class Constants {
     static permitBookUrl = '/permit-books';
     static loadTypesUrl = '/load-types';
     static menageFMUrl = '/menage-fm';
+    static availableTrailerUrl = '/available-trailers';
+    static trailerMakesUrl = '/trailers/marks';
+    static trailerTypesUrl = '/trailers/types';
 }

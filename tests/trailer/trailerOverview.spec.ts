@@ -143,6 +143,7 @@ test('Korisnik moze da otvori truck history modal', async ({ page }) => {
             break;
         }
     };
+    await expect(trailer.trailerAndTruckHistoryModal).toBeVisible({ timeout: 3000 });
 });
 
 test('Korisnik moze da otvori company history modal', async ({ page }) => {
@@ -321,6 +322,7 @@ test('Korisnik moze da doda, edituje i brise info', async ({ page }) => {
     } catch (e) {
     }
     await trailer.clickElement(trailer.cancelButton);
+    await page.locator('v-menu__content theme--light menuable__content__active').waitFor({ state: 'hidden', timeout: 5000 });
     await trailer.clickElement(trailer.infoColumn.nth(3));
     await trailer.enterNoteInInfoAndNoteModal(Constants.newStateValue);
     await trailer.clickSaveButton();
@@ -356,6 +358,7 @@ test('Korisnik moze da doda, edituje i brise note', async ({ page }) => {
     } catch (e) {
     }
     await trailer.clickElement(trailer.cancelButton);
+    await page.locator('v-menu__content theme--light menuable__content__active').waitFor({ state: 'hidden', timeout: 5000 });
     await trailer.clickElement(trailer.notesColumn.nth(4));
     await trailer.enterNoteInInfoAndNoteModal(Constants.newStateValue);
     await trailer.clickSaveButton();

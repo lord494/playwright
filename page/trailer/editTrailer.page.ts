@@ -86,7 +86,13 @@ export class EditTrailersPage extends BasePage {
     }
 
     async selectDriver(driverMenu: Locator, driverName: string, driver: Locator) {
-        await this.fillAndSelectFromMenu(driverMenu, driverName, driver);
+        await driverMenu.waitFor();
+        await driverMenu.click();
+        await driverMenu.type(driverName, { delay: 30 });
+        // await this.page.locator('.v-list.v-select-list.v-sheet').waitFor({ state: 'visible', timeout: 3000 });
+        await driver.waitFor({ state: 'visible', timeout: 3000 });
+        await driver.click();
+        await this.page.waitForTimeout(1000);
     }
 
     async addTruckIfEmpty(truckField: Locator, truckName: string, truckNumber: Locator) {

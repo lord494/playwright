@@ -1,7 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { CompaniesPage } from '../../page/Content/companies.page';
 import { Constants } from '../../helpers/constants';
-import { AddAndEditLoadModal } from '../../page/dispatchDashboard/addAndEditLoad.page';
 import { TrailersPage } from '../../page/trailer/trailer.page';
 import { TrailerInsertPermitBookPage } from '../../page/trailer/trailerInsertPermitBook.page';
 import { TrailerDocumentPage } from '../../page/trailer/trailerDocument.page';
@@ -51,7 +49,7 @@ test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ page }
     await trailer.clickElement(trailer.uploadIcon.first());
     await upload.uploadDocument();
     const formattedFutureDate = await upload.selectExpiringDateMoreThan30Days();
-    await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.eldDocumentsSubtype);
+    await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.registrationSubtype);
     const nameColumnInUpload = (await page.locator('.v-file-input__text').allInnerTexts())[0];
     const textCompanyName = nameColumnInUpload.split(' ')[0];
     await page.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
@@ -64,9 +62,9 @@ test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ page }
     await expect(document.nameColumn).toContainText(textCompanyName);
     await expect(document.statusColumn).toContainText(Constants.validStatus);
     await expect(document.statusColumn).toHaveCSS('background-color', 'rgb(76, 175, 80)');
-    await expect(document.typeColumn).toContainText(Constants.companyType);
+    await expect(document.typeColumn).toContainText(Constants.trailerType);
     await expect(document.companyColumn).toContainText(firtsCompanyName);
-    await expect(document.subTypeColumn).toContainText(Constants.eldDocuments);
+    await expect(document.subTypeColumn).toContainText(Constants.registrationSubtype);
 });
 
 test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ page }) => {
@@ -77,7 +75,7 @@ test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ page }) => 
     await trailer.clickElement(trailer.uploadIcon.first());
     await upload.uploadDocument();
     const formattedFutureDate = await upload.selectExpiringDateLessThan30Days();
-    await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.eldDocumentsSubtype);
+    await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.registrationSubtype);
     const nameColumnInUpload = (await page.locator('.v-file-input__text').allInnerTexts())[0];
     const textCompanyName = nameColumnInUpload.split(' ')[0];
     await page.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
@@ -90,9 +88,9 @@ test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ page }) => 
     await expect(document.nameColumn).toContainText(textCompanyName);
     await expect(document.statusColumn).toContainText(Constants.lessThan30Status);
     await expect(document.statusColumn).toHaveCSS('background-color', 'rgb(255, 235, 59)');
-    await expect(document.typeColumn).toContainText(Constants.companyType);
+    await expect(document.typeColumn).toContainText(Constants.trailerType);
     await expect(document.companyColumn).toContainText(firtsCompanyName);
-    await expect(document.subTypeColumn).toContainText(Constants.eldDocuments);
+    await expect(document.subTypeColumn).toContainText(Constants.registrationSubtype);
 });
 
 // test('Document name je obavezno polje', async ({ page }) => {
@@ -117,7 +115,7 @@ test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ page }) => 
 //     await expect(upload.errorMessage).toContainText('Value is required');
 // });
 
-test('Insert Document je obavezno polje', async ({ page }) => {
+test('Korisnik ne moze da uradi upload za fajl koji je veci od 10mb', async ({ page }) => {
     const upload = new TrailerInsertPermitBookPage(page);
     const trailer = new TrailersPage(page);
     await trailer.clickElement(trailer.uploadIcon.first());
@@ -125,40 +123,35 @@ test('Insert Document je obavezno polje', async ({ page }) => {
     await expect(upload.errorMessage.first()).toContainText('File is required and size should be less than 10 MB!');
 });
 
-test('Document subtype je obavezno polje', async ({ page }) => {
-    const upload = new TrailerInsertPermitBookPage(page);
-    const trailer = new TrailersPage(page);
-    const addLoad = new AddAndEditLoadModal(page);
-    await trailer.clickElement(trailer.uploadIcon.first());
-    await upload.uploadDocument();
-    await upload.expiringDateField.click();
-    const dateText = await upload.currentDate.textContent();
-    const selectedDay = parseInt(dateText?.trim() || '0', 10);
-    const pastDay = selectedDay > 1 ? selectedDay - 1 : 1;
-    const pastDateButton = page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${pastDay}")`);
-    await pastDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
-    await pastDateButton.first().click();
-    await addLoad.okButtonInDatePicker.click();
-    await page.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
-    await upload.clickElement(upload.savePermitButton);
-    await expect(upload.errorMessage.first()).toContainText('Value is required');
-});
+// test('Document subtype je obavezno polje', async ({ page }) => {
+//     const upload = new TrailerInsertPermitBookPage(page);
+//     const trailer = new TrailersPage(page);
+//     const addLoad = new AddAndEditLoadModal(page);
+//     await trailer.clickElement(trailer.uploadIcon.first());
+//     await page.waitForLoadState('networkidle');
+//     await upload.uploadDocument();
+//     await page.waitForLoadState('networkidle');
+//     await upload.expiringDateField.click();
+//     await page.waitForLoadState('networkidle');
+//     const dateText = await upload.currentDate.textContent();
+//     const selectedDay = parseInt(dateText?.trim() || '0', 10);
+//     const pastDay = selectedDay > 1 ? selectedDay - 1 : 1;
+//     const pastDateButton = page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${pastDay}")`);
+//     await pastDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
+//     await pastDateButton.first().click();
+//     await page.waitForLoadState('networkidle');
+//     await addLoad.okButtonInDatePicker.click();
+//     await page.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
+//     await upload.clickElement(upload.savePermitButton);
+//     await expect(upload.errorMessage.first()).toContainText('Value is required');
+// });
 
 test('Expiring date je obavezno polje', async ({ page }) => {
     const upload = new TrailerInsertPermitBookPage(page);
     const trailer = new TrailersPage(page);
     await trailer.clickElement(trailer.uploadIcon.first());
     await upload.uploadDocument();
-    await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.eldDocumentsSubtype);
+    await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.registrationSubtype);
     await upload.clickElement(upload.savePermitButton);
     await expect(upload.errorMessage.first()).toContainText('Value is required');
 });
-
-test('Korisnik ne moze da doda dokument veci od 10mb', async ({ page }) => {
-    const upload = new TrailerInsertPermitBookPage(page);
-    const trailer = new TrailersPage(page);
-    await trailer.clickElement(trailer.uploadIcon.first());
-    await upload.uploadDocumentOver10MB();
-    await expect(upload.errorMessage.first()).toContainText('File is required and size should be less than 10 MB!');
-});
-

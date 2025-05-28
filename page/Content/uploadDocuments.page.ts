@@ -10,6 +10,7 @@ export class InsertPermitBookPage extends BasePage {
     readonly documentSubtypeField: Locator;
     readonly documentTypeField: Locator;
     readonly truckType: Locator;
+    readonly companyType: Locator;
     readonly trailerType: Locator;
     readonly driverType: Locator;
     readonly savePermitButton: Locator;
@@ -26,6 +27,8 @@ export class InsertPermitBookPage extends BasePage {
     readonly doc: Locator;
     readonly truckNumberFromMenu: Locator;
     readonly trailerNumberFromMenu: Locator;
+    readonly secondTrailerNumberFromMenu: Locator;
+    readonly compnyFromMenu: Locator;
     readonly driverOption: Locator;
 
     constructor(page: Page) {
@@ -37,6 +40,7 @@ export class InsertPermitBookPage extends BasePage {
         this.documentSubtypeField = page.locator('.v-select__slot', { hasText: 'Select document subtype' });
         this.documentTypeField = page.locator('.v-select__slot', { hasText: 'Select document type' });
         this.truckType = page.getByRole('option', { name: 'Truck', exact: true });
+        this.companyType = page.getByRole('option', { name: 'Company', exact: true });
         this.trailerType = page.getByRole('option', { name: 'Trailer', exact: true });
         this.driverType = page.getByRole('option', { name: 'Driver', exact: true });
         this.savePermitButton = page.locator('.v-btn__content', { hasText: 'Save permit book' });
@@ -54,6 +58,8 @@ export class InsertPermitBookPage extends BasePage {
         this.doc = page.locator('.v-select__slot .v-label.theme--light');
         this.truckNumberFromMenu = page.getByRole('option', { name: '11996', exact: true });
         this.trailerNumberFromMenu = page.getByRole('option', { name: '118185', exact: true });
+        this.secondTrailerNumberFromMenu = page.getByRole('option', { name: '243648', exact: true });
+        this.compnyFromMenu = page.getByRole('option', { name: 'testcompany', exact: true });
         this.driverOption = page.getByRole('option', { name: 'AppTest (bosko@superegoholding.net)', exact: true });
     }
 
@@ -73,11 +79,24 @@ export class InsertPermitBookPage extends BasePage {
     }
 
     async selectDocumentType(menu: Locator, option: Locator): Promise<void> {
-        await this.selectFromMenu(menu, option);
+        await menu.waitFor({ state: 'visible', timeout: 3000 });
+        await menu.click();
+        await this.page.waitForTimeout(1000);
+        await option.click();
+        await this.page.waitForTimeout(1000);
     }
 
     async enterTruckNumber(menu: Locator, truckNumber: string, option: Locator): Promise<void> {
         await this.fillAndSelectFromMenu(menu, truckNumber, option);
+    }
+
+    async enterSecondTruckNumber(menu: Locator, truckNumber: string, option: Locator): Promise<void> {
+        await menu.waitFor();
+        await menu.click();
+        await menu.type(truckNumber, { delay: 30 });
+        await this.page.waitForTimeout(1000);
+        await option.click();
+        await this.page.waitForTimeout(1000);
     }
 
     async selectPastExpiringDate(): Promise<string> {
@@ -145,6 +164,7 @@ export class InsertPermitBookPage extends BasePage {
     // }
 
     async selectExpiringDateLessThan30Days(): Promise<string> {
+        await this.page.waitForLoadState('networkidle');
         await this.expiringDateField.click();
         const dateText = await this.currentDate.textContent();
         const selectedDay = parseInt(dateText?.trim() || '0', 10);

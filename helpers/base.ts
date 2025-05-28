@@ -45,7 +45,7 @@ export class BasePage {
     async selectFromMenu(menu: Locator, optionFromMenu: Locator) {
         await menu.waitFor({ state: 'visible', timeout: 3000 });
         await menu.click();
-        await this.page.waitForLoadState('networkidle');
+        //await this.page.waitForLoadState('networkidle');
         await optionFromMenu.click();
     }
 
