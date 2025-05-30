@@ -61,6 +61,7 @@ export class Constants {
     static fndUserRole = /Fnd User/
     static teamLeadYes = 'YES';
     static newRole = 'playwright role';
+    static driverPlaywright = 'driver playwright';
     static readRole = 'Read';
     static phoneNumberOfUserApp = '111111';
     static notVerifiedStatus = 'Not Verified';
@@ -69,6 +70,8 @@ export class Constants {
     static newTrailerType = 'playwright trailer type';
     static editTrailerType = 'playwright trailer type edit';
     static makeName = 'playwright make';
+    static makeVolvo = 'VOLVO';
+    static model = 'VNL 760';
     static newMakeName = 'playwright make edit';
     static newLoadTypeEdit = 'playwright load type Edit';
     static newBoardEdit = 'playwright board edit';
@@ -102,6 +105,14 @@ export class Constants {
     static rent = 'RENT';
     static plateNumber = '123456';
     static available = 'available';
+    static vinNumber = '3HSDZAPR5PN207350';
+    static castrolOliType = 'Castrol';
+    static optimaOilType = 'Optima';
+    static millage = '783250';
+    static truckColor = 'BLUE';
+    static year2022 = '2022';
+    static cumminsTruckEngine = 'Cummins';
+    static automaticTransmission = 'Automatic';
 
     // ===== COLORS =====
     static deliveryCity = "East Washington, PA";
@@ -134,6 +145,7 @@ export class Constants {
     static LessThan30StatusColor = 'rgb(255, 235, 59)';
     static validStatusColor = 'rgb(76, 175, 80)';
     static expiredStatusColor = 'rgb(244, 67, 54)';
+    static totalDemageColor = 'rgb(228, 174, 167)';
 
     // ===== URLS =====
     static dashboardUrl = '/dashboard';
@@ -144,6 +156,10 @@ export class Constants {
     static boardsUrl = '/boards';
     static companiesUrl = '/companies';
     static truckUrl = '/trucks/all';
+    static truckInCompanyUrl = '/trucks/in_company';
+    static truckThirdPartyUrl = '/trucks/is_third_party';
+    static inactiveTruckUrl = '/trucks/released';
+    static deletedTruckUrl = '/trucks/is_active';
     static trailerUrl = '/trailers';
     static permitBookUrl = '/permit-books';
     static loadTypesUrl = '/load-types';

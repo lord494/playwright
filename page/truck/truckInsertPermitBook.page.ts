@@ -1,7 +1,7 @@
 import { Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 
-export class TrailerInsertPermitBookPage extends BasePage {
+export class TruckInsertPermitBook extends BasePage {
     readonly page: Page;
     readonly insertDocumentField: Locator;
     readonly documentNameField: Locator;
