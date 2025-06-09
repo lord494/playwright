@@ -73,6 +73,7 @@ export class Constants {
     static makeVolvo = 'VOLVO';
     static model = 'VNL 760';
     static newMakeName = 'playwright make edit';
+    static freightlinerOption = 'FREIGHTLINER';
     static newLoadTypeEdit = 'playwright load type Edit';
     static newBoardEdit = 'playwright board edit';
     static playwrightCompany = 'playwright company';
@@ -113,6 +114,9 @@ export class Constants {
     static year2022 = '2022';
     static cumminsTruckEngine = 'Cummins';
     static automaticTransmission = 'Automatic';
+    static testKompanija011 = '11 Test kompanija';
+    static weight = '24000';
+    static suggestedRate = '700';
 
     // ===== COLORS =====
     static deliveryCity = "East Washington, PA";
@@ -167,4 +171,9 @@ export class Constants {
     static availableTrailerUrl = '/available-trailers';
     static trailerMakesUrl = '/trailers/marks';
     static trailerTypesUrl = '/trailers/types';
+    static availableTrukcUrl = '/available-trucks';
+    static truckMakeUrl = '/truck-make';
+    static truckModelUrl = '/truck-model';
+    static companiesPrebookUrl = '/pre-book/companies';
+    static postLoadPrebookUrl = '/pre-book/post-loads';
 }

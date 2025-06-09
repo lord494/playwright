@@ -38,3 +38,35 @@ export function get6RandomNumber(): number[] {
     return Array.from({ length: 6 }, () => Math.floor(Math.random() * 10));
 }
 
+export function generateRandomLetters(length = 10): string {
+    const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += letters.charAt(Math.floor(Math.random() * letters.length));
+    }
+    return result;
+}
+
+export function generateRandomString(input: number = 5): string {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < input; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+}
+
+
+async function typeSlowly(page: any, selector: string, text: string, delay = 100) {
+    const input = page.locator(selector);
+    await input.click();
+
+    for (const char of text) {
+        await input.type(char);
+        await page.waitForTimeout(delay);
+        await input.click();
+    }
+}
+
+
+
