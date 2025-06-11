@@ -8,6 +8,7 @@ test.use({ storageState: 'auth.json' });
 test.beforeEach(async ({ page }) => {
     const dashboard = new DispatchDashboardOverview(page);
     await page.goto(Constants.dashboardUrl);
+    await dashboard.driveNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await dashboard.fillInputField(dashboard.nameSearchInput, Constants.driverName);
     const driver = page.locator('tr', {
         has: page.locator('td:nth-child(2)', { hasText: 'btest' })
@@ -161,7 +162,7 @@ test.describe('Testovi sa afterAll', () => {
         await edit.selectFromMenu(edit.board, edit.b2Board);
         await page.waitForTimeout(1000);
         await edit.selectFromMenu(edit.dispatcher, edit.testPassDispatcher);
-        await edit.fillAndSelectOption(edit.substituteDispatcher, Constants.trailerTest, edit.secondSubstituteDsipatcher);
+        await edit.fillAndSelectOption(edit.substituteDispatcher, Constants.test, edit.secondSubstituteDsipatcher);
         await edit.selectFromMenu(edit.payroll, edit.secondPayroll);
         await edit.selectFromMenu(edit.trailerManager, edit.secondTrailerManager);
         await edit.fillInputField(edit.dissField, Constants.secondDiss);

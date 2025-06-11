@@ -219,14 +219,13 @@ test('Korisnik moze da prebaci dokument na drugu firmu', async ({ page }) => {
 test('Korisnik moze da prebaci dokument vozaca', async ({ page }) => {
     const upload = new InsertPermitBookPage(page);
     const document = new DocumentPage(page);
-    const company = new CompaniesPage(page);
     await document.eyeIcon.first().waitFor({ state: 'visible' });
     await document.clickElement(document.pencilIcon);
     await document.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
     await upload.selectDocumentType(upload.documentTypeField, upload.driverType);
     await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.othersSubtype);
     await upload.doc.last().waitFor({ state: 'visible', timeout: 10000 });
-    await upload.enterTruckNumber(upload.documentReferrerMenu.last(), Constants.trailerTest, upload.driverOption);
+    await upload.enterTruckNumber(upload.documentReferrerMenu.last(), Constants.testEmail, upload.driverOption);
     await page.waitForLoadState('networkidle');
     await upload.savePermitButton.click();
     await page.waitForLoadState('networkidle');
@@ -241,7 +240,7 @@ test('Korisnik moze da prebaci dokument vozaca', async ({ page }) => {
     await expect(document.statusColumn).toContainText(Constants.expiredStatus);
     await expect(document.statusColumn).toHaveCSS('background-color', Constants.expiredStatusColor);
     await expect(document.typeColumn).toContainText(Constants.driverType);
-    await expect(document.companyColumn).toContainText(Constants.trailerTest);
+    await expect(document.companyColumn).toContainText(Constants.appTest + ' (' + Constants.testEmail + ')');
     await expect(document.subTypeColumn).toContainText(Constants.otherSubtype);
 });
 

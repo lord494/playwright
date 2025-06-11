@@ -114,6 +114,7 @@ test('Korisnik moze da doda, edituje i brise trailer history', async ({ page }) 
         while (await page.locator(deleteSelector).count() > 0) {
             const previousCount = await page.locator(deleteSelector).count();
             await page.locator(deleteSelector).first().click();
+            await page.getByRole('img').locator('circle').waitFor({ state: 'hidden', timeout: 1000 });
             await page.waitForFunction(
                 ({ selector, prevCount }) => {
                     return document.querySelectorAll(selector).length < prevCount;
@@ -154,6 +155,7 @@ test('Korisnik moze da doda, edituje i brise company history', async ({ page }) 
         while (await page.locator(deleteSelector).count() > 0) {
             const previousCount = await page.locator(deleteSelector).count();
             await page.locator(deleteSelector).first().click();
+            await page.getByRole('img').locator('circle').waitFor({ state: 'hidden', timeout: 1000 });
             await page.waitForFunction(
                 ({ selector, prevCount }) => {
                     return document.querySelectorAll(selector).length < prevCount;
@@ -192,6 +194,7 @@ test('Korisnik moze da doda, edituje i brise oil change history', async ({ page 
         while (await page.locator(deleteSelector).count() > 0) {
             const previousCount = await page.locator(deleteSelector).count();
             await page.locator(deleteSelector).first().click();
+            await page.getByRole('img').locator('circle').waitFor({ state: 'hidden', timeout: 1000 });
             await page.waitForFunction(
                 ({ selector, prevCount }) => {
                     return document.querySelectorAll(selector).length < prevCount;
@@ -232,6 +235,7 @@ test('Korisnik moze da doda, edituje i brise annual dot inspection', async ({ pa
         while (await page.locator(deleteSelector).count() > 0) {
             const previousCount = await page.locator(deleteSelector).count();
             await page.locator(deleteSelector).first().click();
+            await page.getByRole('img').locator('circle').waitFor({ state: 'hidden', timeout: 1000 });
             await page.waitForFunction(
                 ({ selector, prevCount }: { selector: string, prevCount: number }) => document.querySelectorAll(selector).length < prevCount,
                 { selector: deleteSelector, prevCount: previousCount }
@@ -267,6 +271,7 @@ test('Korisnik moze da doda, edituje i brise repair history', async ({ page }) =
         while (await page.locator(deleteSelector).count() > 0) {
             const previousCount = await page.locator(deleteSelector).count();
             await page.locator(deleteSelector).first().click();
+            await page.getByRole('img').locator('circle').waitFor({ state: 'hidden', timeout: 1000 });
             await page.waitForFunction(
                 ({ selector, prevCount }) => {
                     return document.querySelectorAll(selector).length < prevCount;

@@ -64,6 +64,7 @@ export class EditDriver {
     readonly cancelButton: Locator;
     readonly editDriverTitle: Locator;
     readonly editDriverModal: Locator;
+    dispeckoDispatcherOption: Locator;
 
     constructor(page: Page) {
         this.page = page;
@@ -104,6 +105,7 @@ export class EditDriver {
         this.adminDispatcher = page.getByRole('option', { name: 'Ray' });
         this.testPassDispatcher = page.getByRole('option', { name: 'Pex' });
         this.adminSubstituteDispatcher = page.getByRole('option', { name: 'QA Test' });
+        this.dispeckoDispatcherOption = page.getByRole('option', { name: 'Dispecko' });
         this.secondSubstituteDsipatcher = page.getByRole('option', { name: 'Simonovic' });
         this.adminPayroll = page.getByRole('option', { name: 'Pejrol' });
         this.secondPayroll = page.getByRole('option', { name: 'PayrollTest' });
@@ -212,7 +214,7 @@ export class EditDriver {
         await this.selectFromMenu(this.board, this.b1Board);
         await this.page.waitForTimeout(1000);
         await this.selectFromMenu(this.dispatcher, this.adminDispatcher);
-        await this.fillAndSelectOption(this.substituteDispatcher, Constants.trailerTest, this.adminSubstituteDispatcher);
+        await this.fillAndSelectOption(this.substituteDispatcher, Constants.dispatcherDispecko, this.dispeckoDispatcherOption);
         await this.selectFromMenu(this.payroll, this.adminPayroll);
         await this.selectFromMenu(this.trailerManager, this.adminTrailerManager);
         await this.fillInputField(this.dissField, Constants.diss);

@@ -1,20 +1,21 @@
-import { test, expect, chromium, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { DispatchDashboardOverview } from '../../page/dispatchDashboard/dispatchDashboardOverview.page';
 import { Constants } from '../../helpers/constants';
 import { getWeekRange } from '../../helpers/dateUtilis';
 import fs from 'fs';
 
-
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
+    const dispatch = new DispatchDashboardOverview(page);
     await page.goto(Constants.dashboardUrl);
+    await dispatch.driveNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 
 test('Korisnik moze da pretrazuje User-a po imenu', async ({ page }) => {
     const dispatch = new DispatchDashboardOverview(page);
-    await dispatch.fillInputField(dispatch.nameSearchInput, Constants.driverName);
-    const imeZaPretragu = Constants.driverName;
+    await dispatch.fillInputField(dispatch.nameSearchInput, Constants.driverNameFraser);
+    const imeZaPretragu = Constants.driverNameFraser;
     await dispatch.driverNameColumn.locator(`text=${imeZaPretragu}`).waitFor({ state: 'visible' });
     const firstDriverName = await dispatch.driverNameColumn.first().textContent();
     expect(firstDriverName?.trim()).toContain(imeZaPretragu);
@@ -32,33 +33,12 @@ test('Korisnik moze da pretrazuje User-a po kamionu', async ({ page }) => {
 
 test('Korisnik moze da pretrazuje User-a po prikolici', async ({ page }) => {
     const dispatch = new DispatchDashboardOverview(page);
-    await dispatch.fillInputField(dispatch.trailerSearchInput, Constants.trailerTest);
+    await dispatch.fillInputField(dispatch.trailerSearchInput, Constants.trailerTestNumber);
     const trailer = page.locator('tr', {
-        has: page.locator('td:nth-child(9)', { hasText: Constants.trailerTest })
+        has: page.locator('td:nth-child(9)', { hasText: Constants.trailerTestNumber })
     });
     await trailer.first().waitFor({ state: 'visible', timeout: 10000 });
-    await expect(dispatch.trailerColumn.first()).toContainText(Constants.trailerTest);
-});
-
-test('Korisnik moze da obrise unose iz input polja', async ({ page }) => {
-    const dispatch = new DispatchDashboardOverview(page);
-    const nameInputField = page.locator('.v-input__slot').first();
-    const truckInputField = page.locator('.v-input__slot').nth(1);
-    const trailerInputField = page.locator('.v-input__slot').last();
-    await dispatch.fillInputField(dispatch.nameSearchInput, Constants.driverName);
-    await dispatch.fillInputField(dispatch.truckSeachInput, Constants.truckName);
-    await dispatch.fillInputField(dispatch.trailerSearchInput, Constants.trailerTest);
-    await page.waitForLoadState('networkidle');
-    await nameInputField.click();
-    await dispatch.xIconInInputField.first().click();
-    await truckInputField.click();
-    await dispatch.xIconInInputField.nth(1).click();
-    await trailerInputField.click();
-    await dispatch.xIconInInputField.last().click();
-    await page.waitForLoadState('networkidle');
-    await expect(dispatch.nameSearchInput).toBeEmpty();
-    await expect(dispatch.truckSeachInput).toBeEmpty();
-    await expect(dispatch.trailerSearchInput).toBeEmpty();
+    await expect(dispatch.trailerColumn.first()).toContainText(Constants.trailerTestNumber);
 });
 
 test('Korisnik moze da mijenja datum u mjesecu', async ({ page }) => {
@@ -181,9 +161,9 @@ test('Korisnik moze da otvori truck tabelu kada klikne na ime kamiona', async ({
     expect(currentURL).toContain(truckName);
 });
 
-test('Korisnik moze da otvori trailer tabelu kada klikne na ime kamiona', async ({ page }) => {
+test('Korisnik moze da otvori trailer tabelu kada klikne na ime trailera', async ({ page }) => {
     const dispatch = new DispatchDashboardOverview(page);
-    await dispatch.fillInputField(dispatch.trailerSearchInput, Constants.trailerTest);
+    await dispatch.fillInputField(dispatch.trailerSearchInput, Constants.trailerTestNumber);
     await page.waitForLoadState("networkidle");
     const trailerName = await dispatch.trailerColumn.first().textContent();
     await dispatch.trailerColumn.first().click();

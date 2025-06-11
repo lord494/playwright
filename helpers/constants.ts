@@ -6,6 +6,7 @@ export class Constants {
     static secondDriverName = 'playwrightTest';
     static secondDriver = 'secondDriver';
     static secondDriverTest = 'secondDriverPlaywright';
+    static driverNameFraser = 'Fraser Carlson';
     static owner = '4 Aces Logistics.';
     static secondOwner = 'Ace Trans Inc.';
     static ownerTrailer = '4D Production Inc.';
@@ -15,6 +16,7 @@ export class Constants {
     static secondDispatcher = 'Pex';
     static firstDispatcher = 'dis4';
     static secondSubstitutleDispatcher = 'Simonovic';
+    static dispatcherDispecko = 'Dispecko';
     static firtsSubstitutleDispatcher = 'QA Test';
     static playWrightUser = 'PlaywrightUser';
     static playWrightUserEmail = 'testplaywright@test.net';
@@ -22,6 +24,7 @@ export class Constants {
     static wrongEmailFormat = 'test@mail.n';
     static testUser = 'TestUser';
     static testEmail = 'bosko@superegoholding.net';
+    static appTest = 'AppTest';
     static password = 'playwrightpass123!';
 
     // ===== TRUCKS =====
@@ -34,6 +37,7 @@ export class Constants {
     static trailerTest = '118185';
     static availableTrailer = '78965';
     static secondTrailerName = '243648';
+    static trailerTestNumber = '130703';
     static trailerType = 'Trailer';
     static rocketCompany = 'Rocket';
 

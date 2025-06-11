@@ -212,7 +212,7 @@ test('Korisnik moze da izabere datume koji su u buducnosti u odnosu na selektova
     futureDate.setDate(selectedDay + 1);
     const futureDateDay = futureDate.getDate();
     const day = String(futureDateDay).padStart(2, '0');
-    const month = String(futureDate.getMonth()).padStart(2, '0');
+    const month = String(futureDate.getMonth() + 1).padStart(2, '0');
     const year = futureDate.getFullYear();
     const formattedFutureDate = `${month}/${day}/${year}`;
     const futureDateButton = page.locator(`.v-btn__content:has-text("${futureDateDay}")`);
@@ -282,7 +282,7 @@ test('Datum je po defaultu izabran kada izaberemo absence', async ({ page }) => 
     const selectedDay = parseInt(dateText?.trim() || '0', 10);
     const defaultDate = new Date();
     defaultDate.setDate(selectedDay);
-    const defaultMonth = String(defaultDate.getMonth()).padStart(2, '0');
+    const defaultMonth = String(defaultDate.getMonth() + 1).padStart(2, '0');
     const defaultYear = defaultDate.getFullYear();
     const formattedDefaultDate = `${defaultMonth}/${selectedDay.toString().padStart(2, '0')}/${defaultYear}`;
     await addLoad.okButtonInDatePicker.click();
