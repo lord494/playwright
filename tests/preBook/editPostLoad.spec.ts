@@ -45,7 +45,7 @@ test.beforeEach(async ({ page }) => {
     await expect(postLoad.loadIdColumn.first()).toContainText(loadId);
 });
 
-test.only('Korisnik moze da edituje post Load', async ({ page }) => {
+test('Korisnik moze da edituje post Load', async ({ page }) => {
     test.setTimeout(60_000);
     const postLoad = new PostLoadsPage(page);
     const add = new AddEditPostLoadPage(page);
