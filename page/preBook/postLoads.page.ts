@@ -29,6 +29,11 @@ export class PostLoadsPage extends BasePage {
     readonly deliveryColumn: Locator;
     readonly dedicatedColumn: Locator;
     readonly trailerTypeColumn: Locator;
+    readonly pencilIcon: Locator;
+    readonly numberOfLoad: Locator;
+    readonly dhoRadiusFeld: Locator;
+    readonly dhdRadiusField: Locator;
+    readonly xButtonInField: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -59,6 +64,11 @@ export class PostLoadsPage extends BasePage {
         this.deliveryColumn = page.locator('tr td:nth-child(8)');
         this.dedicatedColumn = page.locator('tr td:nth-child(9) i');
         this.trailerTypeColumn = page.locator('tr td:nth-child(11)');
+        this.pencilIcon = page.locator('.mdi.mdi-pencil');
+        this.numberOfLoad = page.locator('.text-caption');
+        this.dhoRadiusFeld = page.locator('div:nth-child(8) > .v-input__control > .v-input__slot');
+        this.dhdRadiusField = page.locator('div:nth-child(9) > .v-input__control > .v-input__slot');
+        this.xButtonInField = page.locator('.mdi-close');
     }
 
     async enterLoadIdSearchInpu(loadIdField: Locator, loadId: string) {

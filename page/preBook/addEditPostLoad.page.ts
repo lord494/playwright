@@ -24,6 +24,18 @@ export class AddEditPostLoadPage extends BasePage {
     readonly companyOption: Locator;
     readonly addEditDialogbox: Locator;
     readonly todayDate: Locator;
+    readonly miamiOption: Locator;
+    readonly newYorkOption: Locator;
+    readonly editTestCompanyOption: Locator;
+    readonly pickupTimeField: Locator;
+    readonly hours: Locator;
+    readonly secondHours: Locator;
+    readonly minutes: Locator;
+    readonly secondMinutes: Locator;
+    readonly toPickupTimeField: Locator;
+    readonly deliveryTimeField: Locator;
+    readonly toDilevryTimeField: Locator;
+    readonly trailerTypeOption: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -49,7 +61,18 @@ export class AddEditPostLoadPage extends BasePage {
         this.companyOption = page.getByRole('option', { name: '11 Test kompanija', exact: true });
         this.addEditDialogbox = page.locator('.v-dialog.v-dialog--active');
         this.todayDate = page.locator('.v-date-picker-table__current.v-btn--rounded');
-
+        this.miamiOption = page.getByRole('option', { name: 'Miami, FL', exact: true });
+        this.newYorkOption = page.getByRole('option', { name: 'New York, NY', exact: true });
+        this.editTestCompanyOption = page.getByRole('option', { name: '99 FREIGHT INC', exact: true });
+        this.pickupTimeField = page.getByRole('button', { name: 'P. Time *' });
+        this.deliveryTimeField = page.getByRole('button', { name: 'D. Time *' });
+        this.hours = page.locator('.v-time-picker-clock__item', { hasText: '3' });
+        this.secondHours = page.locator('.v-time-picker-clock__item', { hasText: '15' });
+        this.secondMinutes = page.locator('.v-time-picker-clock__item').filter({ hasText: '30' });
+        this.minutes = page.locator('.v-time-picker-clock__item').filter({ hasText: '40' });
+        this.toPickupTimeField = page.locator('div:nth-child(6) > .v-input');
+        this.toDilevryTimeField = page.locator('div:nth-child(9) > .v-input');
+        this.trailerTypeOption = page.getByRole('option', { name: 'R', exact: true });
     }
 
     async enterLoadId(loadIdField: Locator, loadId: string) {
@@ -80,6 +103,10 @@ export class AddEditPostLoadPage extends BasePage {
         await this.fillInputField(brokerPhoneField, phone);
     }
 
+    async selectTrailerType(trailerTypeMenu: Locator, trailerType: Locator) {
+        await this.selectFromMenu(trailerTypeMenu, trailerType);
+    }
+
     async enterNote(noteField: Locator, note: string) {
         await this.fillInputField(noteField, note);
     }
@@ -106,5 +133,11 @@ export class AddEditPostLoadPage extends BasePage {
     async selectTodayDate(dateField: Locator, date: Locator) {
         await dateField.click();
         await date.click();
+    }
+
+    async selectTime(timeField: Locator, hours: Locator, minutes: Locator) {
+        await timeField.click();
+        await hours.first().click();
+        await minutes.first().click();
     }
 }

@@ -1,7 +1,7 @@
 import { test, expect, Page, Locator } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { PostLoadsPage } from '../../page/preBook/postLoads.page';
-import { AddEditPostLoadPage } from '../../page/preBook/addPostLoad.page';
+import { AddEditPostLoadPage } from '../../page/preBook/addEditPostLoad.page';
 import { generateRandomString } from '../../helpers/dateUtilis';
 
 test.use({ storageState: 'auth.json' });
@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
     await page.waitForLoadState('networkidle');
 });
 
-test.only('Korisnik moze da doda post Load', async ({ page }) => {
+test('Korisnik moze da doda post Load', async ({ page }) => {
     const postLoad = new PostLoadsPage(page);
     const add = new AddEditPostLoadPage(page);
     const loadId = generateRandomString();
@@ -36,14 +36,13 @@ test.only('Korisnik moze da doda post Load', async ({ page }) => {
     await add.saveButton.click();
     await add.addEditDialogbox.waitFor({ state: 'detached', timeout: 5000 });
     await page.waitForLoadState('networkidle');
-    await postLoad.loadIdSearchInputField.click(); // fokus pre svega
+    await postLoad.loadIdSearchInputField.click();
     await page.waitForTimeout(100);
     for (const char of loadId) {
         await postLoad.loadIdSearchInputField.type(char);
         await page.waitForTimeout(300);
         await postLoad.loadIdSearchInputField.click();
     }
-    //await postLoad.enterLoadIdSearchInpu(postLoad.loadIdSearchInputField, loadId);
     const truckCell = page.locator(`tr:nth-child(1) td:nth-child(1):has-text("${loadId}")`);
     await truckCell.waitFor({ state: 'visible', timeout: 10000 });
     await expect(postLoad.loadIdColumn.first()).toContainText(loadId);
@@ -67,3 +66,4 @@ test.only('Korisnik moze da doda post Load', async ({ page }) => {
     await expect(postLoad.dedicatedColumn).toHaveClass(/mdi-alpha-d-box/);
     await expect(postLoad.trailerTypeColumn).toContainText(Constants.firstTrailerType);
 });
+

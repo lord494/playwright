@@ -47,6 +47,7 @@ export class Constants {
     static secondOwnerPhone = '777';
     static firstTrailerType = 'V';
     static secondTrailerType = 'S';
+    static trailerTypeR = 'R';
     static noteFirst = 'Default note';
     static noteSecond = 'Changed note';
     static firtsBoard = 'B1';
@@ -117,10 +118,13 @@ export class Constants {
     static testKompanija011 = '11 Test kompanija';
     static weight = '24000';
     static suggestedRate = '700';
-
-    // ===== COLORS =====
+    static freighttincCompany = '99 FREIGHT INC';
     static deliveryCity = "East Washington, PA";
     static seconDeliveryCity = "East Los Angeles, CA";
+    static miamiOriginCity = 'Miami, FL';
+    static newYorkCity = 'New York, NY';
+
+    // ===== COLORS =====
     static emptyNeedLoad = 'EMPTY, NEED LOAD';
     static emptyNeedLoadColor = 'rgb(183, 28, 28)';
     static loadedLoad = 'LOADED';
