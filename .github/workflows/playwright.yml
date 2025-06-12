@@ -1,20 +1,48 @@
-name: Run Playwright Tests
+# name: Run Playwright Tests
+
+# on:
+#   push:
+#     branches: [ main ]
+#   pull_request:
+#     branches: [ main ]
+
+# jobs:
+#   tests:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout repository
+#         uses: actions/checkout@v3
+
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: 18
+
+#       - name: Install dependencies
+#         run: npm ci
+
+#       - name: Install Playwright Browsers
+#         run: npx playwright install chromium
+
+#       - name: Run Playwright tests
+#         run: npx playwright test
+
+name: Run Changed Playwright Tests
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
-  tests:
+  run-playwright-tests:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -22,8 +50,27 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Install Playwright Browsers
+      - name: Install Playwright browsers
         run: npx playwright install chromium
 
-      - name: Run Playwright tests
-        run: npx playwright test
+      - name: Get changed test folders
+        id: detect
+        run: |
+          echo "CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})" >> $GITHUB_ENV
+          TEST_DIRS=""
+          for file in $(git diff --name-only ${{ github.event.before }} ${{ github.sha }}); do
+            if [[ "$file" == tests/truck/* ]]; then
+              TEST_DIRS="$TEST_DIRS tests/truck"
+            elif [[ "$file" == tests/trailer/* ]]; then
+              TEST_DIRS="$TEST_DIRS tests/trailer"
+            elif [[ "$file" == tests/companies/* ]]; then
+              TEST_DIRS="$TEST_DIRS tests/companies"
+            fi
+          done
+          echo "TEST_DIRS=$TEST_DIRS" >> $GITHUB_ENV
+
+      - name: Run changed Playwright tests
+        if: env.TEST_DIRS != ''
+        run: |
+          echo "Running tests in: $TEST_DIRS"
+          npx playwright test $TEST_DIRS
