@@ -52,7 +52,11 @@ jobs:
 
       - name: Install Playwright browsers
         run: npx playwright install chromium
-
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Ensure we have the full history for diffing 
+          
       - name: Get changed test folders
         id: detect
         run: |
