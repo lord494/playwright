@@ -1,6 +1,5 @@
 import { test, expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
-import { TrailerTypesPage } from '../../page/trailer/trailerTypes.page';
 import { TruckModelPage } from '../../page/truck/truckModel.page';
 
 test.use({ storageState: 'auth.json' });
