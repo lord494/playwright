@@ -9,6 +9,7 @@ test.beforeEach(async ({ page }) => {
 
 test('Korisnik moze da otvori side menu kada klikne na "hamburger" meni ', async ({ page }) => {
     const header = new HeaderPage(page);
+    //test
     await header.click(header.hamburgerMenu);
     await expect(header.connectionStatus).toBeVisible();
 });
