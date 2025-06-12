@@ -66,7 +66,6 @@ test('Korisnik moze da doda Board', async ({ page }) => {
 
 test('Korisnik moze da obrise Board', async ({ page }) => {
     const board = new BoardsPage(page);
-    await page.waitForLoadState('networkidle');
     const elements = await page.locator('tr td:nth-child(2)').all();
     const lastText = await elements[elements.length - 1].innerText();
     const nextNumber = parseInt(lastText, 10) + 1;
