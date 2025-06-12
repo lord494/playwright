@@ -27,7 +27,7 @@ test('Korisnik moze da doda Truck Model i da ga obrise', async ({ page }) => {
         await dialog.accept();
     });
     await truckModel.clickElement(truckModel.grayDeleteIcon.last());
-    await expect(truckModel.snackMessage).toContainText(Constants.makeName + " successfully deleted");
+    expect(truckModel.snackMessage).toContainText(Constants.makeName + " successfully deleted");
 });
 
 test('Name make type je obavezno polje', async ({ page }) => {
