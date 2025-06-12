@@ -65,6 +65,6 @@ test('Korisnik moze da doda Trailer Type, edituje i da ga obrise', async ({ page
 test('Test za testiranje cicd', async ({ page }) => {
     const type = new TrailerTypesPage(page);
     await page.goto(Constants.trailerUrl);
-    expect(page).toHaveURL(Constants.trailerUrl);
+    await expect(page).toHaveURL(Constants.trailerUrl);
 });
 

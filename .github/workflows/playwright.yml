@@ -41,6 +41,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # neophodno da bi git diff radio
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -52,15 +54,10 @@ jobs:
 
       - name: Install Playwright browsers
         run: npx playwright install chromium
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # Ensure we have the full history for diffing 
-          
+
       - name: Get changed test folders
         id: detect
         run: |
-          echo "CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})" >> $GITHUB_ENV
           TEST_DIRS=""
           for file in $(git diff --name-only ${{ github.event.before }} ${{ github.sha }}); do
             if [[ "$file" == tests/truck/* ]]; then
