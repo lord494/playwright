@@ -33,8 +33,6 @@ name: Run Changed Playwright Tests
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
 
 jobs:
   run-playwright-tests:
@@ -44,7 +42,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
         with:
-          fetch-depth: 0  # važno da imamo ceo Git diff
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -55,26 +53,30 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps
+        run: npx playwright install chromium
 
-      - name: Detect changed test folders
+      - name: Get changed test folders
         id: detect
         run: |
-          echo "📂 Git diff:"
-          git diff --name-only ${{ github.event.before }} ${{ github.sha }}
-          
-          TEST_DIRS=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
-            | grep '^tests/' \
-            | awk -F/ '{print $1"/"$2}' \
-            | sort -u | xargs)
-          
-          echo "✅ Detected changed test directories: $TEST_DIRS"
+          CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          echo "Changed files: $CHANGED"
+
+          TEST_DIRS=""
+          for file in $CHANGED; do
+            if [[ "$file" == tests/*/* ]]; then
+              dir=$(echo "$file" | cut -d/ -f1,2)
+              TEST_DIRS="$TEST_DIRS $dir"
+            fi
+          done
+
+          TEST_DIRS=$(echo "$TEST_DIRS" | xargs | tr ' ' '\n' | sort -u | tr '\n' ' ')
           echo "TEST_DIRS=$TEST_DIRS" >> $GITHUB_ENV
 
-      - name: Run Playwright tests for changed folders
+      - name: Debug output
+        run: |
+          echo "Will run tests in: $TEST_DIRS"
+
+      - name: Run changed Playwright tests
         if: env.TEST_DIRS != ''
         run: |
-          echo "🚀 Running tests in: $TEST_DIRS"
           npx playwright test $TEST_DIRS
-
-

@@ -130,6 +130,7 @@ test('Korisnik moze da otvori cargo claims iz safety menija ', async ({ page }) 
 
 test('Korisnik moze da otvori new drivers iz safety menija ', async ({ page }) => {
     const header = new HeaderPage(page);
+    console.log('test');
     await header.hoverAndClick(header.safetyButton, header.newDriversFromSafety);
     await expect(page).toHaveURL(/new-drivers/);
 });
