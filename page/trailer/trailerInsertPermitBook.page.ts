@@ -1,5 +1,7 @@
 import { Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
+import path from 'path';
+
 
 export class TrailerInsertPermitBookPage extends BasePage {
     readonly page: Page;
@@ -56,12 +58,11 @@ export class TrailerInsertPermitBookPage extends BasePage {
     }
 
     async uploadDocument(): Promise<void> {
-        await this.page.setInputFiles('input[type="file"]', 'C:/Users/Korisnik/Desktop/Super Ego Holding/Screenshots/SCTest.png');
+        await this.page.setInputFiles('input[type="file"]', path.resolve(__dirname, '../../helpers/sc/SCTest.png'));
     }
 
     async uploadDocumentOver10MB(): Promise<void> {
-        await this.page.setInputFiles('input[type="file"]', 'C:/Users/Korisnik/Desktop/Super Ego Holding/Screenshots/11mb.pdf');
-        await this.page.waitForLoadState('networkidle');
+        await this.page.setInputFiles('input[type="file"]', path.resolve(__dirname, '../../helpers/sc/11mb.pdf'));
     }
 
     async selectSubtypeFromMenu(menu: Locator, option: Locator): Promise<void> {

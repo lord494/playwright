@@ -11,6 +11,7 @@ test.beforeEach(async ({ page }) => {
     const truck = new TruckPage(page);
     const document = new TruckDocumentPage(page);
     await page.goto(Constants.truckUrl);
+    await truck.truckColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await truck.clickElement(truck.documentIcon.first());
     await document.deleteAllItemsWithDeleteIcon();
 });
@@ -22,6 +23,7 @@ test('Dodavanje dokumenta kojem je istekao datum vazenja', async ({ page }) => {
     const firstTruckName = await truck.truckColumn.first().allInnerTexts();
     await truck.clickElement(truck.uploadDocumentIcon.first());
     await upload.uploadDocument();
+    await page.waitForLoadState('networkidle');
     const formattedDate = await upload.selectPastExpiringDate();
     await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.registrationSubtype);
     const nameColumnInUpload = (await page.locator('.v-file-input__text').allInnerTexts())[0];
@@ -48,6 +50,7 @@ test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ page }
     const firstTruckName = await truck.truckColumn.first().allInnerTexts();
     await truck.clickElement(truck.uploadDocumentIcon.first());
     await upload.uploadDocument();
+    await page.waitForLoadState('networkidle');
     const formattedFutureDate = await upload.selectExpiringDateMoreThan30Days();
     await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.registrationSubtype);
     const nameColumnInUpload = (await page.locator('.v-file-input__text').allInnerTexts())[0];
@@ -74,6 +77,7 @@ test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ page }) => 
     const firstTruckName = await truck.truckColumn.first().allInnerTexts();
     await truck.clickElement(truck.uploadDocumentIcon.first());
     await upload.uploadDocument();
+    await page.waitForLoadState('networkidle');
     const formattedFutureDate = await upload.selectExpiringDateLessThan30Days();
     await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.registrationSubtype);
     const nameColumnInUpload = (await page.locator('.v-file-input__text').allInnerTexts())[0];
@@ -98,6 +102,7 @@ test('Korisnik ne moze da uradi upload za fajl koji je veci od 10mb', async ({ p
     const truck = new TruckPage(page);
     await truck.clickElement(truck.uploadDocumentIcon.first());
     await upload.uploadDocumentOver10MB();
+    await page.waitForLoadState('networkidle');
     await expect(upload.errorMessage.first()).toContainText('File is required and size should be less than 10 MB!');
 });
 
@@ -106,6 +111,7 @@ test('Expiring date je obavezno polje', async ({ page }) => {
     const truck = new TruckPage(page);
     await truck.clickElement(truck.uploadDocumentIcon.first());
     await upload.uploadDocument();
+    await page.waitForLoadState('networkidle');
     await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.registrationSubtype);
     await upload.clickElement(upload.savePermitButton);
     await expect(upload.errorMessage.first()).toContainText('Value is required');

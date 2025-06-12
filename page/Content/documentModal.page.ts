@@ -1,6 +1,6 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
-import { AddAndEditLoadModal } from "../dispatchDashboard/addAndEditLoad.page";
+import path from 'path';
 import { InsertPermitBookPage } from "./uploadDocuments.page";
 
 
@@ -73,13 +73,13 @@ export class DocumentPage extends BasePage {
 
     async uploadNewDocument(): Promise<void> {
         await this.changeFileButton.click();
-        await this.page.setInputFiles('input[type="file"]', 'C:/Users/Korisnik/Desktop/Super Ego Holding/Screenshots/playwright.png');
+        await this.page.setInputFiles('input[type="file"]', path.resolve(__dirname, '../../helpers/sc/playwright.png'));
         await this.page.waitForLoadState('networkidle');
     }
 
     async uploadDocumentOver10MB(): Promise<void> {
         await this.changeFileButton.click();
-        await this.page.setInputFiles('input[type="file"]', 'C:/Users/Korisnik/Desktop/Super Ego Holding/Screenshots/11mb.pdf');
+        await this.page.setInputFiles('input[type="file"]', path.resolve(__dirname, '../../helpers/sc/11mb.pdf'));
         await this.page.waitForLoadState('networkidle');
     }
 

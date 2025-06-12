@@ -4,7 +4,6 @@ import { TrailersPage } from '../../page/trailer/trailer.page';
 import { TrailerInsertPermitBookPage } from '../../page/trailer/trailerInsertPermitBook.page';
 import { TrailerDocumentPage } from '../../page/trailer/trailerDocument.page';
 
-
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
@@ -22,6 +21,7 @@ test('Dodavanje dokumenta kojem je istekao datum vazenja', async ({ page }) => {
     const firstTrailerName = await trailer.trailerNameColumn.first().allInnerTexts();
     await trailer.clickElement(trailer.uploadIcon.first());
     await upload.uploadDocument();
+    await page.waitForLoadState('networkidle');
     const formattedDate = await upload.selectPastExpiringDate();
     await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.registrationSubtype);
     const nameColumnInUpload = (await page.locator('.v-file-input__text').allInnerTexts())[0];
@@ -48,6 +48,7 @@ test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ page }
     const firtsCompanyName = await trailer.companyNameColumn.first().allInnerTexts();
     await trailer.clickElement(trailer.uploadIcon.first());
     await upload.uploadDocument();
+    await page.waitForLoadState('networkidle');
     const formattedFutureDate = await upload.selectExpiringDateMoreThan30Days();
     await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.registrationSubtype);
     const nameColumnInUpload = (await page.locator('.v-file-input__text').allInnerTexts())[0];
@@ -74,6 +75,7 @@ test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ page }) => 
     const firtsCompanyName = await trailer.companyNameColumn.first().allInnerTexts();
     await trailer.clickElement(trailer.uploadIcon.first());
     await upload.uploadDocument();
+    await page.waitForLoadState('networkidle');
     const formattedFutureDate = await upload.selectExpiringDateLessThan30Days();
     await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.registrationSubtype);
     const nameColumnInUpload = (await page.locator('.v-file-input__text').allInnerTexts())[0];
@@ -97,6 +99,12 @@ test('Korisnik ne moze da uradi upload za fajl koji je veci od 10mb', async ({ p
     const upload = new TrailerInsertPermitBookPage(page);
     const trailer = new TrailersPage(page);
     await trailer.clickElement(trailer.uploadIcon.first());
+    await page.waitForFunction(() => {
+        const el = document.querySelector('.v-dialog.v-dialog--active');
+        if (!el) return false;
+        const rect = el.getBoundingClientRect();
+        return rect.width === 500
+    }, { timeout: 10000 });
     await upload.uploadDocumentOver10MB();
     await expect(upload.errorMessage.first()).toContainText('File is required and size should be less than 10 MB!');
 });
@@ -106,6 +114,7 @@ test('Expiring date je obavezno polje', async ({ page }) => {
     const trailer = new TrailersPage(page);
     await trailer.clickElement(trailer.uploadIcon.first());
     await upload.uploadDocument();
+    await page.waitForLoadState('networkidle');
     await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.registrationSubtype);
     await upload.clickElement(upload.savePermitButton);
     await expect(upload.errorMessage.first()).toContainText('Value is required');

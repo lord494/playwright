@@ -30,7 +30,7 @@ test.describe('Testovi bez afterAll', () => {
         const edit = new EditDriver(page);
         await edit.dispatcher.clear();
         await edit.saveButton.click();
-        await expect(edit.errorMessage.nth(1)).toBeVisible();
+        await expect(edit.errorMessage.nth(0)).toBeVisible();
     });
 
     test('Phone je obavezno polje', async ({ page }) => {
