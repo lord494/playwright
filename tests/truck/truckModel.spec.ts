@@ -28,6 +28,7 @@ test('Korisnik moze da doda Truck Model i da ga obrise', async ({ page }) => {
     });
     await truckModel.clickElement(truckModel.grayDeleteIcon.last());
     await expect(truckModel.snackMessage).toContainText(Constants.makeName + " successfully deleted");
+    console.log('tes');
 });
 
 test('Name make type je obavezno polje', async ({ page }) => {
