@@ -7,6 +7,7 @@ let page: Page;
 
 test('Trailer number polje mora biti unique', async ({ page }) => {
     await page.goto(Constants.userUrl);
-    await expect(page).toHaveURL(Constants.userUrl);
     await page.waitForLoadState('networkidle');
+
+    await expect(page).toHaveURL(Constants.userUrl);
 });
