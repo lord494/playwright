@@ -44,7 +44,6 @@ test('Korisnik moze da otvori ordered modal', async ({ page }) => {
 
 test('Korisnik moze da doda Board', async ({ page }) => {
     const board = new BoardsPage(page);
-    console.log('test');
     await page.waitForLoadState('networkidle');
     const elements = await page.locator('tr td:nth-child(2)').all();
     const lastText = await elements[elements.length - 1].innerText();
