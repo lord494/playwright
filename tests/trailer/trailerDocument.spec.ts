@@ -163,6 +163,40 @@ test('Korisnik moze da otovori QR code modal', async ({ page }) => {
     await expect(document.titleInModal).toContainText('QR Code');
 });
 
+test('Korisnik moze da prebaci dokument vozaca', async ({ page }) => {
+    const upload = new InsertPermitBookPage(page);
+    const document = new TrailerDocumentPage(page);
+    const trailer = new TrailersPage(page);
+    await trailer.clickElement(trailer.documentIcon.first());
+    await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await document.clickElement(document.pencilIcon);
+    await document.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
+    await upload.selectDocumentType(upload.documentTypeField, upload.driverType);
+    await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.othersSubtype);
+    await page.waitForLoadState('networkidle');
+    await upload.doc.last().waitFor({ state: 'visible', timeout: 10000 });
+    await upload.enterTruckNumber(upload.documentReferrerMenu.last(), Constants.testEmail, upload.driverOption);
+    await page.waitForLoadState('networkidle');
+    await upload.savePermitButton.click();
+    await upload.loader.waitFor({ state: 'detached' });
+    await page.goto(Constants.permitBookUrl);
+    await page.waitForLoadState('networkidle');
+    await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await page.locator('.v-text-field__slot').first().click();
+    await page.locator('.v-text-field__slot').first().type(Constants.testUser);
+    await page.waitForLoadState('networkidle');
+    await upload.loader.waitFor({ state: 'hidden', timeout: 5000 });
+    const targetRow = page.locator('tr', {
+        has: page.locator('td:nth-child(3)', { hasText: Constants.testUser })
+    });
+    await targetRow.locator('.mdi-eye').click();
+    await expect(document.statusColumn).toContainText(Constants.expiredStatus);
+    await expect(document.statusColumn).toHaveCSS('background-color', Constants.expiredStatusColor);
+    await expect(document.typeColumn).toContainText(Constants.driverType);
+    await expect(document.companyColumn).toContainText(Constants.testEmail);
+    await expect(document.subTypeColumn).toContainText(Constants.otherSubtype);
+});
+
 test('Dokument moze da se prebaci na Truck', async ({ page }) => {
     const upload = new InsertPermitBookPage(page);
     const document = new TrailerDocumentPage(page);
@@ -246,40 +280,6 @@ test('Korisnik moze da prebaci dokument na drugi trailer', async ({ page }) => {
     await expect(document.statusColumn.first()).toHaveCSS('background-color', Constants.expiredStatusColor);
     await expect(document.typeColumn.first()).toContainText(Constants.trailerType);
     await expect(document.companyColumn.first()).toContainText(Constants.secondTrailerName);
-});
-
-test('Korisnik moze da prebaci dokument vozaca', async ({ page }) => {
-    const upload = new InsertPermitBookPage(page);
-    const document = new TrailerDocumentPage(page);
-    const trailer = new TrailersPage(page);
-    await trailer.clickElement(trailer.documentIcon.first());
-    await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await document.clickElement(document.pencilIcon);
-    await document.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
-    await upload.selectDocumentType(upload.documentTypeField, upload.driverType);
-    await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.othersSubtype);
-    await page.waitForLoadState('networkidle');
-    await upload.doc.last().waitFor({ state: 'visible', timeout: 10000 });
-    await upload.enterTruckNumber(upload.documentReferrerMenu.last(), Constants.testEmail, upload.driverOption);
-    await page.waitForLoadState('networkidle');
-    await upload.savePermitButton.click();
-    await upload.loader.waitFor({ state: 'detached' });
-    await page.goto(Constants.permitBookUrl);
-    await page.waitForLoadState('networkidle');
-    await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await page.locator('.v-text-field__slot').first().click();
-    await page.locator('.v-text-field__slot').first().type(Constants.testUser);
-    await page.waitForLoadState('networkidle');
-    await upload.loader.waitFor({ state: 'hidden', timeout: 5000 });
-    const targetRow = page.locator('tr', {
-        has: page.locator('td:nth-child(3)', { hasText: Constants.testUser })
-    });
-    await targetRow.locator('.mdi-eye').click();
-    await expect(document.statusColumn).toContainText(Constants.expiredStatus);
-    await expect(document.statusColumn).toHaveCSS('background-color', Constants.expiredStatusColor);
-    await expect(document.typeColumn).toContainText(Constants.driverType);
-    await expect(document.companyColumn).toContainText(Constants.testEmail);
-    await expect(document.subTypeColumn).toContainText(Constants.otherSubtype);
 });
 
 test('Document subtype polje je obavezno kada korisnik mijenja type', async ({ page }) => {
