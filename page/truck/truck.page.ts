@@ -199,11 +199,19 @@ export class TruckPage extends BasePage {
     }
 
     async selectOldState(oldState: Locator, optionFromMenu: Locator) {
-        await this.selectFromMenu(oldState, optionFromMenu);
+        await this.page.waitForTimeout(1000);
+        await oldState.waitFor({ state: 'visible', timeout: 3000 });
+        await oldState.click();
+        await this.page.waitForTimeout(1000);
+        await optionFromMenu.click();
     }
 
     async selectNewState(newState: Locator, optionFromMenu: Locator) {
-        await this.selectFromMenu(newState, optionFromMenu);
+        await this.page.waitForTimeout(1000);
+        await newState.waitFor({ state: 'visible', timeout: 3000 });
+        await newState.click();
+        await this.page.waitForTimeout(1000);
+        await optionFromMenu.click();
     }
 
     async enterOliType(oliTypeField: Locator, oil: string) {

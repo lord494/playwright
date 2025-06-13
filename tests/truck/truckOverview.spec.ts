@@ -167,7 +167,7 @@ test('Korisnik moze da doda, edituje i brise company history', async ({ page }) 
     }
     await truck.clickElement(truck.addHistoryButton);
     await truck.selectOldState(truck.oldState, truck.rocketCompanyOption);
-    await truck.selectNewState(truck.newState, truck.testCompanyOption.last());
+    await truck.selectNewState(truck.newState, truck.testCompanyOption);
     await truck.dateOfChanged.click();
     await truck.currentDate.click();
     await truck.editButton.click();

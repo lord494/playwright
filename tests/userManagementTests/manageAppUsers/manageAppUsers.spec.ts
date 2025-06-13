@@ -93,8 +93,9 @@ test('X ikonica se prikaze kada korisnik unese nesto u search polja i korisnik m
 
 test('Korisnik moze da konektuje usera sa vozacem', async ({ page }) => {
     const app = new ManageAppUserPage(page);
-    await app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail)
-    await app.card.nth(5).waitFor({ state: 'hidden', timeout: 5000 });
+    await app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail);
+    await page.waitForLoadState('networkidle');
+    await app.card.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
     await app.selectDriverFromMenu(app.driverMenu, 'test', app.driverTestOption);
     await app.clickElement(app.saveButton);
     await app.connectDriverModal.waitFor({ state: 'detached', timeout: 5000 });
@@ -106,7 +107,8 @@ test('Korisnik moze da konektuje usera sa vozacem', async ({ page }) => {
 
 test('Korisnik moze da dozvoli self dispatch vozacu', async ({ page }) => {
     const app = new ManageAppUserPage(page);
-    await app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail)
+    await app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail);
+    await page.waitForLoadState('networkidle');
     await app.card.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
     if (await app.allowSelfDispatch.isVisible()) {
         await app.allowSelfDispatch.click();
