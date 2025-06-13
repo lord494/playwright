@@ -7,16 +7,16 @@ import { MenageFM } from '../../../page/Content/manageFM.page';
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
+    const fm = new MenageFM(page);
     await page.goto(Constants.menageFMUrl);
+    await fm.card.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 
 test('Korisnik moze da uradi drag and drop kamiona koji nema fm u neku karticu', async ({ page }) => {
     const fm = new MenageFM(page);
-
     await fm.card.first().waitFor({ state: 'visible', timeout: 5000 });
     await fm.searchTruckNumberAndFM(fm.searchDrivers, Constants.truckNumberFM);
     await fm.driverNumberAndDriversWithoutFM.nth(5).waitFor({ state: "hidden", timeout: 5000 });
-
     await fm.dragAndDrop();
     await page.waitForLoadState('networkidle');
     await expect(fm.card.first()).toContainText(Constants.truckNumberFM);
@@ -35,7 +35,6 @@ test('Korisnik moze da uradi drag and drop kamiona koji nema fm u neku karticu',
             break;
         }
     }
-
     await page.waitForLoadState('networkidle');
 });
 

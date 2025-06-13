@@ -1,4 +1,4 @@
-import { test, expect, chromium, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { DispatchDashboardOverview } from '../../page/dispatchDashboard/dispatchDashboardOverview.page';
 import { Constants } from '../../helpers/constants';
 import { AddAndEditLoadModal } from '../../page/dispatchDashboard/addAndEditLoad.page';
@@ -10,6 +10,7 @@ test.beforeEach(async ({ page }) => {
     const dashboard = new DispatchDashboardOverview(page);
     await page.goto(Constants.dashboardUrl);
     await page.waitForLoadState('networkidle');
+    await dashboard.loadColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await dashboard.fillInputField(dashboard.nameSearchInput, Constants.driverName);
     const nameText = dashboard.driverNameColumn.filter({ hasText: Constants.driverName });
     await nameText.waitFor({ state: 'visible', timeout: 5000 });

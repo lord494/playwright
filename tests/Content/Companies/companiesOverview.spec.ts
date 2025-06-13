@@ -5,7 +5,9 @@ import { CompaniesPage } from '../../../page/Content/companies.page';
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
+    const companies = new CompaniesPage(page);
     await page.goto(Constants.companiesUrl);
+    await companies.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 
 test('10 rows per page je prikazano po defaultu', async ({ page }) => {

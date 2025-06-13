@@ -11,6 +11,7 @@ test.beforeEach(async ({ page }) => {
     const company = new CompaniesPage(page);
     const document = new DocumentPage(page);
     await page.goto(Constants.companiesUrl);
+    await company.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await company.clickElement(company.documentIcon.first());
     await document.deleteAllItemsWithDeleteIcon();
 });
