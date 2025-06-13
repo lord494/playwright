@@ -5,8 +5,9 @@ import { TruckModelPage } from '../../page/truck/truckModel.page';
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
+    const truckModel = new TruckModelPage(page);
     await page.goto(Constants.truckModelUrl);
-    await page.waitForLoadState('networkidle');
+    await truckModel.modelNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 
 test('Korisnik moze da doda Truck Model i da ga obrise', async ({ page }) => {

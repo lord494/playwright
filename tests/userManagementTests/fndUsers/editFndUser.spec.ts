@@ -7,8 +7,9 @@ import { FndUserPage } from '../../../page/userManagement/fndUsers/fndUser.page'
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
-    await page.goto(Constants.fndUserUrl);
     const user = new FndUserPage(page);
+    await page.goto(Constants.fndUserUrl);
+    await user.userNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await user.pencilIcon.first().click();
     const fndBoard = page.locator('tr', {
         has: page.locator('td:nth-child(3)', { hasText: 'Fnd User' })

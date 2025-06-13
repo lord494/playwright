@@ -5,8 +5,9 @@ import { TruckMakePage } from '../../page/truck/truckMake.page';
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
+    const make = new TruckMakePage(page);
     await page.goto(Constants.truckMakeUrl);
-    await page.waitForLoadState('networkidle');
+    await make.makeNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 
 test('Korisnik moze da doda Truck Make i da ga obrise', async ({ page }) => {

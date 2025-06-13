@@ -5,18 +5,17 @@ import { UsersPage } from '../../../page/userManagement/users/users.page';
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
+    const user = new UsersPage(page);
     await page.goto(Constants.userUrl);
+    await user.emailColumn.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 
 test('Korisnik moze da pretrazuje Usera po imenu', async ({ page }) => {
     const user = new UsersPage(page);
     await user.boardColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await user.searchUser(user.searchInputField, Constants.playWrightUser);
-    await page.waitForLoadState('networkidle');
-    const targetRow = page.locator('tr', {
-        has: page.locator('td:nth-child(1)', { hasText: Constants.playWrightUser })
-    });
-    await targetRow.first().waitFor({ state: 'visible', timeout: 5000 });
+    const userNameCell = page.locator(`td:nth-child(1):has-text("${Constants.playWrightUser}")`);
+    await expect(userNameCell.first()).toBeVisible({ timeout: 10000 });
     const rowCount = await user.userNameColumn.count();
     for (let i = 0; i < rowCount; i++) {
         const rowText = await user.userNameColumn.nth(i).innerText();
@@ -27,6 +26,8 @@ test('Korisnik moze da pretrazuje Usera po imenu', async ({ page }) => {
 test('Korisnik moze da pretrazuje Usera po email-u', async ({ page }) => {
     const user = new UsersPage(page);
     await user.searchUser(user.searchInputField, Constants.playWrightUserEmail);
+    const emailCell = page.locator(`td:nth-child(4):has-text("${Constants.playWrightUserEmail}")`);
+    await expect(emailCell.first()).toBeVisible({ timeout: 10000 });
     await user.emailColumn.nth(3).waitFor({ state: 'hidden', timeout: 5000 });
     await expect(user.emailColumn).toContainText(Constants.playWrightUserEmail);
 });

@@ -13,7 +13,7 @@ test.beforeEach(async ({ page }) => {
 test('Korisnik moze da pretrazuje usere po emailu', async ({ page }) => {
     const app = new ManageAppUserPage(page);
     await app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail);
-    await app.card.nth(5).waitFor({ state: 'hidden', timeout: 3000 });
+    await app.card.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
     await expect(app.card).toContainText(Constants.testEmail);
 });
 

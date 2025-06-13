@@ -1,12 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { Constants } from '../../../helpers/constants';
 import { RolesPage } from '../../../page/userManagement/roles/rolesOverview.page';
-import { generateUniqueRoleName } from '../../../helpers/dateUtilis';
+import { generateUniqueRoleName, get6RandomNumber } from '../../../helpers/dateUtilis';
 
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
+    const roles = new RolesPage(page);
     await page.goto(Constants.rolesUrl);
+    await roles.addRoleIcon.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 
 test('30 rows per page je prikazano po defaultu', async ({ page }) => {
@@ -94,7 +96,7 @@ test('Provjera da permisija moze da se doda i vracanje permisije u all permision
 test('Dodavanje role sa dodavanjem vise permisija', async ({ page }) => {
     const roles = new RolesPage(page);
     await roles.clickElement(roles.addRoleIcon);
-    const roleName = generateUniqueRoleName();
+    const roleName = 'Playwright Role ' + get6RandomNumber().join('');
     const expectedText = roleName.toUpperCase();
     await roles.enterRoleName(roles.nameRoleField, roleName);
     await roles.dragAndDropPermissionToCurrentPermissionsBoxAddModal();
