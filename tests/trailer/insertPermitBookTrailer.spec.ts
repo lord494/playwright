@@ -10,6 +10,7 @@ test.beforeEach(async ({ page }) => {
     const trailer = new TrailersPage(page);
     const document = new TrailerDocumentPage(page);
     await page.goto(Constants.trailerUrl);
+    await trailer.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await trailer.clickElement(trailer.documentIcon.first());
     await document.deleteAllItemsWithDeleteIcon();
 });

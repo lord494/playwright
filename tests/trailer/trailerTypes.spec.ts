@@ -5,7 +5,9 @@ import { TrailerTypesPage } from '../../page/trailer/trailerTypes.page';
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
+    const type = new TrailerTypesPage(page);
     await page.goto(Constants.trailerTypesUrl);
+    await type.typeNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 
 test('Korisnik moze da doda Trailer Type i da ga obrise', async ({ page }) => {

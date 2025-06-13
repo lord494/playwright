@@ -9,8 +9,9 @@ test.use({ storageState: 'auth.json' });
 let page: Page;
 
 test.beforeEach(async ({ page }) => {
+    const trailer = new TrailersPage(page);
     await page.goto(Constants.trailerUrl);
-    await page.waitForLoadState('networkidle');
+    await trailer.addButton.waitFor({ state: 'visible', timeout: 10000 });
 });
 
 test('Korisnik moze da doda trailer', async ({ page }) => {

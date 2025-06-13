@@ -5,7 +5,9 @@ import { TrailerMakesPage } from '../../page/trailer/trailerMakes.page';
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
+    const make = new TrailerMakesPage(page);
     await page.goto(Constants.trailerMakesUrl);
+    await make.makeNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 
 test('Korisnik moze da doda Trailer Make i da ga obrise', async ({ page }) => {

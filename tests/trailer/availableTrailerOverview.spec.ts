@@ -7,8 +7,9 @@ test.use({ storageState: 'auth.json' });
 let page: Page;
 
 test.beforeEach(async ({ page }) => {
+    const availableTrailer = new AvailableTrailersPage(page);
     await page.goto(Constants.availableTrailerUrl)
-    await page.waitForLoadState('networkidle');
+    await availableTrailer.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 
 test('Korisnik moze da pretrazuje trailer po kompaniji', async ({ page }) => {

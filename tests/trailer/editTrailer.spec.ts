@@ -13,6 +13,7 @@ test.beforeEach(async ({ page }) => {
     const trailer = new TrailersPage(page);
     const add = new AddTrailersPage(page);
     await page.goto(Constants.trailerUrl);
+    await trailer.truckColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await page.waitForLoadState('networkidle');
     await trailer.clickElement(trailer.addButton);
     await page.waitForLoadState('networkidle');
