@@ -8,6 +8,12 @@ test.beforeEach(async ({ page }) => {
     const app = new ManageAppUserPage(page);
     await page.goto(Constants.manageAppUsersUrl);
     await app.card.first().waitFor({ state: 'visible', timeout: 10000 });
+    page.on('response', async response => {
+        if (response.url().includes('/api/claims/types')) {
+            console.log('[Response]', response.status(), response.url());
+        }
+    });
+
 });
 
 test('Korisnik moze da pretrazuje usere po emailu', async ({ page }) => {
