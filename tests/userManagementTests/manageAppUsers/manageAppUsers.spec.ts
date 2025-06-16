@@ -107,6 +107,7 @@ test('Korisnik moze da konektuje usera sa vozacem', async ({ page }) => {
 
 test('Korisnik moze da dozvoli self dispatch vozacu', async ({ page }) => {
     const app = new ManageAppUserPage(page);
+    await page.waitForTimeout(5000);
     await app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail);
     await page.waitForLoadState('networkidle');
     await app.card.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
@@ -120,6 +121,7 @@ test('Korisnik moze da dozvoli self dispatch vozacu', async ({ page }) => {
 
 test('Korisnik moze da verifikuje vozaca', async ({ page }) => {
     const app = new ManageAppUserPage(page);
+    await page.waitForTimeout(5000);
     await app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail)
     await app.card.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
     page.on('dialog', async (dialog) => {
