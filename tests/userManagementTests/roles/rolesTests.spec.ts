@@ -1,14 +1,19 @@
 import { test, expect } from '@playwright/test';
 import { Constants } from '../../../helpers/constants';
 import { RolesPage } from '../../../page/userManagement/roles/rolesOverview.page';
-import { generateUniqueRoleName, get6RandomNumber } from '../../../helpers/dateUtilis';
+import { get6RandomNumber } from '../../../helpers/dateUtilis';
 
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
     const roles = new RolesPage(page);
-    await page.goto(Constants.rolesUrl);
-    await roles.addRoleIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await Promise.all([
+        page.waitForResponse(response =>
+            response.url().includes('/api/claims/types') &&
+            (response.status() === 200 || response.status() === 304)
+        ),
+        page.goto(Constants.rolesUrl)
+    ]);
 });
 
 test('30 rows per page je prikazano po defaultu', async ({ page }) => {

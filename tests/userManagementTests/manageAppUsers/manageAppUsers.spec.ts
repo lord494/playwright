@@ -1,4 +1,4 @@
-import { test, expect, chromium, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { Constants } from '../../../helpers/constants';
 import { ManageAppUserPage } from '../../../page/userManagement/manageAppUsers/manageAppUserOverview.page';
 
@@ -13,7 +13,6 @@ test.beforeEach(async ({ page }) => {
         ),
         page.goto(Constants.manageAppUsersUrl)
     ]);
-
 });
 
 test('Korisnik moze da pretrazuje usere po emailu', async ({ page }) => {
@@ -113,7 +112,6 @@ test('Korisnik moze da konektuje usera sa vozacem', async ({ page }) => {
 
 test('Korisnik moze da dozvoli self dispatch vozacu', async ({ page }) => {
     const app = new ManageAppUserPage(page);
-    await page.waitForTimeout(5000);
     await app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail);
     await page.waitForLoadState('networkidle');
     await app.card.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
@@ -122,12 +120,10 @@ test('Korisnik moze da dozvoli self dispatch vozacu', async ({ page }) => {
     }
     await app.clickElement(app.forbidSelfDispatch);
     await expect(app.allowSelfDispatch).toBeVisible();
-    //test123
 });
 
 test('Korisnik moze da verifikuje vozaca', async ({ page }) => {
     const app = new ManageAppUserPage(page);
-    await page.waitForTimeout(5000);
     await app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail)
     await app.card.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
     page.on('dialog', async (dialog) => {
@@ -140,33 +136,3 @@ test('Korisnik moze da verifikuje vozaca', async ({ page }) => {
     await app.clickElement(app.unverifyIcon);
     await expect(app.verifyIconIcon).toBeVisible();
 });
-
-//Testovi koje je napisao coplilot, treba ih proveriti
-
-// test('Korisnik moze da unverify vozaca', async ({ page }) => {
-//     const app = new ManageAppUserPage(page);
-//     await app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail)
-//     await app.card.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
-//     page.on('dialog', async (dialog) => {
-//         await dialog.accept();
-//     });
-//     if (await app.unverifyIcon.isVisible()) {
-//         await app.unverifyIcon.click();
-//         await app.snackMessage.waitFor({ state: 'visible', timeout: 5000 });
-//     }
-//     await app.clickElement(app.verifyIconIcon);
-//     await expect(app.unverifyIcon).toBeVisible();
-// });
-// test('Korisnik moze da unconnectuje vozaca', async ({ page }) => {
-//     const app = new ManageAppUserPage(page);
-//     await app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail)
-//     await app.card.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
-//     page.on('dialog', async (dialog) => {
-//         await dialog.accept();
-//     });
-//     if (await app.xIconOnDispatherField.isVisible()) {
-//         await app.xIconOnDispatherField.click();
-//         await app.snackMessage.waitFor({ state: 'visible', timeout: 5000 });
-//     }
-//     await expect(app.dispathersInCard).toBeEmpty;
-// });
