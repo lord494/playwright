@@ -11,6 +11,9 @@ export default defineConfig({
     browserName: 'chromium',
     trace: 'on-first-retry',
     storageState: 'auth.json',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
+  reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }]],
   globalSetup: require.resolve('./globalSetup'),
 });

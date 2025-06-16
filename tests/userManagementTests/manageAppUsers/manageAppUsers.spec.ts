@@ -115,6 +115,7 @@ test('Korisnik moze da dozvoli self dispatch vozacu', async ({ page }) => {
     }
     await app.clickElement(app.forbidSelfDispatch);
     await expect(app.allowSelfDispatch).toBeVisible();
+    //test
 });
 
 test('Korisnik moze da verifikuje vozaca', async ({ page }) => {
