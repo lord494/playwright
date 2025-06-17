@@ -34,7 +34,7 @@ export class TrailerInsertPermitBookPage extends BasePage {
         this.page = page;
         this.insertDocumentField = page.locator('.v-text-field--is-booted.v-file-input .v-text-field__slot');
         this.documentNameField = page.locator('.v-input.v-input--has-state .v-input__control .v-input__slot');
-        this.expiringDateField = page.locator('.v-input--is-readonly.theme--light.v-text-field .v-text-field__slot').first();
+        this.expiringDateField = page.getByRole('button', { name: 'Choose expiring date' });
         this.documentSubtypeField = page.locator('.v-select__slot', { hasText: 'Select document subtype' });
         this.documentTypeField = page.locator('.v-select__slot', { hasText: 'Select document type' });
         this.truckType = page.getByRole('option', { name: 'Truck', exact: true });
