@@ -4,7 +4,6 @@ import { TruckPage } from '../../page/truck/truck.page';
 import { TruckDocumentPage } from '../../page/truck/truckDocument.page';
 import { TruckInsertPermitBook } from '../../page/truck/truckInsertPermitBook.page';
 
-
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {

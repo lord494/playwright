@@ -1,12 +1,10 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { get17RandomNumbers, get6RandomNumber } from '../../helpers/dateUtilis';
 import { AddAvailableTrailersPage } from '../../page/trailer/addAvailableTrailer.page';
 import { AvailableTrailersPage } from '../../page/trailer/availableTrailer.page';
 
 test.use({ storageState: 'auth.json' });
-
-let page: Page;
 
 test.beforeEach(async ({ page }) => {
     await page.goto(Constants.availableTrailerUrl);

@@ -1,10 +1,8 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { TruckPage } from '../../page/truck/truck.page';
 
 test.use({ storageState: 'auth.json' });
-
-let page: Page;
 
 test.beforeEach(async ({ page }) => {
     const truck = new TruckPage(page);

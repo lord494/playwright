@@ -1,4 +1,4 @@
-import { test, expect, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { AddTrailersPage } from '../../page/trailer/addTrailer.page';
 import { get17RandomNumbers, get6RandomNumber } from '../../helpers/dateUtilis';
@@ -6,8 +6,6 @@ import { EditTrailersPage } from '../../page/trailer/editTrailer.page';
 import { AvailableTrailersPage } from '../../page/trailer/availableTrailer.page';
 
 test.use({ storageState: 'auth.json' });
-
-let page: Page;
 
 test.beforeEach(async ({ page }) => {
     const trailer = new AvailableTrailersPage(page);
