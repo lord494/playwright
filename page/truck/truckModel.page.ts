@@ -65,4 +65,5 @@ export class TruckModelPage extends BasePage {
             await toggleButton.click();
         }
     }
+
 }
