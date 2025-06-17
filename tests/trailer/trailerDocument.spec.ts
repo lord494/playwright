@@ -52,14 +52,7 @@ test.beforeEach(async ({ page }) => {
     await page.goto(Constants.trailerUrl);
     await trailer.clickElement(trailer.documentIcon.first());
     await document2.deleteAllItemsWithDeleteIconForDrivers();
-    //await trailer.clickElement(trailer.uploadIcon.first());
-    await Promise.all([
-        page.waitForResponse(response =>
-            response.url().includes('/api/trailers/all?search=') &&
-            response.status() === 200
-        ),
-        await trailer.uploadIcon.first().click()
-    ]);
+    await trailer.clickElement(trailer.uploadIcon.first());
     await page.waitForFunction(() => {
         const el = document.querySelector('.v-dialog.v-dialog--active');
         if (!el) return false;
