@@ -131,6 +131,7 @@ export class TruckInsertPermitBook extends BasePage {
         const selectedDay = parseInt(dateText?.trim() || '0', 10);
         const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
         await nextMonthButton.click();
+        await this.page.waitForTimeout(1000);
         const futureDate = new Date();
         futureDate.setMonth(futureDate.getMonth() + 1);
         futureDate.setDate(selectedDay);
@@ -138,6 +139,7 @@ export class TruckInsertPermitBook extends BasePage {
         const futureDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${dayToSelect}")`);
         await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
         await futureDateButton.first().click();
+        await this.page.waitForTimeout(1000);
         await this.okButtonInDatePicekr.click();
         await this.page.waitForTimeout(1000);
         const formattedDate = futureDate.toLocaleDateString('en-US', {

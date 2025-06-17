@@ -32,15 +32,6 @@ test.beforeEach(async ({ page }) => {
         await addLoad.addLoadModal.waitFor({ state: 'detached', timeout: 10000 });
         await expect(dashboard.loadColumn.first()).toContainText(Constants.deliveryCity);
     };
-    // } else {
-    //     await dashboard.loadColumn.first().click({ button: 'right' });
-    // await dashboard.loadColumn.first().click({ button: "right" });
-    // await addLoad.deleteLoadButton.click();
-    // await addLoad.addLoadModal.waitFor({ state: 'detached', timeout: 10000 });
-    // await expect(dashboard.loadColumn.first()).not.toContainText(Constants.deliveryCity);
-    //}
-    // await addLoad.addLoadModal.waitFor({ state: 'detached', timeout: 10000 });
-    // await dashboard.loadColumn.first().click({ button: 'right' });
     await dashboard.loadColumn.first().click({ button: 'right' });
 });
 

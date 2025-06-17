@@ -1,3 +1,63 @@
+# name: Run Changed Playwright Tests
+
+# on:
+#   push:
+#     branches: [ main ]
+
+# jobs:
+#   run-playwright-tests:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v3
+#         with:
+#           fetch-depth: 0
+
+#       - name: Set up Node.js
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: 18
+
+#       - name: Install dependencies
+#         run: npm ci
+
+#       - name: Install Playwright browsers
+#         run: npx playwright install chromium
+
+#       - name: Get changed test folders
+#         id: detect
+#         run: |
+#           CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+#           echo "Changed files: $CHANGED"
+
+#           TEST_DIRS=""
+#           for file in $CHANGED; do
+#             if [[ "$file" == tests/*/* ]]; then
+#               dir=$(echo "$file" | cut -d/ -f1,2)
+#               TEST_DIRS="$TEST_DIRS $dir"
+#             fi
+#           done
+
+#           TEST_DIRS=$(echo "$TEST_DIRS" | xargs | tr ' ' '\n' | sort -u | tr '\n' ' ')
+#           echo "TEST_DIRS=$TEST_DIRS" >> $GITHUB_ENV
+
+#       - name: Debug output
+#         run: |
+#           echo "Will run tests in: $TEST_DIRS"
+
+#       - name: Run changed Playwright tests
+#         if: env.TEST_DIRS != ''
+#         run: |
+#           npx playwright test $TEST_DIRS
+
+#       - name: Upload Playwright HTML Report
+#         if: always()
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: playwright-report
+#           path: playwright-report
+
 name: Run Changed Playwright Tests
 
 on:
@@ -32,14 +92,24 @@ jobs:
           echo "Changed files: $CHANGED"
 
           TEST_DIRS=""
+
           for file in $CHANGED; do
+            # Ako je direktno test fajl
             if [[ "$file" == tests/*/* ]]; then
               dir=$(echo "$file" | cut -d/ -f1,2)
               TEST_DIRS="$TEST_DIRS $dir"
             fi
+
+            # Ako je promenjen neki page fajl
+            if [[ "$file" == pages/*.ts ]]; then
+              base=$(basename "$file")
+              name="${base%%.*}" # npr trailer iz trailer.page.ts
+              TEST_DIRS="$TEST_DIRS tests/$name"
+            fi
           done
 
-          TEST_DIRS=$(echo "$TEST_DIRS" | xargs | tr ' ' '\n' | sort -u | tr '\n' ' ')
+          # Uklanjanje duplikata
+          TEST_DIRS=$(echo "$TEST_DIRS" | xargs -n1 | sort -u | tr '\n' ' ')
           echo "TEST_DIRS=$TEST_DIRS" >> $GITHUB_ENV
 
       - name: Debug output
