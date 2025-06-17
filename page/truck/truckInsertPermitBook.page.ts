@@ -80,12 +80,14 @@ export class TruckInsertPermitBook extends BasePage {
 
     async selectPastExpiringDate(): Promise<string> {
         await this.expiringDateField.click();
+        await this.page.waitForTimeout(1000);
         const dateText = await this.currentDate.textContent();
         const selectedDay = parseInt(dateText?.trim() || '0', 10);
         const pastDay = selectedDay > 1 ? selectedDay - 1 : 1;
         const pastDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${pastDay}")`);
         await pastDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
         await pastDateButton.first().click();
+        await this.page.waitForTimeout(1000);
         await this.okButtonInDatePicekr.click();
         const expectedDate = new Date();
         expectedDate.setDate(pastDay);
@@ -99,6 +101,7 @@ export class TruckInsertPermitBook extends BasePage {
 
     async selectExpiringDateMoreThan30Days(): Promise<string> {
         await this.expiringDateField.click();
+        await this.page.waitForTimeout(1000);
         const dateText = await this.currentDate.textContent();
         const selectedDay = parseInt(dateText?.trim() || '0', 10);
         const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
@@ -111,6 +114,7 @@ export class TruckInsertPermitBook extends BasePage {
         const futureDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${futureDateDay}")`);
         await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
         await futureDateButton.first().click();
+        await this.page.waitForTimeout(1000);
         await this.okButtonInDatePicekr.click();
         const formattedFutureDate = futureDate.toLocaleDateString('en-US', {
             year: 'numeric',
@@ -122,6 +126,7 @@ export class TruckInsertPermitBook extends BasePage {
 
     async selectExpiringDateLessThan30Days(): Promise<string> {
         await this.expiringDateField.click();
+        await this.page.waitForTimeout(1000);
         const dateText = await this.currentDate.textContent();
         const selectedDay = parseInt(dateText?.trim() || '0', 10);
         const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
@@ -134,6 +139,7 @@ export class TruckInsertPermitBook extends BasePage {
         await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
         await futureDateButton.first().click();
         await this.okButtonInDatePicekr.click();
+        await this.page.waitForTimeout(1000);
         const formattedDate = futureDate.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
