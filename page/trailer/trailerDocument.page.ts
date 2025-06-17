@@ -3,7 +3,6 @@ import { BasePage } from "../../helpers/base";
 import { InsertPermitBookPage } from "../Content/uploadDocuments.page";
 import path from 'path';
 
-
 export class TrailerDocumentPage extends BasePage {
     readonly page: Page;
     readonly deleteIconsInDocumentModal: Locator;
