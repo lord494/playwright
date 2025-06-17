@@ -149,4 +149,5 @@ export class TrailerInsertPermitBookPage extends BasePage {
 
         return formattedDate;
     }
+
 }
