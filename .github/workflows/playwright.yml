@@ -89,7 +89,8 @@ jobs:
         id: detect
         run: |
           CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-          echo "Changed files: $CHANGED"
+          echo "Changed files:"
+          echo "$CHANGED"
 
           TEST_DIRS=""
 
@@ -100,15 +101,14 @@ jobs:
               TEST_DIRS="$TEST_DIRS $dir"
             fi
 
-            # Ako je promenjen neki page fajl
-            if [[ "$file" == pages/*.ts ]]; then
-              base=$(basename "$file")
-              name="${base%%.*}" # npr trailer iz trailer.page.ts
-              TEST_DIRS="$TEST_DIRS tests/$name"
+            # Ako je fajl u page podfolderu (npr. pages/trailer/trailer.page.ts)
+            if [[ "$file" == pages/*/* ]]; then
+              subfolder=$(echo "$file" | cut -d/ -f2)
+              TEST_DIRS="$TEST_DIRS tests/$subfolder"
             fi
           done
 
-          # Uklanjanje duplikata
+          # Ukloni duplikate
           TEST_DIRS=$(echo "$TEST_DIRS" | xargs -n1 | sort -u | tr '\n' ' ')
           echo "TEST_DIRS=$TEST_DIRS" >> $GITHUB_ENV
 
@@ -127,3 +127,4 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report
+

@@ -241,5 +241,4 @@ export class TruckPage extends BasePage {
     async enterShopInfo(shopInfoField: Locator, info: string) {
         await this.fillInputField(shopInfoField, info);
     }
-
 }
