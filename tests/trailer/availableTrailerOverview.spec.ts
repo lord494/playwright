@@ -6,7 +6,7 @@ test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
     const availableTrailer = new AvailableTrailersPage(page);
-    await page.goto(Constants.availableTrailerUrl)
+    await page.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle' })
     await availableTrailer.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 

@@ -7,8 +7,7 @@ import { AvailableTrailersPage } from '../../page/trailer/availableTrailer.page'
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
-    await page.goto(Constants.availableTrailerUrl);
-    await page.waitForLoadState('networkidle');
+    await page.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle' });
 });
 
 test('Korisnik moze da doda trailer', async ({ page }) => {

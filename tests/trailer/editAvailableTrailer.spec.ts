@@ -10,7 +10,7 @@ test.use({ storageState: 'auth.json' });
 test.beforeEach(async ({ page }) => {
     const trailer = new AvailableTrailersPage(page);
     const add = new AddTrailersPage(page);
-    await page.goto(Constants.availableTrailerUrl);
+    await page.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle' });
     await trailer.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await page.waitForLoadState('networkidle');
     await trailer.clickElement(trailer.addButton);

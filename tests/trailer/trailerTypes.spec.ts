@@ -6,7 +6,7 @@ test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
     const type = new TrailerTypesPage(page);
-    await page.goto(Constants.trailerTypesUrl);
+    await page.goto(Constants.trailerTypesUrl, { waitUntil: 'networkidle' });
     await type.typeNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 

@@ -8,7 +8,7 @@ test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
     const trailer = new TrailersPage(page);
-    await page.goto(Constants.trailerUrl);
+    await page.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
     await trailer.addButton.waitFor({ state: 'visible', timeout: 10000 });
 });
 
