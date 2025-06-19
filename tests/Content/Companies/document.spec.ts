@@ -12,15 +12,14 @@ test.beforeAll(async ({ browser }) => {
     page = await browser.newPage();
     const company = new CompaniesPage(page);
     const document = new DocumentPage(page);
-    await page.goto(Constants.truckUrl);
+    await page.goto(Constants.truckUrl, { waitUntil: 'networkidle' });
     await company.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await page.locator('.v-text-field input').fill(Constants.truckName);
     await company.documentIcon.nth(9).waitFor({ state: 'hidden', timeout: 10000 });
     await company.clickElement(company.documentIcon);
     await page.waitForLoadState('networkidle');
     await document.deleteAllItemsWithDeleteIconForDrivers();
-    await page.goto(Constants.trailerUrl);
-    await page.waitForLoadState('networkidle');
+    await page.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
     await company.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await page.locator('.v-text-field input').nth(6).fill(Constants.trailerTest);
     await page.waitForLoadState('networkidle');
@@ -30,14 +29,14 @@ test.beforeAll(async ({ browser }) => {
     await targetRow.locator('.mdi-file-document-multiple').click();
     await page.waitForLoadState('networkidle');
     await document.deleteAllItemsWithDeleteIconForDrivers();
-    await page.goto(Constants.permitBookUrl);
+    await page.goto(Constants.permitBookUrl, { waitUntil: 'networkidle' });
     await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await page.locator('.v-text-field input').first().fill(Constants.testUser);
     await document.eyeIcon.nth(9).waitFor({ state: 'hidden', timeout: 10000 });
     await company.clickElement(document.eyeIcon);
     await page.waitForLoadState('networkidle');
     await document.deleteAllItemsWithDeleteIconForDrivers();
-    await page.goto(Constants.companiesUrl);
+    await page.goto(Constants.companiesUrl), { waitUntil: 'networkidle' };
     await company.clickElement(company.documentIcon.nth(1));
     await document.deleteAllItemsWithDeleteIcon();
 });
@@ -46,7 +45,7 @@ test.beforeEach(async ({ page }) => {
     const upload = new InsertPermitBookPage(page);
     const company = new CompaniesPage(page);
     const document = new DocumentPage(page);
-    await page.goto(Constants.companiesUrl);
+    await page.goto(Constants.companiesUrl, { waitUntil: 'networkidle' });
     await company.clickElement(company.documentIcon.first());
     await document.deleteAllItemsWithDeleteIconForDrivers();
     await company.clickElement(company.uploadIcon.first());
@@ -152,7 +151,7 @@ test('Dokument moze da se prebaci na Truck', async ({ page }) => {
     await page.waitForLoadState('networkidle');
     await upload.savePermitButton.click();
     await page.waitForLoadState('networkidle');
-    await page.goto(Constants.truckUrl);
+    await page.goto(Constants.truckUrl, { waitUntil: 'networkidle' });
     await company.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await page.locator('.v-text-field input').fill(Constants.truckName);
     await company.documentIcon.nth(9).waitFor({ state: 'hidden', timeout: 10000 });
@@ -178,7 +177,7 @@ test('Dokument moze da se prebaci na Trailer', async ({ page }) => {
     await page.waitForLoadState('networkidle');
     await upload.savePermitButton.click();
     await page.waitForLoadState('networkidle');
-    await page.goto(Constants.trailerUrl);
+    await page.goto(Constants.trailerUrl), { waitUntil: 'networkidle' };
     await company.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await page.locator('.v-text-field input').nth(6).fill(Constants.trailerTest);
     const targetRow = page.locator('tr', {
@@ -229,7 +228,7 @@ test('Korisnik moze da prebaci dokument vozaca', async ({ page }) => {
     await page.waitForLoadState('networkidle');
     await upload.savePermitButton.click();
     await page.waitForLoadState('networkidle');
-    await page.goto(Constants.permitBookUrl);
+    await page.goto(Constants.permitBookUrl), { waitUntil: 'networkidle' };
     await page.locator('.v-text-field__slot').first().click();
     await page.locator('.v-text-field__slot').first().type(Constants.testUser);
     await upload.loader.waitFor({ state: 'hidden', timeout: 5000 });

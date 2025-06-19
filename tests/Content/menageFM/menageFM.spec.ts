@@ -1,14 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { Constants } from '../../../helpers/constants';
 import { MenageFM } from '../../../page/Content/manageFM.page';
-//test
+
 test.describe.serial('Testovi koji se izvršavaju redom', () => {
 
     test.use({ storageState: 'auth.json' });
 
     test.beforeEach(async ({ page }) => {
         const fm = new MenageFM(page);
-        await page.goto(Constants.menageFMUrl);
+        await page.goto(Constants.menageFMUrl), { waitUntil: 'networkidle' };
         await fm.card.first().waitFor({ state: 'visible', timeout: 10000 });
     });
 
