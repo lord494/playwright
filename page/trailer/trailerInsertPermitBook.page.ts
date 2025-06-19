@@ -131,6 +131,7 @@ export class TrailerInsertPermitBookPage extends BasePage {
         const selectedDay = parseInt(dateText?.trim() || '0', 10);
         const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
         await nextMonthButton.click();
+        await this.page.waitForTimeout(1000);
         const futureDate = new Date();
         futureDate.setMonth(futureDate.getMonth() + 1);
         futureDate.setDate(selectedDay);
