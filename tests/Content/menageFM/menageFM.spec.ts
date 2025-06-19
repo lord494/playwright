@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { Constants } from '../../../helpers/constants';
 import { MenageFM } from '../../../page/Content/manageFM.page';
-
+//test
 test.describe.serial('Testovi koji se izvršavaju redom', () => {
 
     test.use({ storageState: 'auth.json' });

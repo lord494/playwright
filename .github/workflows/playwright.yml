@@ -89,7 +89,7 @@ jobs:
         id: detect
         run: |
           echo "Detecting changes..."
-          
+
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
           echo "Changed files:"
           echo "$CHANGED_FILES"
@@ -97,7 +97,17 @@ jobs:
           TEST_DIRS_SET=()
 
           for file in $CHANGED_FILES; do
+            # Ako je fajl u page/<feature>/...
             if [[ "$file" == page/*/* ]]; then
+              feature=$(echo "$file" | cut -d/ -f2)
+              test_path="tests/$feature"
+              if [ -d "$test_path" ]; then
+                TEST_DIRS_SET+=("$test_path")
+              fi
+            fi
+
+            # Ako je fajl direktno u tests/<feature>/...
+            if [[ "$file" == tests/*/* ]]; then
               feature=$(echo "$file" | cut -d/ -f2)
               test_path="tests/$feature"
               if [ -d "$test_path" ]; then
@@ -106,7 +116,7 @@ jobs:
             fi
           done
 
-          # Ukloni duplikate
+          # Ukloni duplikate i formatiraj kao string
           UNIQUE_TEST_DIRS=$(printf "%s\n" "${TEST_DIRS_SET[@]}" | sort -u | tr '\n' ' ')
           echo "TEST_DIRS=$UNIQUE_TEST_DIRS" >> $GITHUB_ENV
           echo "Will run tests in: $UNIQUE_TEST_DIRS"
