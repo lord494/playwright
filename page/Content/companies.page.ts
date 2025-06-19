@@ -1,6 +1,5 @@
-import { expect, Locator, Page } from "@playwright/test";
+import { Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
-
 
 export class CompaniesPage extends BasePage {
     readonly page: Page;

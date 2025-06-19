@@ -97,7 +97,7 @@ jobs:
           TEST_DIRS_SET=()
 
           for file in $CHANGED_FILES; do
-            if [[ "$file" == pages/*/* ]]; then
+            if [[ "$file" == page/*/* ]]; then
               feature=$(echo "$file" | cut -d/ -f2)
               test_path="tests/$feature"
               if [ -d "$test_path" ]; then
