@@ -6,7 +6,7 @@ test.use({ storageState: 'auth.json' });
 const targetText = "11996 - FREIGHTLINER / CASCADIA / 2025 *Default note*";
 test.beforeEach(async ({ page }) => {
     const availableTruck = new AvailableTruckPage(page);
-    await page.goto(Constants.availableTrukcUrl);
+    await page.goto(Constants.availableTrukcUrl, { waitUntil: 'networkidle' });
     await availableTruck.addTruckIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     page.on('dialog', async (dialog) => {
         await dialog.accept();

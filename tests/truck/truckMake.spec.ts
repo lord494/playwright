@@ -6,7 +6,7 @@ test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
     const make = new TruckMakePage(page);
-    await page.goto(Constants.truckMakeUrl);
+    await page.goto(Constants.truckMakeUrl, { waitUntil: 'networkidle' });
     await make.makeNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 
