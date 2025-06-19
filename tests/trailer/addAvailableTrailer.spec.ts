@@ -43,7 +43,8 @@ test('Korisnik moze da doda trailer', async ({ page }) => {
 test('Trailer number polje mora biti unique', async ({ page }) => {
     const add = new AddAvailableTrailersPage(page);
     const trailer = new AvailableTrailersPage(page);
-    await page.waitForLoadState('networkidle');
+    await page.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle' });
+    await trailer.trailerNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     const name = await trailer.trailerNameColumn.first().textContent();
     await trailer.clickElement(trailer.addButton);
     await page.waitForLoadState('networkidle');
