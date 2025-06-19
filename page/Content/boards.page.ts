@@ -1,7 +1,6 @@
 import { Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 
-
 export class BoardsPage extends BasePage {
     readonly page: Page;
     readonly rowsPerPageDropdownMenu: Locator;
