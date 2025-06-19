@@ -85,26 +85,24 @@ jobs:
       - name: Install Playwright browsers
         run: npx playwright install chromium
 
-      - name: Get changed test folders
+      - name: Detect changed test folders dynamically
         id: detect
         run: |
-          CHANGED=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+          echo "Detecting changed folders from 'pages/'..."
+          CHANGED=$(git diff --name-only origin/main)
+
           echo "Changed files:"
           echo "$CHANGED"
 
           TEST_DIRS=""
 
           for file in $CHANGED; do
-            # Ako je direktno test fajl
-            if [[ "$file" == tests/*/* ]]; then
-              dir=$(echo "$file" | cut -d/ -f1,2)
-              TEST_DIRS="$TEST_DIRS $dir"
-            fi
-
-            # Ako je fajl u page podfolderu (npr. pages/trailer/trailer.page.ts)
+            # Ako je fajl u pages/<feature>/*
             if [[ "$file" == pages/*/* ]]; then
-              subfolder=$(echo "$file" | cut -d/ -f2)
-              TEST_DIRS="$TEST_DIRS tests/$subfolder"
+              folder=$(echo "$file" | cut -d/ -f2)
+              if [ -d "tests/$folder" ]; then
+                TEST_DIRS="$TEST_DIRS tests/$folder"
+              fi
             fi
           done
 
@@ -114,12 +112,11 @@ jobs:
 
       - name: Debug output
         run: |
-          echo "Will run tests in: $TEST_DIRS"
+          echo "Running tests in: $TEST_DIRS"
 
-      - name: Run changed Playwright tests
+      - name: Run relevant Playwright tests
         if: env.TEST_DIRS != ''
-        run: |
-          npx playwright test $TEST_DIRS
+        run: npx playwright test $TEST_DIRS
 
       - name: Upload Playwright HTML Report
         if: always()
@@ -127,4 +124,5 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report
+
 
