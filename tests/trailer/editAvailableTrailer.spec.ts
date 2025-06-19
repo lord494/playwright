@@ -34,6 +34,7 @@ test.beforeEach(async ({ page }) => {
     await add.clickSaveButton();
     await page.locator('.v-progress-linear__background.primary').waitFor({ state: 'hidden', timeout: 10000 });
     await add.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
+    await page.waitForLoadState('networkidle');
     await trailer.enterTrailerName(trailer.trailerNumberFilter, trailerNumber);
     await page.waitForLoadState('networkidle');
     const trailerCell = page.locator(`td:nth-child(1):has-text("${trailerNumber}")`);
