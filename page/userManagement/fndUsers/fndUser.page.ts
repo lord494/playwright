@@ -1,7 +1,6 @@
 import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "../../../helpers/base";
 
-
 export class FndUserPage extends BasePage {
     readonly page: Page;
     readonly accountIcon: Locator;
@@ -23,7 +22,6 @@ export class FndUserPage extends BasePage {
     readonly teamLeadColumn: Locator;
     readonly extColumn: Locator;
     readonly addModal: Locator;
-
 
     constructor(page: Page) {
         super(page);
