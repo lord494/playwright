@@ -1,4 +1,4 @@
-import { test, expect, chromium, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { AvailableTruckPage } from '../../page/truck/availableTruck.page';
 
@@ -21,6 +21,7 @@ test.beforeEach(async ({ page }) => {
             await column.click({ button: 'right' });
             await availableTruck.deleteIconInStatusMenu.click();
             await page.waitForLoadState('networkidle');
+            await availableTruck.addTruckIcon.first().waitFor({ state: 'visible', timeout: 10000 });
             await await availableTruck.addTruckIcon.first().click();
             await availableTruck.submitButton.waitFor({ state: 'visible', timeout: 10000 });
             found = true;
