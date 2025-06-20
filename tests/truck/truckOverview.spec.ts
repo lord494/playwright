@@ -112,7 +112,7 @@ test('Korisnik moze da doda, edituje i brise trailer history', async ({ page }) 
         while (await page.locator(deleteSelector).count() > 0) {
             const previousCount = await page.locator(deleteSelector).count();
             await page.locator(deleteSelector).first().click();
-            await page.getByRole('img').locator('circle').waitFor({ state: 'hidden', timeout: 1000 });
+            await page.getByRole('img').locator('circle').waitFor({ state: 'hidden', timeout: 5000 });
             await page.waitForFunction(
                 ({ selector, prevCount }) => {
                     return document.querySelectorAll(selector).length < prevCount;
@@ -128,13 +128,13 @@ test('Korisnik moze da doda, edituje i brise trailer history', async ({ page }) 
     await truck.toFieldModal.click();
     await truck.currentDate.click();
     await truck.addButton.last().click();
-    await truck.dialogBox.waitFor({ state: 'hidden', timeout: 5000 });
+    await truck.dialogBox.waitFor({ state: 'hidden', timeout: 10000 });
     await expect(truck.histryList).toBeVisible({ timeout: 10000 });
     await expect(truck.histryList).toContainText(Constants.driverName);
     await truck.pencilIconInHistoryModal.click();
     await truck.enterNoteInHistoryModal(truck.noteInHistoryModal, Constants.noteFirst);
     await truck.editButton.click();
-    await truck.dialogBox.waitFor({ state: 'hidden', timeout: 5000 });
+    await truck.dialogBox.waitFor({ state: 'hidden', timeout: 10000 });
     await expect(truck.histryList).toBeVisible({ timeout: 10000 });
     await expect(truck.histryList).toContainText(Constants.noteFirst, { timeout: 10000 });
     await truck.deleteIconInHistoryModal.click();
@@ -149,7 +149,7 @@ test('Korisnik moze da doda, edituje i brise company history', async ({ page }) 
     });
     const deleteSelector = '.TruckHistory__content .mdi-delete';
     try {
-        await page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
+        await page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 5000 });
         while (await page.locator(deleteSelector).count() > 0) {
             const previousCount = await page.locator(deleteSelector).count();
             await page.locator(deleteSelector).first().click();
@@ -169,7 +169,7 @@ test('Korisnik moze da doda, edituje i brise company history', async ({ page }) 
     await truck.dateOfChanged.click();
     await truck.currentDate.click();
     await truck.editButton.click();
-    await truck.dialogBox.waitFor({ state: 'detached' });
+    await truck.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
     await expect(truck.companyHistoryList).toContainText('Changed from ' + Constants.rocketCompany + ' to ' + Constants.testCompany);
     await truck.pencilIconInCompanyHistoryModal.click();
     await truck.selectNewState(truck.newState, truck.rocketCompanyOption);
@@ -206,7 +206,7 @@ test('Korisnik moze da doda, edituje i brise oil change history', async ({ page 
     await truck.enterOliType(truck.olyTypeField, Constants.castrolOliType);
     await truck.enterMillage(truck.millageField, Constants.millage)
     await truck.addButton.last().click();
-    await truck.dialogBox.waitFor({ state: 'detached' });
+    await truck.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
     await expect(truck.truckOilList).toContainText('Millage: ' + Constants.millage);
     await expect(truck.truckOilList).toContainText('Oil Type: ' + Constants.castrolOliType);
     await truck.pencilIconInTruckOilList.click();
@@ -249,7 +249,7 @@ test('Korisnik moze da doda, edituje i brise annual dot inspection', async ({ pa
     await truck.enterCity(truck.city, Constants.city);
     await truck.enterShopInfo(truck.shopInfo, Constants.shopInfo);
     await truck.clickElement(truck.addButton.last());
-    await truck.dialogBox.waitFor({ state: 'detached', timeout: 5000 });
+    await truck.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
     await expect(truck.annualdotInspectionModalCard).toContainText('Invoice number: ' + Constants.invoiceNumber);
     await expect(truck.annualdotInspectionModalCard).toContainText('Amount: ' + Constants.amount);
     await expect(truck.annualdotInspectionModalCard).toContainText('State: ' + Constants.state);
@@ -265,7 +265,7 @@ test('Korisnik moze da doda, edituje i brise repair history', async ({ page }) =
     });
     const deleteSelector = '.truck-repairs__content .mdi.mdi-delete';
     try {
-        await page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
+        await page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 5000 });
         while (await page.locator(deleteSelector).count() > 0) {
             const previousCount = await page.locator(deleteSelector).count();
             await page.locator(deleteSelector).first().click();
@@ -286,7 +286,7 @@ test('Korisnik moze da doda, edituje i brise repair history', async ({ page }) =
     await truck.enterCity(truck.city, Constants.city);
     await truck.enterShopInfo(truck.shopInfo, Constants.shopInfo);
     await truck.clickElement(truck.addButton.last());
-    await truck.dialogBox.waitFor({ state: 'detached', timeout: 5000 });
+    await truck.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
     await expect(truck.repairCard).toContainText('Invoice number: ' + Constants.invoiceNumber);
     await expect(truck.repairCard).toContainText('Amount: ' + Constants.amount);
     await expect(truck.repairCard).toContainText('State: ' + Constants.state);

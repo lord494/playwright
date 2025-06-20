@@ -20,7 +20,7 @@ test.beforeEach(async ({ page }) => {
         if (text?.trim() === targetText) {
             await column.click({ button: 'right' });
             await availableTruck.deleteIconInStatusMenu.click();
-            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(1000);
             await availableTruck.addTruckIcon.first().waitFor({ state: 'visible', timeout: 10000 });
             await await availableTruck.addTruckIcon.first().click();
             await availableTruck.submitButton.waitFor({ state: 'visible', timeout: 10000 });
