@@ -64,7 +64,7 @@ export class EditDriver {
     readonly cancelButton: Locator;
     readonly editDriverTitle: Locator;
     readonly editDriverModal: Locator;
-    dispeckoDispatcherOption: Locator;
+    readonly dispeckoDispatcherOption: Locator;
 
     constructor(page: Page) {
         this.page = page;

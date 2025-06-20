@@ -1,4 +1,4 @@
-import { test, expect, chromium, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { DispatchDashboardOverview } from '../../page/dispatchDashboard/dispatchDashboardOverview.page';
 import { Constants } from '../../helpers/constants';
 import { AddAndEditLoadModal } from '../../page/dispatchDashboard/addAndEditLoad.page';
@@ -12,18 +12,14 @@ test.beforeEach(async ({ page }) => {
     await page.goto(Constants.dashboardUrl);
     await dashboard.driveNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await dashboard.fillInputField(dashboard.nameSearchInput, Constants.driverName);
-
     const driver = page.locator('tr', {
         has: page.locator('td:nth-child(2)', { hasText: 'btest' })
     });
     await driver.first().waitFor({ state: 'visible', timeout: 10000 });
-
     const text = await dashboard.loadColumn.first().textContent();
-
     page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
-
     if (!text || text.trim() === '') {
         await dashboard.loadColumn.first().click({ button: "right" });
         await addLoad.fillAndSelectOption(addLoad.deliveryCityLabel, Constants.deliveryCity, addLoad.deliveryCity);

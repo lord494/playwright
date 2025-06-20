@@ -1,4 +1,4 @@
-import { test, expect, chromium, Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 import { DispatchDashboardOverview } from '../../page/dispatchDashboard/dispatchDashboardOverview.page';
 import { Constants } from '../../helpers/constants';
 import { EditDriver } from '../../page/dispatchDashboard/editDriver.page';
@@ -74,7 +74,6 @@ test.describe('Testovi bez afterAll', () => {
         const dashboard = new DispatchDashboardOverview(page);
         await page.waitForLoadState('networkidle');
         await edit.unCheckFC();
-        //await edit.fcTogglebuttonOff.click();
         await edit.saveButton.click();
         await page.waitForLoadState('networkidle');
 
