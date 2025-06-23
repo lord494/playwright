@@ -34,6 +34,10 @@ export class PostLoadsPage extends BasePage {
     readonly dhoRadiusFeld: Locator;
     readonly dhdRadiusField: Locator;
     readonly xButtonInField: Locator;
+    readonly postedByColumn: Locator;
+    readonly deleteButton: Locator
+    readonly yesButton: Locator;
+    readonly snackBar: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -69,9 +73,17 @@ export class PostLoadsPage extends BasePage {
         this.dhoRadiusFeld = page.locator('div:nth-child(8) > .v-input__control > .v-input__slot');
         this.dhdRadiusField = page.locator('div:nth-child(9) > .v-input__control > .v-input__slot');
         this.xButtonInField = page.locator('.mdi-close');
+        this.postedByColumn = page.locator('tr td:nth-child(18)');
+        this.deleteButton = page.locator('.v-btn__content').filter({ hasText: 'DELETE' });
+        this.yesButton = page.locator('.v-btn__content').filter({ hasText: 'YES' });
+        this.snackBar = page.locator('.v-snack__wrapper');
     }
 
     async enterLoadIdSearchInpu(loadIdField: Locator, loadId: string) {
         await this.fillInputField(loadIdField, loadId);
+    }
+
+    async selectTrailerType(trailerTypeMenu: Locator, trailerType: Locator) {
+        await this.selectFromMenu(trailerTypeMenu, trailerType);
     }
 }

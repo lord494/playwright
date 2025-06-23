@@ -1,4 +1,6 @@
 import fs from 'fs';
+import { Page } from '@playwright/test';
+
 
 export function getWeekRange(offset = 0): string {
     const today = new Date();
@@ -67,6 +69,17 @@ async function typeSlowly(page: any, selector: string, text: string, delay = 100
         await input.click();
     }
 }
+
+export async function waitForPrebookLoads(page: Page, action: () => Promise<void>) {
+    await Promise.all([
+        page.waitForResponse(response =>
+            response.url().includes('/api/prebook-loads?filter=notbooked') &&
+            (response.status() === 200 || response.status() === 304)
+        ),
+        action()
+    ]);
+}
+
 
 
 

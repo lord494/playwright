@@ -26,6 +26,7 @@ export class Constants {
     static testEmail = 'bosko@superegoholding.net';
     static appTest = 'AppTest';
     static password = 'playwrightpass123!';
+    static appTestEmail = 'superegoholdingtest@gmail.com';
 
     // ===== TRUCKS =====
     static truckName = '11996';
