@@ -185,4 +185,6 @@ export class Constants {
     static truckModelUrl = '/truck-model';
     static companiesPrebookUrl = '/pre-book/companies';
     static postLoadPrebookUrl = '/pre-book/post-loads';
+    static postTruckPrebookUrl = '/pre-book/post-trucks';
+    static postedTruckUrl = '/pre-book/posted-trucks';
 }

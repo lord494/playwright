@@ -38,6 +38,9 @@ export class PostLoadsPage extends BasePage {
     readonly deleteButton: Locator
     readonly yesButton: Locator;
     readonly snackBar: Locator;
+    readonly mapIcon: Locator;
+    readonly dialogBox: Locator;
+    readonly searchTruckButton: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -77,6 +80,9 @@ export class PostLoadsPage extends BasePage {
         this.deleteButton = page.locator('.v-btn__content').filter({ hasText: 'DELETE' });
         this.yesButton = page.locator('.v-btn__content').filter({ hasText: 'YES' });
         this.snackBar = page.locator('.v-snack__wrapper');
+        this.mapIcon = page.locator('.mdi.mdi-map');
+        this.dialogBox = page.locator('.v-dialog__content--active');
+        this.searchTruckButton = page.locator('.v-btn__content').filter({ hasText: 'Search Trucks' });
     }
 
     async enterLoadIdSearchInpu(loadIdField: Locator, loadId: string) {

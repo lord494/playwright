@@ -57,7 +57,7 @@ test('Korisnik moze da edituje post Load', async ({ page }) => {
     await add.selectOrigin(add.originMenu, Constants.miamiOriginCity, add.miamiOption);
     await add.selecDestination(add.destinatinMenu, Constants.newYorkCity, add.newYorkOption);
     await add.selectTodayDate(add.pickupDateField, page.getByRole('button', { name: '20', exact: true }).locator('div').first());
-    await add.selectTodayDate(add.deliveryDateField, await page.getByRole('button', { name: '22', exact: true }).nth(1));
+    await add.selectTodayDate(add.deliveryDateField, page.getByRole('button', { name: '22', exact: true }).nth(1));
     await add.selectTime(add.pickupTimeField, add.hours, add.minutes);
     await add.selectTime(add.toPickupTimeField, add.secondHours, add.secondMinutes);
     await add.selectTime(add.deliveryTimeField, add.secondHours, add.secondMinutes);

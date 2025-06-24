@@ -192,3 +192,27 @@ test('Korisnik moze da obrise load', async ({ page }) => {
         }
     }
 });
+
+test('Korisnik moze da otovri mapu od Load-a', async ({ page }) => {
+    const postLoad = new PostLoadsPage(page);
+    await postLoad.dateMenu.click();
+    await page.getByRole('button', { name: '20', exact: true }).locator('div').first().click();
+    await waitForPrebookLoads(page, async () => {
+        page.getByRole('button', { name: '21', exact: true }).locator('div').first().click()
+    });
+    await Promise.all([
+        page.waitForResponse(response =>
+            response.url().includes('/api/prebook-loads?filter=posted') &&
+            response.status() === 200 || response.status() == 304
+        ),
+        postLoad.postedByMeRadiobutton.click()
+    ]);
+    await postLoad.mapIcon.first().click();
+    await expect(postLoad.dialogBox).toBeVisible({ timeout: 5000 });
+});
+
+test('Korisnik moze da klikne na Search Truck button', async ({ page }) => {
+    const postLoad = new PostLoadsPage(page);
+    await postLoad.searchTruckButton.click();
+    await expect(page.url()).toContain('/posted-trucks');
+});
