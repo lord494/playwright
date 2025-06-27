@@ -4,9 +4,11 @@ export class Constants {
     static driverName = 'btest';
     static driverTest = 'driverTest';
     static secondDriverName = 'playwrightTest';
+    static driver = 'nameDriverTest';
     static secondDriver = 'secondDriver';
     static secondDriverTest = 'secondDriverPlaywright';
     static driverNameFraser = 'Fraser Carlson';
+    static markLabatDriver = 'Mark Labat';
     static owner = '4 Aces Logistics.';
     static secondOwner = 'Ace Trans Inc.';
     static ownerTrailer = '4D Production Inc.';
@@ -14,6 +16,7 @@ export class Constants {
     static firstCompany = 'TC7';
     static secondSCompany = 'FY';
     static secondDispatcher = 'Pex';
+    static secDis = 'scdis2';
     static firstDispatcher = 'dis4';
     static secondSubstitutleDispatcher = 'Simonovic';
     static dispatcherDispecko = 'Dispecko';
@@ -187,4 +190,5 @@ export class Constants {
     static postLoadPrebookUrl = '/pre-book/post-loads';
     static postTruckPrebookUrl = '/pre-book/post-trucks';
     static postedTruckUrl = '/pre-book/posted-trucks';
+    static driverUrl = '/drivers';
 }
