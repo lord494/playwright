@@ -123,7 +123,7 @@ test('Korisnik moze da doda, edituje i brise employment history', async ({ page 
     await expect(driver.historyList).not.toBeVisible();
 });
 
-test('korisnik moze da pretrazuje drivere po drivers po imenu', async ({ page }) => {
+test('korisnik moze da pretrazuje drivere po imenu', async ({ page }) => {
     const driver = new DriverOverviewPage(page);
     const [response] = await Promise.all([
         page.waitForResponse(res =>

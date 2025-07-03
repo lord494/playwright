@@ -35,6 +35,7 @@ export class DriverOverviewPage extends BasePage {
     readonly historyList: Locator;
     readonly editButtonInModal: Locator;
     readonly noHistoryLocator: Locator;
+    readonly snackMessage: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -71,6 +72,7 @@ export class DriverOverviewPage extends BasePage {
         this.historyList = page.locator('.EmploymentHistoriesList__item-content');
         this.editButtonInModal = page.getByRole('button', { name: 'Edit', exact: true });
         this.noHistoryLocator = page.locator('.no-history');
+        this.snackMessage = page.locator('.v-snack__wrapper.v-sheet .v-snack__content');
     }
 
     async selectOptionFromSearchMenu(menu: Locator, option: Locator): Promise<void> {

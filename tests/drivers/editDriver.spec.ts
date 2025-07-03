@@ -9,7 +9,12 @@ test.beforeEach(async ({ page }) => {
     const driver = new DriverOverviewPage(page);
     await page.goto(Constants.driverUrl, { waitUntil: 'networkidle' });
     await driver.driverNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-    await driver.enterDriverNameInSearchField(driver.searchInputField, Constants.markLabatDriver);
+    const [response] = await Promise.all([
+        page.waitForResponse(res =>
+            res.url().includes('/api/drivers')
+        ),
+        await driver.enterDriverNameInSearchField(driver.searchInputField, Constants.markLabatDriver)
+    ]);
     const driverName = page.locator('tr', {
         has: page.locator('td:nth-child(1)', { hasText: 'Mark Labat' })
     });
