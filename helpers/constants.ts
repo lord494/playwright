@@ -9,6 +9,8 @@ export class Constants {
     static secondDriverTest = 'secondDriverPlaywright';
     static driverNameFraser = 'Fraser Carlson';
     static markLabatDriver = 'Mark Labat';
+    static johnsonDriver = 'Shontavius Johnson';
+    static brianDriver = 'Brian Sampley';
     static owner = '4 Aces Logistics.';
     static secondOwner = 'Ace Trans Inc.';
     static ownerTrailer = '4D Production Inc.';
@@ -191,4 +193,5 @@ export class Constants {
     static postTruckPrebookUrl = '/pre-book/post-trucks';
     static postedTruckUrl = '/pre-book/posted-trucks';
     static driverUrl = '/drivers';
+    static inactiveDriveUrl = '/drivers/deleted'
 }
