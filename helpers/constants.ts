@@ -49,6 +49,9 @@ export class Constants {
 
     // ===== TEST DATA =====
     static test = 'bosko';
+    static boskoQA = 'Bosko QA Test';
+    static boskoQAEmail = 'dis@l.qq';
+    static boskoQAPosition = 'SALES_TRUCK_MANAGER';
     static diss = 'dis1';
     static secondDiss = 'scdis2';
     static adminPhone = '069875116';
@@ -194,4 +197,5 @@ export class Constants {
     static postedTruckUrl = '/pre-book/posted-trucks';
     static driverUrl = '/drivers';
     static inactiveDriveUrl = '/drivers/deleted'
+    static contactsUrl = '/contacts'
 }
