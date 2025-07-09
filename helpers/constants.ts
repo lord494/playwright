@@ -136,6 +136,10 @@ export class Constants {
     static seconDeliveryCity = "East Los Angeles, CA";
     static miamiOriginCity = 'Miami, FL';
     static newYorkCity = 'New York, NY';
+    static messagTitle = 'Test message title';
+    static messageContent = 'Test message content';
+    static dailyRepor = 'Daily report for market updates';
+    static weeklyReport = 'Weekly report for market updates';
 
     // ===== COLORS =====
     static emptyNeedLoad = 'EMPTY, NEED LOAD';
@@ -196,6 +200,7 @@ export class Constants {
     static postTruckPrebookUrl = '/pre-book/post-trucks';
     static postedTruckUrl = '/pre-book/posted-trucks';
     static driverUrl = '/drivers';
-    static inactiveDriveUrl = '/drivers/deleted'
-    static contactsUrl = '/contacts'
+    static inactiveDriveUrl = '/drivers/deleted';
+    static contactsUrl = '/contacts';
+    static messageUrl = '/messages';
 }
