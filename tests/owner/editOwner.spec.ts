@@ -1,8 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
-import { ThirdPartyPage } from '../../page/thirdParty/thirdPartyOverview.page';
-import { AddThirdParty } from '../../page/thirdParty/addThirdParty.page';
-import { get6RandomNumber, getRandom10Number } from '../../helpers/dateUtilis';
+import { get6RandomNumber } from '../../helpers/dateUtilis';
 import { OwnersPage } from '../../page/owner/ownerOverview.page';
 import { AddOwner } from '../../page/owner/addOwner.page';
 

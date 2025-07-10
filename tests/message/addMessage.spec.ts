@@ -61,24 +61,25 @@ test('Kada korisnik selektuje Daily report for market updates? checkbox, role po
     await expect(addMessagePage.roleField).toHaveText('DISPATCHER, BROKER, ADMIN, SUPERADMIN');
 });
 
-test('Poruka se prikazuje na ekranu za odgovarajucu rolu kada korisnik posalje poruku', async ({ page }) => {
-    const message = new MessagePage(page);
-    const addMessagePage = new AddMessagePage(page);
-    await addMessagePage.enterTitle(addMessagePage.titleField, Constants.messagTitle);
-    await addMessagePage.enterMessageContent(addMessagePage.contentField, Constants.messageContent);
-    await addMessagePage.uncheck(addMessagePage.dailyReportCheckbox);
-    await addMessagePage.uncheck(addMessagePage.weeklyReportCheckbox);
-    await addMessagePage.selectRole(addMessagePage.roleField, addMessagePage.superadminRole);
-    await addMessagePage.contentField.click();
-    await addMessagePage.sendButton.click();
-    await page.waitForLoadState('networkidle');
-    await expect(message.dialogBox).toBeVisible({ timeout: 5000 });
-    await expect(message.dialogBox).toContainText(Constants.messagTitle);
-    await expect(message.dialogBox).toContainText(Constants.messageContent);
-    await message.okButton.click();
-    await expect(message.dialogBox).not.toBeVisible();
-});
 /////////////////////////////////// SALJU SE MEJLOVI SVIMA //////////////////////////////////////////////
+
+// test('Poruka se prikazuje na ekranu za odgovarajucu rolu kada korisnik posalje poruku', async ({ page }) => {
+//     const message = new MessagePage(page);
+//     const addMessagePage = new AddMessagePage(page);
+//     await addMessagePage.enterTitle(addMessagePage.titleField, Constants.messagTitle);
+//     await addMessagePage.enterMessageContent(addMessagePage.contentField, Constants.messageContent);
+//     await addMessagePage.uncheck(addMessagePage.dailyReportCheckbox);
+//     await addMessagePage.uncheck(addMessagePage.weeklyReportCheckbox);
+//     await addMessagePage.selectRole(addMessagePage.roleField, addMessagePage.superadminRole);
+//     await addMessagePage.contentField.click();
+//     await addMessagePage.sendButton.click();
+//     await page.waitForLoadState('networkidle');
+//     await expect(message.dialogBox).toBeVisible({ timeout: 5000 });
+//     await expect(message.dialogBox).toContainText(Constants.messagTitle);
+//     await expect(message.dialogBox).toContainText(Constants.messageContent);
+//     await message.okButton.click();
+//     await expect(message.dialogBox).not.toBeVisible();
+// });
 // test('Korisnik moze da salje daily report', async ({ page }) => {
 //     const addMessagePage = new AddMessagePage(page);
 //     const message = new MessagePage(page);

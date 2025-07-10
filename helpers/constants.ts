@@ -205,4 +205,5 @@ export class Constants {
     static messageUrl = '/messages';
     static thirdPartyUrl = '/owners/third';
     static ownerUrl = '/owners/owner';
+    static dealersshipUrl = '/dealerships';
 }
