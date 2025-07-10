@@ -203,4 +203,6 @@ export class Constants {
     static inactiveDriveUrl = '/drivers/deleted';
     static contactsUrl = '/contacts';
     static messageUrl = '/messages';
+    static thirdPartyUrl = '/owners/third';
+    static ownerUrl = '/owners/owner';
 }

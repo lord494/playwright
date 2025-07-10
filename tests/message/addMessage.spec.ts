@@ -78,35 +78,35 @@ test('Poruka se prikazuje na ekranu za odgovarajucu rolu kada korisnik posalje p
     await message.okButton.click();
     await expect(message.dialogBox).not.toBeVisible();
 });
+/////////////////////////////////// SALJU SE MEJLOVI SVIMA //////////////////////////////////////////////
+// test('Korisnik moze da salje daily report', async ({ page }) => {
+//     const addMessagePage = new AddMessagePage(page);
+//     const message = new MessagePage(page);
+//     await addMessagePage.enterTitle(addMessagePage.titleField, Constants.dailyRepor);
+//     await addMessagePage.enterMessageContent(addMessagePage.contentField, Constants.messageContent);
+//     await addMessagePage.check(addMessagePage.dailyReportCheckbox);
+//     await expect(addMessagePage.roleField).toHaveText('DISPATCHER, BROKER, ADMIN, SUPERADMIN');
+//     await addMessagePage.contentField.click();
+//     await addMessagePage.sendButton.click();
+//     await expect(message.dialogBox).toBeVisible({ timeout: 5000 });
+//     await expect(message.dialogBox).toContainText(Constants.dailyRepor);
+//     await expect(message.dialogBox).toContainText(Constants.messageContent);
+//     await message.okButton.click();
+//     await expect(message.dialogBox).not.toBeVisible();
+// });
 
-test('Korisnik moze da salje daily report', async ({ page }) => {
-    const addMessagePage = new AddMessagePage(page);
-    const message = new MessagePage(page);
-    await addMessagePage.enterTitle(addMessagePage.titleField, Constants.dailyRepor);
-    await addMessagePage.enterMessageContent(addMessagePage.contentField, Constants.messageContent);
-    await addMessagePage.check(addMessagePage.dailyReportCheckbox);
-    await expect(addMessagePage.roleField).toHaveText('DISPATCHER, BROKER, ADMIN, SUPERADMIN');
-    await addMessagePage.contentField.click();
-    await addMessagePage.sendButton.click();
-    await expect(message.dialogBox).toBeVisible({ timeout: 5000 });
-    await expect(message.dialogBox).toContainText(Constants.dailyRepor);
-    await expect(message.dialogBox).toContainText(Constants.messageContent);
-    await message.okButton.click();
-    await expect(message.dialogBox).not.toBeVisible();
-});
-
-test('Korisnik moze da salje weekly report', async ({ page }) => {
-    const addMessagePage = new AddMessagePage(page);
-    const message = new MessagePage(page);
-    await addMessagePage.enterTitle(addMessagePage.titleField, Constants.weeklyReport);
-    await addMessagePage.enterMessageContent(addMessagePage.contentField, Constants.messageContent);
-    await addMessagePage.check(addMessagePage.dailyReportCheckbox);
-    await expect(addMessagePage.roleField).toHaveText('DISPATCHER, BROKER, ADMIN, SUPERADMIN');
-    await addMessagePage.contentField.click();
-    await addMessagePage.sendButton.click();
-    await expect(message.dialogBox).toBeVisible({ timeout: 5000 });
-    await expect(message.dialogBox).toContainText(Constants.weeklyReport);
-    await expect(message.dialogBox).toContainText(Constants.messageContent);
-    await message.okButton.click();
-    await expect(message.dialogBox).not.toBeVisible();
-});
+// test('Korisnik moze da salje weekly report', async ({ page }) => {
+//     const addMessagePage = new AddMessagePage(page);
+//     const message = new MessagePage(page);
+//     await addMessagePage.enterTitle(addMessagePage.titleField, Constants.weeklyReport);
+//     await addMessagePage.enterMessageContent(addMessagePage.contentField, Constants.messageContent);
+//     await addMessagePage.check(addMessagePage.dailyReportCheckbox);
+//     await expect(addMessagePage.roleField).toHaveText('DISPATCHER, BROKER, ADMIN, SUPERADMIN');
+//     await addMessagePage.contentField.click();
+//     await addMessagePage.sendButton.click();
+//     await expect(message.dialogBox).toBeVisible({ timeout: 5000 });
+//     await expect(message.dialogBox).toContainText(Constants.weeklyReport);
+//     await expect(message.dialogBox).toContainText(Constants.messageContent);
+//     await message.okButton.click();
+//     await expect(message.dialogBox).not.toBeVisible();
+// });

@@ -40,6 +40,10 @@ export function get6RandomNumber(): number[] {
     return Array.from({ length: 6 }, () => Math.floor(Math.random() * 10));
 }
 
+export function getRandom10Number(): number[] {
+    return Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
+}
+
 export function generateRandomLetters(length = 10): string {
     const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
     let result = '';
