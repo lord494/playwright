@@ -140,6 +140,13 @@ export class Constants {
     static messageContent = 'Test message content';
     static dailyRepor = 'Daily report for market updates';
     static weeklyReport = 'Weekly report for market updates';
+    static plawrightRecruiter = 'Playwright Regruter';
+    static seconPlaywrightRecruiter = 'Test Automation';
+    static unemployedStatus = 'Unemployed';
+    static employedStatus = 'Employed';
+    static blockedStatus = 'Blocked';
+    static exDriversStatus = 'EX DRIVERS';
+    static holdStatus = 'Hold';
 
     // ===== COLORS =====
     static emptyNeedLoad = 'EMPTY, NEED LOAD';
@@ -171,6 +178,12 @@ export class Constants {
     static validStatusColor = 'rgb(76, 175, 80)';
     static expiredStatusColor = 'rgb(244, 67, 54)';
     static totalDemageColor = 'rgb(228, 174, 167)';
+    static unemployedStatusColor = 'rgb(255, 255, 0)';
+    static holdStatusColor = 'rgb(128, 128, 128)';
+    static exDriversStatusColor = 'rgb(0, 0, 255)';
+    static employedStatusColor = 'rgb(0, 128, 0)';
+    static blockedStatusColor = 'rgb(255, 0, 0)';
+
 
     // ===== URLS =====
     static dashboardUrl = '/dashboard';
@@ -207,4 +220,5 @@ export class Constants {
     static ownerUrl = '/owners/owner';
     static dealersshipUrl = '/dealerships';
     static yardUrl = '/yards';
+    static recruitmentUrl = '/recruitment';
 }
