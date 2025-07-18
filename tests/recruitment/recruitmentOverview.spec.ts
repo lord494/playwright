@@ -222,11 +222,15 @@ test('Korisnik moze da prebaci broj na drugog regrutera sa Move akcijom', async 
 test('Korisnik moze da prebaci sve brojeve na drugog regrutera sa Move All akcijom', async ({ page }) => {
     const recruitment = new RecrutimentPage(page);
     const addEmployee = new AddNewEmployeePage(page);
-    const phoneList: string[] = []
+    const phoneList: string[] = [];
+    let firstPhone: string;
+    let secondPhone: string;
     for (let i = 0; i < 2; i++) {
         const randomCdlNew = get6RandomNumber().join('');
         const randomPhoneNew = getRandom10Number().join('');
         phoneList.push(randomPhoneNew);
+        if (i === 0) firstPhone = randomPhoneNew;
+        else if (i === 1) secondPhone = randomPhoneNew;
         await recruitment.addNewEmployeeButton.click();
         await addEmployee.enterCdl(addEmployee.cdlField, randomCdlNew);
         await addEmployee.selectRecruiter(addEmployee.recruiterMenu, addEmployee.recruiterOption);
@@ -241,28 +245,27 @@ test('Korisnik moze da prebaci sve brojeve na drugog regrutera sa Move All akcij
     }
     await recruitment.recruiterTab.click();
     await recruitment.selectRecruiter(recruitment.searchRecruiterMenu, recruitment.recruiterOption.last());
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
+    await page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
     await recruitment.moveAllButton.click();
     await recruitment.dialogBox.waitFor({ state: 'visible' });
     await recruitment.selectRecruiter(recruitment.searchRecruiterMenuInMoveModal, recruitment.secondRecruiterOption.last());
     await recruitment.okButton.click();
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
+    await page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
     await recruitment.selectRecruiter(recruitment.searchRecruiterMenu, recruitment.secondRecruiterOption.last());
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
+    await page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
     const phoneColumnTexts = await recruitment.phoneColumn.allTextContents();
-    for (const phone of phoneList) {
-        expect(phoneColumnTexts).toContain(phone);
-    }
+    expect(phoneColumnTexts).toContain(firstPhone!);
+    expect(phoneColumnTexts).toContain(secondPhone!);
 });
 
-////////////////////////////////////////////// KORISTI SE POVREMENO ZA BRISANJE BAZE /////////////////////////////////////////////////
+//////////////////////////////////////////// KORISTI SE POVREMENO ZA BRISANJE BAZE /////////////////////////////////////////////////
 // test('Korisnik moze da obrise brojeve', async ({ page }) => {
 //     const recruitment = new RecrutimentPage(page);
 //     page.on('dialog', async (dialog) => {
 //         await dialog.accept();
 //     });
 //     await recruitment.recruiterTab.click();
-//     await recruitment.selectRecruiter(recruitment.searchRecruiterMenu, recruitment.recruiterOption);
+//     await recruitment.selectRecruiter(recruitment.searchRecruiterMenu, recruitment.secondRecruiterOption);
 //     await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
 //     await recruitment.deleteIcon.first().waitFor({ state: 'visible' });
 //     const deleteButtons = await recruitment.deleteIcon;
