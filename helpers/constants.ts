@@ -147,6 +147,12 @@ export class Constants {
     static blockedStatus = 'Blocked';
     static exDriversStatus = 'EX DRIVERS';
     static holdStatus = 'Hold';
+    static newYorkPostalCode = '07032';
+    static chicagoPostalCode = '60007';
+    static miamiPostalCode = '33178';
+    static truckFranchise = 'Any truck';
+    static trailerFranchise = 'Any trailer';
+    static parkingFranchise = 'Parking';
 
     // ===== COLORS =====
     static emptyNeedLoad = 'EMPTY, NEED LOAD';
@@ -221,4 +227,5 @@ export class Constants {
     static dealersshipUrl = '/dealerships';
     static yardUrl = '/yards';
     static recruitmentUrl = '/recruitment';
+    static shopUrl = '/shop';
 }

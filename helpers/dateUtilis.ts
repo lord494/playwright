@@ -84,6 +84,14 @@ export async function waitForPrebookLoads(page: Page, action: () => Promise<void
     ]);
 }
 
-
-
-
+export async function waitForShopLoads(page: Page, action: () => Promise<void>) {
+    await Promise.all([
+        page.waitForResponse(
+            response =>
+                response.url().includes('/ms-shop/shop') &&
+                (response.status() === 200 || response.status() === 304),
+            { timeout: 10_000 }
+        ),
+        action()
+    ]);
+}
