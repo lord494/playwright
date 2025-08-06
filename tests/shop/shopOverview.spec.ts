@@ -82,11 +82,12 @@ test('Korisnik moze da pretrazuje shopove po gradu - Miami', async ({ page }) =>
 test('Korisnik moze da pretrazuje shopove po gradu - New York', async ({ page }) => {
     const shop = new ShopPage(page);
     await waitForShopLoads(page, async () => {
-        shop.selectCity(shop.cityMenu, Constants.newYorkCity, shop.newYorkOption)
-    });
-    await waitForShopLoads(page, async () => {
         shop.enterPostalCode(shop.postalCodeField, Constants.newYorkPostalCode)
     });
+    await waitForShopLoads(page, async () => {
+        shop.selectCity(shop.cityMenu, Constants.newYorkCity, shop.newYorkOption)
+    });
+
     const allCard = await shop.shopCardLocationPart.allTextContents();
     await expect(shop.shopCardLocationPart.first()).toContainText('NJ' + Constants.newYorkPostalCode, { timeout: 15000 });
     for (const cardText of allCard) {
