@@ -7,9 +7,6 @@ test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
     await page.goto(Constants.shopUrl, { waitUntil: 'networkidle', timeout: 20_000 });
-
-    //testovi padaju na gitu, ne ucita se stranica do kraja, probati mozda da se saceka lokator za write review. Pogledati report zadnji u donwload
-
 })
 
 test('Korisnik moze da izabere Truck opciju iz Franchise iz menija', async ({ page }) => {

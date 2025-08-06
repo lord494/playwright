@@ -90,7 +90,7 @@ export async function waitForShopLoads(page: Page, action: () => Promise<void>) 
             response =>
                 response.url().includes('/ms-shop/shop') &&
                 (response.status() === 200 || response.status() === 304),
-            { timeout: 10_000 }
+            { timeout: 20_000 }
         ),
         action()
     ]);
