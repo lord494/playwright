@@ -7,7 +7,7 @@ test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
     await page.goto(Constants.shopUrl, { waitUntil: 'networkidle', timeout: 20_000 });
-})
+});
 
 test('Korisnik moze da izabere Truck opciju iz Franchise iz menija', async ({ page }) => {
     const shop = new ShopPage(page);
