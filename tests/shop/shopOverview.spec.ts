@@ -37,6 +37,7 @@ test('Korisnik moze da izabere Parking opciju iz Franchise iz menija', async ({ 
     await waitForShopLoads(page, async () => {
         shop.selectFranchise(shop.franchiseMenu, shop.parkingFranchise)
     });
+    await expect(shop.shopCardFranchisePart.first()).toContainText(Constants.parkingFranchise, { timeout: 15000 });
     const allCard = await shop.shopCardFranchisePart.allTextContents();
     for (const cardText of allCard) {
         expect(cardText).toContain(Constants.parkingFranchise);
