@@ -71,7 +71,7 @@ export class ShopPage extends BasePage {
     }
 
     async selectFranchise(menu: Locator, franchise: Locator): Promise<void> {
-        return this.selectFromMenu(menu, franchise);
+        return this.selectFranchiseFromMenu(menu, franchise);
     }
 
     async enterPostalCode(field: Locator, postalCode: string): Promise<void> {

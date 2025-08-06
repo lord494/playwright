@@ -88,7 +88,7 @@ test('Korisnik moze da pretrazuje shopove po gradu - New York', async ({ page })
         shop.selectCity(shop.cityMenu, Constants.newYorkCity, shop.newYorkOption)
     });
     const allCard = await shop.shopCardLocationPart.allTextContents();
-    await expect(shop.shopCardLocationPart.first()).toContainText('NJ' + Constants.newYorkPostalCode, { timeout: 15000 });
+    await expect(shop.shopCardLocationPart.first()).toContainText('NJ ' + Constants.newYorkPostalCode, { timeout: 15000 });
     for (const cardText of allCard) {
         expect(cardText).toContain('NJ ' + Constants.newYorkPostalCode);
     }
