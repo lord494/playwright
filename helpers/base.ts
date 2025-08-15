@@ -49,14 +49,6 @@ export class BasePage {
         await optionFromMenu.click();
     }
 
-    async selectFranchiseFromMenu(menu: Locator, optionFromMenu: Locator) {
-        await menu.waitFor({ state: 'visible', timeout: 3000 });
-        await menu.click();
-        await this.page.waitForTimeout(1000);
-        await optionFromMenu.click();
-        await this.page.waitForTimeout(2000);
-    }
-
     async uncheck(toggleButton: Locator): Promise<void> {
         if (await toggleButton.isChecked()) {
             await toggleButton.click();

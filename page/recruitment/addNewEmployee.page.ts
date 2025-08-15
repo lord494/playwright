@@ -20,6 +20,7 @@ export class AddNewEmployeePage extends BasePage {
     readonly exDriversStatus: Locator;
     readonly holdStatus: Locator;
     readonly errorMessage: Locator;
+    readonly alertMessage: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -41,6 +42,7 @@ export class AddNewEmployeePage extends BasePage {
         this.exDriversStatus = page.getByRole('option', { name: 'EX DRIVERS' });
         this.holdStatus = page.getByRole('option', { name: 'Hold' });
         this.errorMessage = page.locator('.v-messages__message');
+        this.alertMessage = page.locator('.v-alert__content');
     }
 
     enterCdl(field: Locator, cdl: string): Promise<void> {

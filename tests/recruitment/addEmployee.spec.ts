@@ -26,6 +26,7 @@ test('Korisnik moze da doda employee sa statusom Unemployed', async ({ page }) =
     await addEmployee.enterNote(addEmployee.noteField, Constants.noteFirst);
     await addEmployee.selectStatus(addEmployee.stausMenu, addEmployee.unemployedStatus);
     await addEmployee.saveButton.click();
+    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
     await recruitment.dialogBox.waitFor({ state: 'detached' });
     await expect(recruitment.cdlColumn.first()).toContainText(randomCdl);
     await expect(recruitment.employeeNameColumn.first()).toContainText(Constants.driverName);
@@ -255,3 +256,22 @@ test('Novi employee se nalazi kod odgovarajuce regrutera', async ({ page }) => {
     expect(hasPhone).toBe(true);
 });
 
+test('Korisnik ne moze da doda novog zaposlenog ako broj telefona vec postoji', async ({ page }) => {
+    const recruitment = new RecrutimentPage(page);
+    const addEmployee = new AddNewEmployeePage(page);
+    await recruitment.closeButton.click();
+    const existPhone = await recruitment.phoneColumn.first().allInnerTexts();
+    await recruitment.addNewEmployeeButton.click();
+    const randomCdl = get6RandomNumber().join('');
+    await addEmployee.enterCdl(addEmployee.cdlField, randomCdl)
+    await addEmployee.selectRecruiter(addEmployee.recruiterMenu, addEmployee.recruiterOption);
+    await addEmployee.enterName(addEmployee.nameField, Constants.driverName);
+    await addEmployee.enterEmail(addEmployee.emailField, Constants.testEmail);
+    await addEmployee.enterPhone(addEmployee.phoneField, existPhone.join(''));
+    await addEmployee.enterCountry(addEmployee.countryField, Constants.state);
+    await addEmployee.enterNote(addEmployee.noteField, Constants.noteFirst);
+    await addEmployee.selectStatus(addEmployee.stausMenu, addEmployee.unemployedStatus);
+    await addEmployee.saveButton.click();
+    await expect(addEmployee.alertMessage).toBeVisible({ timeout: 5000 });
+    await expect(addEmployee.alertMessage).toContainText('An employee with this PHONE NUMBER already exists.');
+});

@@ -54,8 +54,11 @@ export class Constants {
     static boskoQAPosition = 'SALES_TRUCK_MANAGER';
     static diss = 'dis1';
     static secondDiss = 'scdis2';
-    static adminPhone = '069875116';
-    static secondPhone = '447803004';
+    static adminPhone = '0698751163';
+    static editAdminPhone = '0631551122';
+    static formatedEditAdminPhone = '(063) 155-1122';
+    static formatedAdminPhone = '(069) 875-1163';
+    static secondPhone = '4478030043';
     static ownerPhone = '999';
     static secondOwnerPhone = '777';
     static firstTrailerType = 'V';
@@ -134,6 +137,7 @@ export class Constants {
     static freighttincCompany = '99 FREIGHT INC';
     static deliveryCity = "East Washington, PA";
     static seconDeliveryCity = "East Los Angeles, CA";
+    static addressShop = 'CA-1, Long Beach, CA 90804, United States';
     static miamiOriginCity = 'Miami, FL';
     static newYorkCity = 'New York, NY';
     static messagTitle = 'Test message title';
@@ -153,6 +157,15 @@ export class Constants {
     static truckFranchise = 'Any truck';
     static trailerFranchise = 'Any trailer';
     static parkingFranchise = 'Parking';
+    static partnerStatus = 'PARTNER';
+    static platinumStatus = 'PLATINUM';
+    static goldStatus = 'GOLD';
+    static silverStatus = 'SILVER';
+    static playwrightShopID = '/250c7c0a-b007-4153-8016-e6ee0d4e59c1';
+    static shopName = 'Playwright Shop';
+    static editShopName = 'Playwright Shop Edit';
+    static shopWebsite = 'www.playwrightshop.com';
+
 
     // ===== COLORS =====
     static emptyNeedLoad = 'EMPTY, NEED LOAD';
@@ -190,9 +203,9 @@ export class Constants {
     static employedStatusColor = 'rgb(0, 128, 0)';
     static blockedStatusColor = 'rgb(255, 0, 0)';
 
-
     // ===== URLS =====
     static dashboardUrl = '/dashboard';
+    static user = 'USER';
     static userUrl = '/users';
     static rolesUrl = '/roles';
     static manageAppUsersUrl = '/manage-app-users';

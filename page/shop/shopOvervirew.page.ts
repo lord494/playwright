@@ -9,6 +9,7 @@ export class ShopPage extends BasePage {
     readonly radiusField: Locator;
     readonly typeMenu: Locator;
     readonly allCheckbox: Locator;
+    readonly partnerCheckbox: Locator;
     readonly goldCheckBox: Locator;
     readonly platinumCheckbox: Locator;
     readonly silverCheckbox: Locator;
@@ -27,6 +28,18 @@ export class ShopPage extends BasePage {
     readonly shopCardLocationPart: Locator;
     readonly miamiOption: Locator;
     readonly newYorkOption: Locator;
+    readonly mobileShopIcon: Locator;
+    readonly truckIcon: Locator;
+    readonly towingIcon: Locator;
+    readonly securedParkingIcon: Locator;
+    readonly franchisePlaceholder: Locator;
+    readonly postalCodePlaceholder: Locator;
+    readonly cityPlaceholder: Locator;
+    readonly typePlaceholder: Locator;
+    readonly shopBadge: Locator;
+    readonly snackMessage: Locator;
+    readonly leftArrowIcon: Locator;
+    readonly card: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -37,6 +50,7 @@ export class ShopPage extends BasePage {
         this.radiusField = page.getByRole('spinbutton', { name: 'Radius 80mi' });
         this.typeMenu = page.getByRole('textbox', { name: 'Type' });
         this.allCheckbox = page.getByText('All').first();
+        this.partnerCheckbox = page.getByText('Partner', { exact: true });
         this.goldCheckBox = page.getByText('Gold');
         this.platinumCheckbox = page.getByText('Platinum', { exact: true });
         this.silverCheckbox = page.getByText('Silver');
@@ -47,7 +61,7 @@ export class ShopPage extends BasePage {
         this.truckFranchise = page.getByRole('option', { name: 'Any truck', exact: true });
         this.trailerFranchise = page.getByRole('option', { name: 'Any trailer', exact: true });
         this.parkingFranchise = page.getByRole('option', { name: 'Parking', exact: true });
-        this.truckType = page.getByRole('option', { name: 'Truck' }).filter({ has: page.locator('.v-list-item__action') });
+        this.truckType = page.getByRole('option', { name: 'Truck', exact: true })
         this.mobileShopType = page.getByRole('option', { name: 'Mobile Shop' }).filter({ has: page.locator('.v-list-item__action') });
         this.towingType = page.getByRole('option', { name: 'Towing' }).filter({ has: page.locator('.v-list-item__action') });
         this.securedParkingType = page.getByRole('option', { name: 'Secured Parking' }).filter({ has: page.locator('.v-list-item__action') });
@@ -55,6 +69,18 @@ export class ShopPage extends BasePage {
         this.shopCardLocationPart = page.locator('.v-card__text.pl-4.pr-4.pt-0.pb-0.font-weight-medium.text-truncate');
         this.miamiOption = page.getByRole('option', { name: 'Miami, FL', exact: true });
         this.newYorkOption = page.getByRole('option', { name: 'New York, NY', exact: true });
+        this.mobileShopIcon = page.locator('.mdi-account-wrench');
+        this.truckIcon = page.locator('.mdi-truck');
+        this.towingIcon = page.locator('.mdi-tow-truck');
+        this.securedParkingIcon = page.locator('.mdi-parking');
+        this.franchisePlaceholder = page.getByRole('textbox', { name: 'Franchise' });
+        this.postalCodePlaceholder = page.getByRole('textbox', { name: 'Postal Code' });
+        this.cityPlaceholder = page.getByRole('textbox', { name: 'City' });
+        this.typePlaceholder = page.getByRole('textbox', { name: 'Type' });
+        this.shopBadge = page.locator('.v-chip__content');
+        this.snackMessage = page.locator('.v-snack__content');
+        this.leftArrowIcon = page.locator('.mdi-arrow-left');
+        this.card = page.locator('.shop-card-data');
     }
 
     async check(checkbox: Locator): Promise<void> {
@@ -71,7 +97,7 @@ export class ShopPage extends BasePage {
     }
 
     async selectFranchise(menu: Locator, franchise: Locator): Promise<void> {
-        return this.selectFranchiseFromMenu(menu, franchise);
+        return this.selectFromMenu(menu, franchise);
     }
 
     async enterPostalCode(field: Locator, postalCode: string): Promise<void> {

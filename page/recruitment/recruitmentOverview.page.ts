@@ -38,6 +38,7 @@ export class RecrutimentPage extends BasePage {
     readonly searchRecruiterMenuInMoveModal: Locator;
     readonly recruiterFieldValue: Locator;
     readonly moveAllButton: Locator;
+    readonly closeButton: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -77,6 +78,7 @@ export class RecrutimentPage extends BasePage {
         this.searchRecruiterMenuInMoveModal = page.locator('.v-select__slot', { hasText: 'Select a recruiter' });
         this.recruiterFieldValue = page.locator('.v-select__selection').first();
         this.moveAllButton = page.getByRole('button', { name: 'Move all', exact: true });
+        this.closeButton = page.locator('.v-dialog--active .v-btn__content', { hasText: "Close" });
     }
 
     async check(checkbox: Locator): Promise<void> {
@@ -92,7 +94,7 @@ export class RecrutimentPage extends BasePage {
         }
     }
 
-    selectRecruiter(menu: Locator, recruiter: Locator): Promise<void> {
+    async selectRecruiter(menu: Locator, recruiter: Locator): Promise<void> {
         return this.selectFromMenu(menu, recruiter);
     }
 }
