@@ -95,3 +95,15 @@ export async function waitForShopLoads(page: Page, action: () => Promise<void>) 
         action()
     ]);
 }
+
+export async function waitForBrokerLoad(page: Page, action: () => Promise<void>) {
+    await Promise.all([
+        page.waitForResponse(
+            response =>
+                response.url().includes('/api/brokers') &&
+                (response.status() === 200 || response.status() === 304),
+            { timeout: 20_000 }
+        ),
+        action()
+    ]);
+}

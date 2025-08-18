@@ -241,4 +241,5 @@ export class Constants {
     static yardUrl = '/yards';
     static recruitmentUrl = '/recruitment';
     static shopUrl = '/shop';
+    static dispatchInfoUrl = '/dispatch-info';
 }
