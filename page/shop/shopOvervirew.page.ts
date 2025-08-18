@@ -40,6 +40,7 @@ export class ShopPage extends BasePage {
     readonly snackMessage: Locator;
     readonly leftArrowIcon: Locator;
     readonly card: Locator;
+    readonly loader: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -81,6 +82,7 @@ export class ShopPage extends BasePage {
         this.snackMessage = page.locator('.v-snack__content');
         this.leftArrowIcon = page.locator('.mdi-arrow-left');
         this.card = page.locator('.shop-card-data');
+        this.loader = page.locator('.v-progress-linear__buffer');
     }
 
     async check(checkbox: Locator): Promise<void> {

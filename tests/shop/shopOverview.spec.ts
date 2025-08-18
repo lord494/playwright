@@ -4,14 +4,15 @@ import { ShopPage } from '../../page/shop/shopOvervirew.page';
 import { waitForShopLoads } from '../../helpers/dateUtilis';
 
 test.use({ storageState: 'auth.json' });
-// POSTOJI PROBLEM DA NA GITU PADAJU TESTOVI IZ NEKOG RAZLOGA A OVDE PROLAZE NORMALNO
+
 test.beforeEach(async ({ page }) => {
+    const shop = new ShopPage(page);
     await page.goto(Constants.shopUrl, { waitUntil: 'networkidle', timeout: 20_000 });
+    await shop.loader.waitFor({ state: 'hidden', timeout: 20000 });
 });
 
 test('Korisnik moze da izabere Truck opciju iz Franchise iz menija', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await waitForShopLoads(page, async () => {
         shop.selectFranchise(shop.franchiseMenu, shop.truckFranchise)
     });
@@ -23,7 +24,6 @@ test('Korisnik moze da izabere Truck opciju iz Franchise iz menija', async ({ pa
 
 test('Korisnik moze da izabere Trailer opciju iz Franchise iz menija', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await waitForShopLoads(page, async () => {
         shop.selectFranchise(shop.franchiseMenu, shop.trailerFranchise)
     });
@@ -35,7 +35,6 @@ test('Korisnik moze da izabere Trailer opciju iz Franchise iz menija', async ({ 
 
 test('Korisnik moze da izabere Parking opciju iz Franchise iz menija', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await waitForShopLoads(page, async () => {
         shop.selectFranchise(shop.franchiseMenu, shop.parkingFranchise)
     });
@@ -47,7 +46,6 @@ test('Korisnik moze da izabere Parking opciju iz Franchise iz menija', async ({ 
 
 test('Korisnik moze da pretrazuje shopove po postalo codu - Chicago postal code', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await waitForShopLoads(page, async () => {
         shop.enterPostalCode(shop.postalCodeField, Constants.chicagoPostalCode)
     });
@@ -59,7 +57,6 @@ test('Korisnik moze da pretrazuje shopove po postalo codu - Chicago postal code'
 
 test('Korisnik moze da pretrazuje shopove po postalo codu - New York postal code', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await waitForShopLoads(page, async () => {
         shop.enterPostalCode(shop.postalCodeField, Constants.newYorkPostalCode)
     });
@@ -71,7 +68,6 @@ test('Korisnik moze da pretrazuje shopove po postalo codu - New York postal code
 
 test('Korisnik moze da pretrazuje shopove po gradu - Miami', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await waitForShopLoads(page, async () => {
         shop.selectCity(shop.cityMenu, Constants.miamiOriginCity, shop.miamiOption)
     });
@@ -86,7 +82,6 @@ test('Korisnik moze da pretrazuje shopove po gradu - Miami', async ({ page }) =>
 
 test('Korisnik moze da pretrazuje shopove po gradu - New York', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await waitForShopLoads(page, async () => {
         shop.enterPostalCode(shop.postalCodeField, Constants.newYorkPostalCode)
     });
@@ -102,7 +97,6 @@ test('Korisnik moze da pretrazuje shopove po gradu - New York', async ({ page })
 
 test('Korisnik moze da pretrazuje shopove po tipu shopa - truck type', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await shop.typeMenu.click();
     await waitForShopLoads(page, async () => {
         await shop.check(shop.truckType);
@@ -118,7 +112,6 @@ test('Korisnik moze da pretrazuje shopove po tipu shopa - truck type', async ({ 
 
 test('Korisnik moze da pretrazuje shopove po tipu shopa - mobile shop type', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await shop.typeMenu.click();
     await waitForShopLoads(page, async () => {
         await shop.check(shop.mobileShopType);
@@ -134,7 +127,6 @@ test('Korisnik moze da pretrazuje shopove po tipu shopa - mobile shop type', asy
 
 test('Korisnik moze da pretrazuje shopove po tipu shopa - towing type', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await shop.typeMenu.click();
     await waitForShopLoads(page, async () => {
         await shop.check(shop.towingType);
@@ -150,7 +142,6 @@ test('Korisnik moze da pretrazuje shopove po tipu shopa - towing type', async ({
 
 test('Korisnik moze da pretrazuje shopove po tipu shopa - secured parking', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await shop.typeMenu.click();
     await waitForShopLoads(page, async () => {
         await shop.check(shop.securedParkingType);
@@ -166,7 +157,6 @@ test('Korisnik moze da pretrazuje shopove po tipu shopa - secured parking', asyn
 
 test('Korisnik moze da pretrazuje shopove po vise tipova', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await shop.typeMenu.click();
     await waitForShopLoads(page, async () => {
         await shop.check(shop.truckType);
@@ -194,7 +184,6 @@ test('Korisnik moze da pretrazuje shopove po vise tipova', async ({ page }) => {
 
 test('Korisnik moze da ponisti unose u search polja kada klikne na crveni X button', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await waitForShopLoads(page, async () => {
         shop.selectFranchise(shop.franchiseMenu, shop.truckFranchise)
     });
@@ -238,7 +227,6 @@ test('Korisnik moze da ponisti unose u search polja kada klikne na crveni X butt
 
 test('Korisnik moze da pretrazuje shopove po statusu - Platinum', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await waitForShopLoads(page, async () => {
         shop.check(shop.platinumCheckbox)
     });
@@ -251,7 +239,6 @@ test('Korisnik moze da pretrazuje shopove po statusu - Platinum', async ({ page 
 
 test('Korisnik moze da pretrazuje shopove po statusu - Partner', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await waitForShopLoads(page, async () => {
         shop.check(shop.partnerCheckbox)
     });
@@ -264,7 +251,6 @@ test('Korisnik moze da pretrazuje shopove po statusu - Partner', async ({ page }
 
 test('Korisnik moze da pretrazuje shopove po statusu - Gold', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await waitForShopLoads(page, async () => {
         shop.check(shop.goldCheckBox)
     });
@@ -277,7 +263,6 @@ test('Korisnik moze da pretrazuje shopove po statusu - Gold', async ({ page }) =
 
 test('Korisnik moze da pretrazuje shopove po statusu - Silver', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await waitForShopLoads(page, async () => {
         shop.check(shop.silverCheckbox)
     });
@@ -290,7 +275,6 @@ test('Korisnik moze da pretrazuje shopove po statusu - Silver', async ({ page })
 
 test('Kada nije nadjen nijedan rezultat prikaze se snack message', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await waitForShopLoads(page, async () => {
         shop.enterPostalCode(shop.postalCodeField, Constants.secondPhone);
     });
@@ -299,7 +283,6 @@ test('Kada nije nadjen nijedan rezultat prikaze se snack message', async ({ page
 
 test('Korisnik moze da otvori shop kada klikne na karticu', async ({ page }) => {
     const shop = new ShopPage(page);
-    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     await waitForShopLoads(page, async () => {
         shop.card.first().click();
     });
