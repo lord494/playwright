@@ -43,6 +43,7 @@ test('Korisnik moze da izabere Parking opciju iz Franchise iz menija', async ({ 
 });
 
 test('Korisnik moze da pretrazuje shopove po postalo codu - Chicago postal code', async ({ page }) => {
+    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     const shop = new ShopPage(page);
     await waitForShopLoads(page, async () => {
         shop.enterPostalCode(shop.postalCodeField, Constants.chicagoPostalCode)
@@ -54,6 +55,7 @@ test('Korisnik moze da pretrazuje shopove po postalo codu - Chicago postal code'
 });
 
 test('Korisnik moze da pretrazuje shopove po postalo codu - New York postal code', async ({ page }) => {
+    await page.locator('.v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 20000 });
     const shop = new ShopPage(page);
     await waitForShopLoads(page, async () => {
         shop.enterPostalCode(shop.postalCodeField, Constants.newYorkPostalCode)
