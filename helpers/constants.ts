@@ -165,7 +165,8 @@ export class Constants {
     static shopName = 'Playwright Shop';
     static editShopName = 'Playwright Shop Edit';
     static shopWebsite = 'www.playwrightshop.com';
-
+    static defaultCallType = 'DEFAULT';
+    static problemCallType = 'PROBLEM'
 
     // ===== COLORS =====
     static emptyNeedLoad = 'EMPTY, NEED LOAD';
@@ -202,6 +203,7 @@ export class Constants {
     static exDriversStatusColor = 'rgb(0, 0, 255)';
     static employedStatusColor = 'rgb(0, 128, 0)';
     static blockedStatusColor = 'rgb(255, 0, 0)';
+    static defaultCallTypeColor = 'rgb(13, 104, 161, 0)';
 
     // ===== URLS =====
     static dashboardUrl = '/dashboard';
@@ -242,4 +244,5 @@ export class Constants {
     static recruitmentUrl = '/recruitment';
     static shopUrl = '/shop';
     static dispatchInfoUrl = '/dispatch-info';
+    static eldDashboardUrl = '/eld-dashboard';
 }
