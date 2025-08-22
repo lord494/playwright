@@ -24,6 +24,7 @@ export class EldDashboardPage extends BasePage {
     readonly firstCellEdit: Locator;
     readonly commentContent: Locator;
     readonly editCommentIcon: Locator;
+    readonly deleteIconOnLockedChip: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -49,6 +50,7 @@ export class EldDashboardPage extends BasePage {
         this.firstCellEdit = page.locator('.table-container-eld tr:nth-child(1) td:nth-child(5)');
         this.commentContent = page.locator('.comment-text');
         this.editCommentIcon = page.locator('.mdi-pencil');
+        this.deleteIconOnLockedChip = page.locator('.mdi-delete');
     }
 
     async handleTruckNumber(): Promise<void> {
@@ -56,10 +58,8 @@ export class EldDashboardPage extends BasePage {
             await dialog.accept();
         });
         const cellTexts = await this.allCells.allTextContents();
-        const lockedTruckTexts = await this.lockedTrucks.allTextContents();
         const has11996 = cellTexts.some(text => text.includes('11996'));
-        const has11996Locked = lockedTruckTexts.some(text => text.includes('11996'));
-        if (has11996 || has11996Locked) {
+        if (has11996) {
             const cellWith11996 = this.page.locator('.table-container-eld td', { hasText: '11996' });
             await cellWith11996.click({ button: 'right' });
             await this.deleteButton.click();
@@ -72,6 +72,41 @@ export class EldDashboardPage extends BasePage {
             await this.deleteButton.click();
             await this.dialogBox.waitFor({ state: 'hidden' });
             await this.firstCell.click({ button: 'right' });
+        }
+    }
+
+    async handleTruckNumber4721(): Promise<void> {
+        this.page.on('dialog', async (dialog) => {
+            await dialog.accept();
+        });
+        const cellTexts = await this.allCells.allTextContents();
+        const has4721 = cellTexts.some(text => text.includes('4721'));
+        if (has4721) {
+            const cellWith11996 = this.page.locator('.table-container-eld td', { hasText: '4721' });
+            await cellWith11996.click({ button: 'right' });
+            await this.deleteButton.click();
+            await this.dialogBox.waitFor({ state: 'hidden' });
+        }
+        else {
+            await this.firstCellEdit.click({ button: 'right' });
+        }
+    }
+
+    async handleTruckNumberLocked(): Promise<void> {
+        const lockedTruckTexts = await this.lockedTrucks.allTextContents();
+        const has4721Locked = lockedTruckTexts.some(text => text.includes('4721'));
+        if (has4721Locked) {
+            const cellWith4721 = this.page.locator('.v-chip__content', { hasText: '4721' });
+            await cellWith4721.locator(this.deleteIconOnLockedChip).click();
+        }
+    }
+
+    async handleTruckNumberLocked11996(): Promise<void> {
+        const lockedTruckTexts = await this.lockedTrucks.allTextContents();
+        const has11996Locked = lockedTruckTexts.some(text => text.includes('11996'));
+        if (has11996Locked) {
+            const cellWith4721 = this.page.locator('.v-chip__content', { hasText: '11996' });
+            await cellWith4721.locator(this.deleteIconOnLockedChip).click();
         }
     }
 
