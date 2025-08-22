@@ -166,7 +166,9 @@ export class Constants {
     static editShopName = 'Playwright Shop Edit';
     static shopWebsite = 'www.playwrightshop.com';
     static defaultCallType = 'DEFAULT';
-    static problemCallType = 'PROBLEM'
+    static problemCallType = 'PROBLEM';
+    static eldPlaywright = 'playwright eld';
+    static centralTimezone = 'Central';
 
     // ===== COLORS =====
     static emptyNeedLoad = 'EMPTY, NEED LOAD';
@@ -245,4 +247,7 @@ export class Constants {
     static shopUrl = '/shop';
     static dispatchInfoUrl = '/dispatch-info';
     static eldDashboardUrl = '/eld-dashboard';
+    static eldShifts = '/shifts'
+    static dotInspectionUrl = '/dot-inspections';
+    static eldTypesUrl = '/eld-types'
 }
