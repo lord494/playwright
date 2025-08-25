@@ -8,7 +8,7 @@ test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
     const user = new FndUserPage(page);
-    await page.goto(Constants.fndUserUrl);
+    await page.goto(Constants.fndUserUrl, { waitUntil: 'networkidle', timeout: 15000 });
     await user.userNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await user.clickElement(user.accountIcon);
     await user.clickElement(user.addUserIcon);

@@ -5,28 +5,30 @@ import { ManageAppUserPage } from '../../../page/userManagement/manageAppUsers/m
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
-    const app = new ManageAppUserPage(page);
-    await Promise.all([
-        page.waitForResponse(response =>
-            response.url().includes('/api/claims/types') &&
-            (response.status() === 200 || response.status() === 304)
-        ),
-        page.goto(Constants.manageAppUsersUrl)
-    ]);
+    await page.goto(Constants.manageAppUsersUrl, { waitUntil: 'networkidle', timeout: 15000 });
 });
 
 test('Korisnik moze da pretrazuje usere po emailu', async ({ page }) => {
     const app = new ManageAppUserPage(page);
-    await app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail);
-    await app.card.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/app-users') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail)
+    ]);
     await expect(app.card).toContainText(Constants.testEmail);
 });
 
 test('Korisnik moze da pretrazuje usere po imenu', async ({ page }) => {
     const app = new ManageAppUserPage(page);
-    await app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.appTestUser);
-    await page.waitForLoadState('networkidle');
-    await app.card.nth(10).waitFor({ state: 'hidden', timeout: 3000 });
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/app-users') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.appTestUser)
+    ]);
     const count = await app.cardTitle.count();
     for (let i = 0; i < count; i++) {
         const cardText = await app.cardTitle.nth(i).textContent();
@@ -36,9 +38,13 @@ test('Korisnik moze da pretrazuje usere po imenu', async ({ page }) => {
 
 test('Korisnik moze da pretrazuje usere po broju telefona', async ({ page }) => {
     const app = new ManageAppUserPage(page);
-    await app.fillPhoneNumberInSearchField(app.phoneNumberSearchInputField, Constants.phoneNumberOfUserApp);
-    await page.waitForLoadState('networkidle');
-    await app.card.nth(10).waitFor({ state: 'hidden', timeout: 3000 });
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/app-users') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        app.fillPhoneNumberInSearchField(app.phoneNumberSearchInputField, Constants.phoneNumberOfUserApp)
+    ]);
     const count = await app.card.count();
     for (let i = 0; i < count; i++) {
         const cardText = await app.card.nth(i).textContent();
@@ -48,9 +54,13 @@ test('Korisnik moze da pretrazuje usere po broju telefona', async ({ page }) => 
 
 test('Korisnik moze da pretrazuje usere po statusu', async ({ page }) => {
     const app = new ManageAppUserPage(page);
-    await app.selectStatusFromMenu(app.statusDropdown, app.notVerifiedOption);
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(2000);
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/app-users') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        app.selectStatusFromMenu(app.statusDropdown, app.notVerifiedOption)
+    ]);
     const count = await app.card.count();
     for (let i = 0; i < count; i++) {
         const cardText = await app.card.nth(i).textContent();
@@ -112,9 +122,13 @@ test('Korisnik moze da konektuje usera sa vozacem', async ({ page }) => {
 
 test('Korisnik moze da dozvoli self dispatch vozacu', async ({ page }) => {
     const app = new ManageAppUserPage(page);
-    await app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail);
-    await page.waitForLoadState('networkidle');
-    await app.card.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/app-users') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail)
+    ]);
     if (await app.allowSelfDispatch.isVisible()) {
         await app.allowSelfDispatch.click();
     }
@@ -124,8 +138,13 @@ test('Korisnik moze da dozvoli self dispatch vozacu', async ({ page }) => {
 
 test('Korisnik moze da verifikuje vozaca', async ({ page }) => {
     const app = new ManageAppUserPage(page);
-    await app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail)
-    await app.card.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/app-users') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail)
+    ]);
     page.on('dialog', async (dialog) => {
         await dialog.accept();
     });

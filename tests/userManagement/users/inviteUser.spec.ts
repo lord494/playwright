@@ -6,8 +6,8 @@ import { UsersPage } from '../../../page/userManagement/users/users.page';
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
-    await page.goto(Constants.userUrl);
     const user = new UsersPage(page);
+    await page.goto(Constants.userUrl, { waitUntil: 'networkidle', timeout: 15000 });
     await user.clickElement(user.accountIcon);
     await user.clickElement(user.inviteUserIcon);
 });

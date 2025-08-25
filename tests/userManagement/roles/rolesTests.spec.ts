@@ -6,14 +6,7 @@ import { get6RandomNumber } from '../../../helpers/dateUtilis';
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
-    const roles = new RolesPage(page);
-    await Promise.all([
-        page.waitForResponse(response =>
-            response.url().includes('/api/claims/types') &&
-            (response.status() === 200 || response.status() === 304)
-        ),
-        page.goto(Constants.rolesUrl)
-    ]);
+    await page.goto(Constants.rolesUrl, { waitUntil: 'networkidle', timeout: 15000 });
 });
 
 test('30 rows per page je prikazano po defaultu', async ({ page }) => {
@@ -32,7 +25,7 @@ test('Korisnik moze da predje na sledecu stranicu', async ({ browser }) => {
         viewport: { width: 1920, height: 1080 }
     });
     const page = await context.newPage();
-    await page.goto(Constants.rolesUrl);
+    await page.goto(Constants.rolesUrl, { waitUntil: 'networkidle', timeout: 15000 });
     const roles = new RolesPage(page);
     await page.waitForLoadState('networkidle');
     let paginationText = await roles.getPaginationText();
@@ -53,7 +46,7 @@ test('Korisnik moze da se vrati na prethodnu stranicu', async ({ browser }) => {
         viewport: { width: 1920, height: 1080 }
     });
     const page = await context.newPage();
-    await page.goto(Constants.rolesUrl);
+    await page.goto(Constants.rolesUrl, { waitUntil: 'networkidle', timeout: 15000 });
     const roles = new RolesPage(page);
     await roles.clickElement(roles.rightArrow);
     await page.waitForLoadState('networkidle');

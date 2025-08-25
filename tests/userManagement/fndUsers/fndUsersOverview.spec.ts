@@ -15,15 +15,26 @@ test.beforeEach(async ({ page }) => {
 test('Korisnik moze da pretrazuje Usera po imenu', async ({ page }) => {
     const user = new FndUserPage(page);
     const name = (await user.userNameColumn.first().allInnerTexts()).toString();
-    await user.searchUser(user.searchInputField, name);
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/users') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        user.searchUser(user.searchInputField, name)
+    ]);
     await expect(user.userNameColumn.first()).toContainText(name, { timeout: 10000 });
 });
 
 test('Korisnik moze da pretrazuje Usera po email-u', async ({ page }) => {
     const user = new FndUserPage(page);
     const email = (await user.emailColumn.first().allInnerTexts()).toString();
-    await user.searchUser(user.searchInputField, email);
-    await user.emailColumn.nth(2).waitFor({ state: 'hidden', timeout: 10000 });
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/users') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        user.searchUser(user.searchInputField, email)
+    ]);
     await expect(user.emailColumn.first()).toContainText(email);
 });
 
@@ -79,24 +90,24 @@ test('Korisnik moze da otvori devices modal', async ({ page }) => {
 });
 
 test('Korisnik moze da obrise usera na sivu ikonicu', async ({ page }) => {
-    const user = new FndUserPage(page);
-    await user.emailColumn.nth(1).waitFor({ state: 'visible', timeout: 5000 });
-    const email = await user.emailColumn.first().allInnerTexts();
     page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
+    const user = new FndUserPage(page);
+    await user.emailColumn.nth(1).waitFor({ state: 'visible', timeout: 5000 });
+    const email = await user.emailColumn.first().allInnerTexts();
     await user.clickElement(user.grayDeleteIcon.first());
     await page.waitForLoadState('networkidle');
     await expect(user.snackMessage).toContainText("User: " + email + " successfully deleted");
 });
 
 test('Korisnik moze da obrise usera skroz na crvenu ikonicu', async ({ page }) => {
-    const user = new FndUserPage(page);
-    await user.emailColumn.nth(1).waitFor({ state: 'visible', timeout: 5000 });
-    const email = await user.emailColumn.first().allInnerTexts();
     page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
+    const user = new FndUserPage(page);
+    await user.emailColumn.nth(1).waitFor({ state: 'visible', timeout: 5000 });
+    const email = await user.emailColumn.first().allInnerTexts();
     await user.clickElement(user.redDeleteIcon.first());
     await page.waitForLoadState('networkidle');
     await expect(user.snackMessage).toContainText("User: " + email + " successfully deleted");

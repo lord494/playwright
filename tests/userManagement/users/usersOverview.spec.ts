@@ -6,7 +6,7 @@ test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
     const user = new UsersPage(page);
-    await page.goto(Constants.userUrl);
+    await page.goto(Constants.userUrl, { waitUntil: 'networkidle', timeout: 15000 });
     await user.emailColumn.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 
