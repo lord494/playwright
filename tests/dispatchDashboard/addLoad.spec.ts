@@ -8,7 +8,7 @@ test.use({ storageState: 'auth.json' });
 test.beforeEach(async ({ page }) => {
     const addLoad = new AddAndEditLoadModal(page);
     const dashboard = new DispatchDashboardOverview(page);
-    await page.goto(Constants.dashboardUrl);
+    await page.goto(Constants.dashboardUrl, { waitUntil: 'networkidle', timeout: 15000 });
     await page.waitForLoadState('networkidle');
     await dashboard.loadColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await dashboard.fillInputField(dashboard.nameSearchInput, Constants.driverName);
@@ -344,8 +344,13 @@ test('Korisnik moze da doda "Empty, Need Load" load i provjeri filter load-a', a
     await addLoad.saveButton.click();
     await addLoad.addLoadModal.waitFor({ state: 'detached', timeout: 5000 });
     const filterButton = await addLoad.emptyNeedLoadFilter;
-    await filterButton.click();
-    await page.waitForTimeout(1000);
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/drivers/dashboard') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        filterButton.click()
+    ]);
     const fields = await dashboard.loadColumn;
     await Promise.all(
         Array.from({ length: await fields.count() }, async (_, i) => {
@@ -366,8 +371,13 @@ test('Korisnik moze da doda "Loaded" load i provjeri filter load-a', async ({ pa
     await addLoad.saveButton.click();
     await addLoad.addLoadModal.waitFor({ state: 'detached', timeout: 5000 });
     const filterButton = await addLoad.loadedLoadFilter.first();
-    await filterButton.click();
-    await page.waitForTimeout(1000);
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/drivers/dashboard') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        filterButton.click()
+    ]);
     const fields = await dashboard.loadColumn;
     await Promise.all(
         Array.from({ length: await fields.count() }, async (_, i) => {
@@ -388,8 +398,13 @@ test('Korisnik moze da doda "Dispatched not loaded" load i provjeri filter load-
     await addLoad.saveButton.click();
     await addLoad.addLoadModal.waitFor({ state: 'detached', timeout: 5000 });
     const filterButton = await addLoad.dispatchedNotLoadedFilter;
-    await filterButton.click();
-    await page.waitForTimeout(1000);
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/drivers/dashboard') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        filterButton.click()
+    ]);
     const fields = await dashboard.loadColumn;
     await Promise.all(
         Array.from({ length: await fields.count() }, async (_, i) => {
@@ -410,8 +425,13 @@ test('Korisnik moze da doda "Load problem" load i provjeri filter load-a', async
     await addLoad.saveButton.click();
     await addLoad.addLoadModal.waitFor({ state: 'detached', timeout: 5000 });
     const filterButton = await addLoad.loadProblemFilter;
-    await filterButton.click();
-    await page.waitForTimeout(1000);
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/drivers/dashboard') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        filterButton.click()
+    ]);
     const fields = await dashboard.loadColumn;
     await Promise.all(
         Array.from({ length: await fields.count() }, async (_, i) => {
@@ -432,8 +452,13 @@ test('Korisnik moze da doda "Broken" load i provjeri filter load-a', async ({ pa
     await addLoad.saveButton.click();
     await addLoad.addLoadModal.waitFor({ state: 'detached', timeout: 5000 });
     const filterButton = await addLoad.brokenLoadFilter.first();
-    await filterButton.click();
-    await page.waitForTimeout(1000);
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/drivers/dashboard') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        filterButton.click()
+    ]);
     const fields = await dashboard.loadColumn;
     await Promise.all(
         Array.from({ length: await fields.count() }, async (_, i) => {
@@ -454,8 +479,13 @@ test('Korisnik moze da doda "Special Note" load i provjeri filter load-a', async
     await addLoad.saveButton.click();
     await addLoad.addLoadModal.waitFor({ state: 'detached', timeout: 5000 });
     const filterButton = await addLoad.specialNoteFilter;
-    await filterButton.click();
-    await page.waitForTimeout(1000);
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/drivers/dashboard') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        filterButton.click()
+    ]);
     const fields = await dashboard.loadColumn;
     await Promise.all(
         Array.from({ length: await fields.count() }, async (_, i) => {
@@ -476,8 +506,13 @@ test('Korisnik moze da doda "PM Setvice" load i provjeri filter load-a', async (
     await addLoad.saveButton.click();
     await addLoad.addLoadModal.waitFor({ state: 'detached', timeout: 5000 });
     const filterButton = await addLoad.pmServiceFilter;
-    await filterButton.click();
-    await page.waitForTimeout(1000);
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/drivers/dashboard') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        filterButton.click()
+    ]);
     const fields = await dashboard.loadColumn;
     await Promise.all(
         Array.from({ length: await fields.count() }, async (_, i) => {
@@ -498,8 +533,13 @@ test('Korisnik moze da doda "Repo" load i provjeri filter load-a', async ({ page
     await addLoad.saveButton.click();
     await addLoad.addLoadModal.waitFor({ state: 'detached', timeout: 5000 });
     const filterButton = await addLoad.repoFilter;
-    await filterButton.click();
-    await page.waitForTimeout(1000);
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/drivers/dashboard') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        filterButton.click()
+    ]);
     const fields = await dashboard.loadColumn;
     await Promise.all(
         Array.from({ length: await fields.count() }, async (_, i) => {
@@ -520,8 +560,13 @@ test('Korisnik moze da doda "LOTR" load i provjeri filter load-a', async ({ page
     await addLoad.saveButton.click();
     await addLoad.addLoadModal.waitFor({ state: 'detached', timeout: 5000 });
     const filterButton = await addLoad.lotrFilter;
-    await filterButton.click();
-    await page.waitForTimeout(1000);
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/drivers/dashboard') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        filterButton.click()
+    ]);
     const fields = await dashboard.loadColumn;
     await Promise.all(
         Array.from({ length: await fields.count() }, async (_, i) => {

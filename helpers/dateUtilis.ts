@@ -10,14 +10,18 @@ export function getWeekRange(offset = 0): string {
     const endDay = new Date(currentMonday);
     endDay.setDate(currentMonday.getDate() + 8); // 8 dana
 
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
     const formatDate = (date: Date) => {
         const days = date.getDate().toString().padStart(2, '0');
-        const month = date.toLocaleString('default', { month: 'short' }); // prva 3 slova meseca
+        const month = months[date.getMonth()];
         return `${days}${month}`;
     };
 
     return `${formatDate(currentMonday)} - ${formatDate(endDay)}`;
 }
+
 
 const COUNTER_FILE = './counter.txt';
 export function generateUniqueRoleName(): string {

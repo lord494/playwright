@@ -8,7 +8,7 @@ test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
     const dispatch = new DispatchDashboardOverview(page);
-    await page.goto(Constants.dashboardUrl);
+    await page.goto(Constants.dashboardUrl, { waitUntil: 'networkidle', timeout: 15000 });
     await dispatch.driveNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 
@@ -23,21 +23,25 @@ test('Korisnik moze da pretrazuje User-a po imenu', async ({ page }) => {
 
 test('Korisnik moze da pretrazuje User-a po kamionu', async ({ page }) => {
     const dispatch = new DispatchDashboardOverview(page);
-    await dispatch.fillInputField(dispatch.truckSeachInput, Constants.truckName);
-    const truck = page.locator('tr', {
-        has: page.locator('td:nth-child(8)', { hasText: Constants.truckName })
-    });
-    await truck.first().waitFor({ state: 'visible', timeout: 10000 });
-    await expect(dispatch.truckColumn.first()).toContainText(Constants.truckName);
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/drivers/dashboard') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        dispatch.fillInputField(dispatch.truckSeachInput, Constants.truckName)
+    ]);
+    await expect(dispatch.truckColumn.first()).toContainText(Constants.truckName, { timeout: 5000 });
 });
 
 test('Korisnik moze da pretrazuje User-a po prikolici', async ({ page }) => {
     const dispatch = new DispatchDashboardOverview(page);
-    await dispatch.fillInputField(dispatch.trailerSearchInput, Constants.trailerTestNumber);
-    const trailer = page.locator('tr', {
-        has: page.locator('td:nth-child(9)', { hasText: Constants.trailerTestNumber })
-    });
-    await trailer.first().waitFor({ state: 'visible', timeout: 10000 });
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/drivers/dashboard') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        dispatch.fillInputField(dispatch.trailerSearchInput, Constants.trailerTestNumber)
+    ]);
     await expect(dispatch.trailerColumn.first()).toContainText(Constants.trailerTestNumber);
 });
 
@@ -99,7 +103,6 @@ test('Korisnik moze da mijenja datum, mjesec i godinu', async ({ page }) => {
     await expect(dispatch.monthOryearLabelInDatePicker).toContainText(/January 2023/)
     await expect(dispatch.selectedDate).toContainText(/13/);
 });
-
 
 test('Korisnik moze da mijenja range na next dugme', async ({ page }) => {
     const dispatch = new DispatchDashboardOverview(page);
@@ -177,5 +180,5 @@ test('Korisnik moze da otvori edit driver modal kada klikne na ime kamiona', asy
     await dispatch.fillInputField(dispatch.nameSearchInput, Constants.driverName);
     await page.waitForLoadState("networkidle");
     await dispatch.driveNameColumn.first().click({ button: "right" });
-    await page.locator('.v-dialog--active').isVisible();
+    await dispatch.activeDialogbox.isVisible();
 });

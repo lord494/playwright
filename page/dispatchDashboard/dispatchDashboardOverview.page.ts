@@ -40,6 +40,7 @@ export class DispatchDashboardOverview {
     readonly fcColumn: Locator;
     readonly loadColumn: Locator;
     readonly dedicatedIcon: Locator;
+    readonly activeDialogbox: Locator;
 
     constructor(page: Page) {
         this.page = page;
@@ -81,6 +82,7 @@ export class DispatchDashboardOverview {
         this.noteIcon = page.locator('.v-icon.note-icon');
         this.loadColumn = page.locator('.load-cell');
         this.dedicatedIcon = page.locator('.v-icon.notranslate.dedicated-icon');
+        this.activeDialogbox = page.locator('.v-dialog--active');
     }
 
     async fillInputField(locator: Locator, text: string): Promise<void> {

@@ -9,13 +9,14 @@ test.use({ storageState: 'auth.json' });
 test.beforeEach(async ({ page }) => {
     const dashboard = new DispatchDashboardOverview(page);
     const addLoad = new AddAndEditLoadModal(page);
-    await page.goto(Constants.dashboardUrl);
-    await dashboard.driveNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-    await dashboard.fillInputField(dashboard.nameSearchInput, Constants.driverName);
-    const driver = page.locator('tr', {
-        has: page.locator('td:nth-child(2)', { hasText: 'btest' })
-    });
-    await driver.first().waitFor({ state: 'visible', timeout: 10000 });
+    await page.goto(Constants.dashboardUrl, { waitUntil: 'networkidle', timeout: 15000 });
+    const [response] = await Promise.all([
+        page.waitForResponse(resp =>
+            resp.url().includes('/api/drivers/dashboard') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        await dashboard.fillInputField(dashboard.nameSearchInput, Constants.driverName)
+    ]);
     const text = await dashboard.loadColumn.first().textContent();
     page.on('dialog', async (dialog) => {
         await dialog.accept();
