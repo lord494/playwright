@@ -5,18 +5,14 @@ import { LoadTypesPage } from '../../../page/Content/loadTypes.page';
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
-    const type = new LoadTypesPage(page);
-    await page.goto(Constants.loadTypesUrl);
-    await type.typeColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+    await page.goto(Constants.loadTypesUrl, { waitUntil: 'networkidle', timeout: 20000 });
 });
 
 test('Korisnik moze da doda Load Type i da ga obrise', async ({ page }) => {
     const type = new LoadTypesPage(page);
-    await page.waitForLoadState('networkidle');
     await type.clickElement(type.addTypeIcon);
     await type.fillBoardName(type.nameTypeField, Constants.newLoadType);
-    const colorOptions = page.locator('.v-color-picker__color');
-    const desiredColor = colorOptions.filter({
+    const desiredColor = type.colorOptions.filter({
         has: page.locator('[style*="rgb(194, 24, 91)"]')
     });
     await desiredColor.first().click();
@@ -33,7 +29,6 @@ test('Korisnik moze da doda Load Type i da ga obrise', async ({ page }) => {
 
 test('Name load type je obavezno polje', async ({ page }) => {
     const type = new LoadTypesPage(page);
-    await page.waitForLoadState('networkidle');
     await type.clickElement(type.addTypeIcon);
     await type.clickAddButton();
     await expect(type.errorMessage).toBeVisible({ timeout: 3000 });
@@ -42,11 +37,9 @@ test('Name load type je obavezno polje', async ({ page }) => {
 
 test('Korisnik moze da doda Load Type, postavi is Active false i da ga obrise', async ({ page }) => {
     const type = new LoadTypesPage(page);
-    await page.waitForLoadState('networkidle');
     await type.clickElement(type.addTypeIcon);
     await type.fillBoardName(type.nameTypeField, Constants.newLoadType);
-    const colorOptions = page.locator('.v-color-picker__color');
-    const desiredColor = colorOptions.filter({
+    const desiredColor = type.colorOptions.filter({
         has: page.locator('[style*="rgb(194, 24, 91)"]')
     });
     await desiredColor.first().click();
@@ -65,7 +58,6 @@ test('Korisnik moze da doda Load Type, postavi is Active false i da ga obrise', 
 
 test('Korisnik moze da doda Load Type i podesi boje pomocu slider-a i da ga obrise', async ({ page }) => {
     const type = new LoadTypesPage(page);
-    await page.waitForLoadState('networkidle');
     await type.clickElement(type.addTypeIcon);
     await type.fillBoardName(type.nameTypeField, Constants.newLoadType);
     const box = await type.sliderThumb.first().boundingBox();
@@ -92,7 +84,6 @@ test('Korisnik moze da doda Load Type i podesi boje pomocu slider-a i da ga obri
 
 test('Korisnik moze da doda Load Type i podesi obe boje pomocu slider-a i da ga obrise', async ({ page }) => {
     const type = new LoadTypesPage(page);
-    await page.waitForLoadState('networkidle');
     await type.clickElement(type.addTypeIcon);
     await type.fillBoardName(type.nameTypeField, Constants.newLoadType);
     const box = await type.sliderThumb.first().boundingBox();
@@ -126,12 +117,10 @@ test('Korisnik moze da doda Load Type i podesi obe boje pomocu slider-a i da ga 
 
 test('Korisnik moze da doda Load Type, izmeni boju i da ga obrise', async ({ page }) => {
     const type = new LoadTypesPage(page);
-    await page.waitForLoadState('networkidle');
     await type.clickElement(type.addTypeIcon);
     await type.fillBoardName(type.nameTypeField, Constants.newLoadType);
-    const colorOptions = page.locator('.v-color-picker__color');
     const initialColor = 'rgb(194, 24, 91)';
-    const firstColor = colorOptions.filter({
+    const firstColor = type.colorOptions.filter({
         has: page.locator(`[style*="${initialColor}"]`)
     });
     await firstColor.first().click();
@@ -141,7 +130,7 @@ test('Korisnik moze da doda Load Type, izmeni boju i da ga obrise', async ({ pag
     await expect(type.colorColumn.last()).toHaveCSS('background-color', initialColor);
     await type.clickElement(type.pencilIcon.last());
     const updatedColor = 'rgb(142, 36, 170)';
-    const secondColor = colorOptions.filter({
+    const secondColor = type.colorOptions.filter({
         has: page.locator(`[style*="${updatedColor}"]`)
     });
     await secondColor.first().click();

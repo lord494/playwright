@@ -16,6 +16,7 @@ export class LoadTypesPage extends BasePage {
     readonly errorMessage: Locator;
     readonly sliderThumb: Locator;
     readonly dotColorPicker: Locator;
+    readonly colorOptions: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -33,6 +34,7 @@ export class LoadTypesPage extends BasePage {
         this.errorMessage = page.locator('.v-messages__message');
         this.sliderThumb = page.locator('.v-slider__thumb.grey');
         this.dotColorPicker = page.locator('.v-color-picker__dot');
+        this.colorOptions = page.locator('.v-color-picker__color');
     }
 
     async fillBoardName(board: Locator, name: string): Promise<void> {

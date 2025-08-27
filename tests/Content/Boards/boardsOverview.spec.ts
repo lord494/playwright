@@ -5,9 +5,7 @@ import { BoardsPage } from '../../../page/Content/boards.page';
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
-    const board = new BoardsPage(page);
-    await page.goto(Constants.boardsUrl);
-    await board.userNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+    await page.goto(Constants.boardsUrl, { waitUntil: 'networkidle', timeout: 20000 });
 });
 
 test('15 rows per page je prikazano po defaultu', async ({ page }) => {

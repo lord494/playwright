@@ -5,14 +5,11 @@ import { CompaniesPage } from '../../../page/Content/companies.page';
 test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
-    const companies = new CompaniesPage(page);
-    await page.goto(Constants.companiesUrl);
-    await companies.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+    await page.goto(Constants.companiesUrl, { waitUntil: 'networkidle', timeout: 20000 });
 });
 
 test('Korisnik moze da doda Company', async ({ page }) => {
     const companies = new CompaniesPage(page);
-    await page.waitForLoadState('networkidle');
     await companies.clickElement(companies.addCompany);
     await companies.fillCompanyName(companies.nameCompanyField, Constants.playwrightCompany);
     await companies.fillShortName(companies.shortNameField, Constants.shortName);
@@ -29,7 +26,6 @@ test('Korisnik moze da doda Company', async ({ page }) => {
 
 test('Company name polje je obavezno', async ({ page }) => {
     const companies = new CompaniesPage(page);
-    await page.waitForLoadState('networkidle');
     await companies.clickElement(companies.addCompany);
     await companies.fillShortName(companies.shortNameField, Constants.shortName);
     await companies.clickAddButton();
@@ -38,7 +34,6 @@ test('Company name polje je obavezno', async ({ page }) => {
 
 test('Company short name polje je obavezno', async ({ page }) => {
     const companies = new CompaniesPage(page);
-    await page.waitForLoadState('networkidle');
     await companies.clickElement(companies.addCompany);
     await companies.fillCompanyName(companies.nameCompanyField, Constants.playwrightCompany);
     await companies.clickAddButton();
@@ -47,7 +42,6 @@ test('Company short name polje je obavezno', async ({ page }) => {
 
 test('Korisnik moze da obrise Company', async ({ page }) => {
     const companies = new CompaniesPage(page);
-    await page.waitForLoadState('networkidle');
     await companies.clickElement(companies.addCompany);
     await companies.fillCompanyName(companies.nameCompanyField, Constants.playwrightCompany);
     await companies.fillShortName(companies.shortNameField, Constants.shortName);
@@ -63,7 +57,6 @@ test('Korisnik moze da obrise Company', async ({ page }) => {
 
 test('Korisnik moze da edituje Board', async ({ page }) => {
     const companies = new CompaniesPage(page);
-    await page.waitForLoadState('networkidle');
     await companies.clickElement(companies.addCompany);
     await companies.fillCompanyName(companies.nameCompanyField, Constants.playwrightCompany);
     await companies.fillShortName(companies.shortNameField, Constants.shortName);
@@ -89,7 +82,6 @@ test('Korisnik moze da edituje Board', async ({ page }) => {
 
 test('Company name polje je obavezno u edit modalu', async ({ page }) => {
     const companies = new CompaniesPage(page);
-    await page.waitForLoadState('networkidle');
     await companies.clickElement(companies.pencilIcon.first());
     await companies.nameCompanyField.clear();
     await companies.clickSaveButton();
@@ -98,7 +90,6 @@ test('Company name polje je obavezno u edit modalu', async ({ page }) => {
 
 test('Short name polje je obavezno u edit modalu', async ({ page }) => {
     const companies = new CompaniesPage(page);
-    await page.waitForLoadState('networkidle');
     await companies.clickElement(companies.pencilIcon.first());
     await companies.shortNameField.clear();
     await companies.clickSaveButton();

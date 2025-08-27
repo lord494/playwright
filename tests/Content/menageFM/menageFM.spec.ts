@@ -1,24 +1,25 @@
 import { test, expect } from '@playwright/test';
 import { Constants } from '../../../helpers/constants';
 import { MenageFM } from '../../../page/Content/manageFM.page';
+import { waitForDriver } from '../../../helpers/dateUtilis';
 
 test.describe.serial('Testovi koji se izvršavaju redom', () => {
 
     test.use({ storageState: 'auth.json' });
 
     test.beforeEach(async ({ page }) => {
-        const fm = new MenageFM(page);
-        await page.goto(Constants.menageFMUrl), { waitUntil: 'networkidle' };
-        await fm.card.first().waitFor({ state: 'visible', timeout: 10000 });
+        await page.goto(Constants.menageFMUrl, { waitUntil: 'networkidle', timeout: 20000 });
     });
 
     test('Korisnik moze da uradi drag and drop kamiona koji nema fm u neku karticu', async ({ page }) => {
         const fm = new MenageFM(page);
         await fm.card.first().waitFor({ state: 'visible', timeout: 5000 });
-        await fm.searchTruckNumberAndFM(fm.searchDrivers, Constants.truckNumberFM);
-        await fm.driverNumberAndDriversWithoutFM.nth(5).waitFor({ state: "hidden", timeout: 5000 });
-        await fm.dragAndDrop();
-        await page.waitForLoadState('networkidle');
+        await waitForDriver(page, async () => {
+            fm.searchTruckNumberAndFM(fm.searchDrivers, Constants.truckNumberFM)
+        });
+        await waitForDriver(page, async () => {
+            fm.dragAndDrop()
+        });
         await expect(fm.card.first()).toContainText(Constants.truckNumberFM);
         const numbers = await fm.driverNumberAndDriver.allTextContents();
         page.on('dialog', async (dialog) => {
@@ -49,7 +50,6 @@ test.describe.serial('Testovi koji se izvršavaju redom', () => {
 
     test('Korisnik moze da pretrazuje fleet manager-e', async ({ page }) => {
         const fm = new MenageFM(page);
-        await page.waitForLoadState('networkidle');
         const fleetManager = (await fm.fmNameTitle.first().allInnerTexts()).toString();
         await fm.searchTruckNumberAndFM(fm.searchFMorTruckNumberField, fleetManager);
         await fm.clickElement(fm.searchButton);
@@ -77,21 +77,24 @@ test.describe.serial('Testovi koji se izvršavaju redom', () => {
     test('Korisnik moze da pretrazuje vozace koji nemaju fm', async ({ page }) => {
         const fm = new MenageFM(page);
         const truckNumber = await fm.getTruckNumberWithoutFM();
-        await fm.searchTruckNumberAndFM(fm.searchDrivers, truckNumber);
-        await fm.driverNumberAndDriversWithoutFM.nth(5).waitFor({ state: "hidden", timeout: 5000 });
+        await waitForDriver(page, async () => {
+            fm.searchTruckNumberAndFM(fm.searchDrivers, truckNumber)
+        });
         await expect(fm.driverNumberAndDriversWithoutFM).toContainText(truckNumber);
     });
 
     test('Broj u counteru se povecava i smanjuje nakon dodavanja i brisanja', async ({ page }) => {
         const fm = new MenageFM(page);
-        await page.waitForLoadState('networkidle');
         await fm.card.first().waitFor({ state: 'visible', timeout: 5000 });
-        await fm.searchTruckNumberAndFM(fm.searchDrivers, Constants.truckNumberFM);
-        await fm.driverNumberAndDriversWithoutFM.nth(5).waitFor({ state: "hidden", timeout: 5000 });
+        await waitForDriver(page, async () => {
+            fm.searchTruckNumberAndFM(fm.searchDrivers, Constants.truckNumberFM)
+        });
         const beforeAddTrukc = await fm.counter.first().textContent();
         const beforeAddTruckNumber = Number(beforeAddTrukc?.trim());
-        await fm.dragAndDrop();
-        await page.waitForLoadState('networkidle');
+        await waitForDriver(page, async () => {
+            fm.dragAndDrop()
+        });
+
         await expect(fm.card.first()).toContainText(Constants.truckNumberFM);
         const afterAddTruck = await fm.counter.first().textContent();
         const afterAddTruckNumber = Number(afterAddTruck?.trim());
@@ -116,8 +119,9 @@ test.describe.serial('Testovi koji se izvršavaju redom', () => {
     test('Korisnik moze da pretrazuje kamione koji nemaju fm', async ({ page }) => {
         const fm = new MenageFM(page);
         const truckNumber = await fm.getTruckNumberWithoutFM();
-        await fm.searchTruckNumberAndFM(fm.searchDrivers, truckNumber);
-        await fm.driverNumberAndDriversWithoutFM.nth(5).waitFor({ state: "hidden", timeout: 5000 });
+        await waitForDriver(page, async () => {
+            fm.searchTruckNumberAndFM(fm.searchDrivers, truckNumber)
+        });
         await expect(fm.driverNumberAndDriversWithoutFM).toContainText(truckNumber);
     });
 });
