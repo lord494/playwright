@@ -2,8 +2,6 @@ import { Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 import path from 'path';
 
-
-
 export class InsertPermitBookPage extends BasePage {
     readonly page: Page;
     readonly insertDocumentField: Locator;
@@ -55,7 +53,6 @@ export class InsertPermitBookPage extends BasePage {
         this.loader = page.locator('div[role="dialog"] .v-progress-linear__background.primary');
         this.xIconInFIelds = page.locator('.mdi.mdi-close');
         this.errorMessage = page.locator('.v-messages__message');
-        //this.documentReferrerMenu = page.locator('.v-input.v-select.v-select--is-menu-active .v-select__slot');
         this.documentReferrerMenu = page.locator('.v-input__slot');
         this.doc = page.locator('.v-select__slot .v-label.theme--light');
         this.truckNumberFromMenu = page.getByRole('option', { name: '11996', exact: true });
@@ -143,28 +140,6 @@ export class InsertPermitBookPage extends BasePage {
         return formattedFutureDate;
     }
 
-    // async selectExpiringDateLessThan30Days(): Promise<string> {
-    //     await this.expiringDateField.click();
-    //     const dateText = await this.currentDate.textContent();
-    //     const selectedDay = parseInt(dateText?.trim() || '0', 10);
-    //     const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
-    //     await nextMonthButton.click();
-    //     const futureDate = new Date();
-    //     const newDay = selectedDay + futureDate.getMonth() + 2;
-    //     futureDate.setDate(selectedDay + newDay);
-    //     const futureDateDay = futureDate.getDate();
-    //     const futureDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${futureDateDay}")`);
-    //     await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
-    //     await futureDateButton.first().click();
-    //     await this.okButtonInDatePicekr.click();
-    //     const formattedDate = futureDate.toLocaleDateString('en-US', {
-    //         year: 'numeric',
-    //         month: 'short',
-    //         day: 'numeric',
-    //     });
-    //     return formattedDate;
-    // }
-
     async selectExpiringDateLessThan30Days(): Promise<string> {
         await this.page.waitForLoadState('networkidle');
         await this.expiringDateField.click();
@@ -191,5 +166,4 @@ export class InsertPermitBookPage extends BasePage {
 
         return formattedDate;
     }
-
 }
