@@ -37,10 +37,7 @@ test('Korisnik moze da doda Shop sa Any truck fransizom', async ({ page }) => {
     await expect(addShop.shopTypePart).toContainText('TRUCK');
     await expect(addShop.websitePart).toContainText(Constants.shopWebsite);
     await expect(addShop.emailPart).toContainText(Constants.testEmail);
-    await addShop.editShopButton.click();
-    await addShop.deleteShopButton.click();
-    await addShop.deleteButtonInModal.click();
-    await page.waitForLoadState('networkidle');
+    await addShop.deleteShop();
 });
 
 test('Korisnik moze da doda Shop sa vise tipova shopa', async ({ page }) => {
@@ -75,10 +72,7 @@ test('Korisnik moze da doda Shop sa vise tipova shopa', async ({ page }) => {
     };
     await expect(addShop.websitePart).toContainText(Constants.shopWebsite);
     await expect(addShop.emailPart).toContainText(Constants.testEmail);
-    await addShop.editShopButton.click();
-    await addShop.deleteShopButton.click();
-    await addShop.deleteButtonInModal.click();
-    await page.waitForLoadState('networkidle');
+    await addShop.deleteShop();
 });
 
 test('Shop name je obavezno polje', async ({ page }) => {
@@ -128,7 +122,6 @@ test('Address je obavezno polje', async ({ page }) => {
 
 test('Korisnik moze da edituje Shop', async ({ page }) => {
     const addShop = new AddShopPage(page);
-    const address = new RegExp(Constants.addressShop);
     await addShop.enterShopName(addShop.shopNameField, Constants.shopName);
     await addShop.selectFranchise(addShop.franchiseMenu, addShop.anyTruckFranchiseOption);
     await addShop.selectAddress(addShop.addressField, Constants.addressShop, addShop.addressOption);
@@ -162,8 +155,25 @@ test('Korisnik moze da edituje Shop', async ({ page }) => {
         const text = (await addShop.shopTypePart.nth(i).textContent())?.trim();
         expect(shopTypes).toContain(text);
     };
-    await addShop.editShopButton.click();
-    await addShop.deleteShopButton.click();
-    await addShop.deleteButtonInModal.click();
-    await page.waitForLoadState('networkidle');
+    await addShop.deleteShop();
+});
+
+test('Korisnik moze da prebaci shop u Blacklisted', async ({ page }) => {
+    const addShop = new AddShopPage(page);
+    await addShop.enterShopName(addShop.shopNameField, Constants.shopName);
+    await addShop.selectFranchise(addShop.franchiseMenu, addShop.anyTruckFranchiseOption);
+    await addShop.selectAddress(addShop.addressField, Constants.addressShop, addShop.addressOption);
+    await addShop.check(addShop.truckTypeCheckobx);
+    await addShop.check(addShop.nationalShopToggle);
+    await addShop.enterWebSite(addShop.websiteField, Constants.shopWebsite);
+    await addShop.enterEmail(addShop.emailField, Constants.testEmail);
+    await addShop.enterPhoneNumber(addShop.phoneNumberField, Constants.adminPhone);
+    await addShop.addShopButton.click();
+    await addShop.addNewShopCard.waitFor({ state: 'visible', timeout: 5000 });
+    await addShop.yesButtonInDialog.click();
+    await addShop.backIcon.waitFor({ state: 'visible', timeout: 5000 });
+    await expect(addShop.changeShopStatusButton).toBeVisible({ timeout: 5000 });
+    await addShop.moveShopToBlackedList();
+    await expect(addShop.shopCategoryPart).toContainText("BLACKLISTED");
+    await addShop.deleteShop();
 });

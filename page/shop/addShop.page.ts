@@ -37,6 +37,10 @@ export class AddShopPage extends BasePage {
     readonly errorMessage: Locator;
     readonly mapIcon: Locator;
     readonly editShopButtonInModal: Locator;
+    readonly changeShopStatusButton: Locator;
+    readonly blackedListedButtonInModal: Locator;
+    readonly blackedListTextbox: Locator;
+    readonly confirmButton: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -76,6 +80,10 @@ export class AddShopPage extends BasePage {
         this.errorMessage = page.locator('.v-messages__message');
         this.mapIcon = page.locator('.mdi-map-search');
         this.editShopButtonInModal = page.locator('.v-dialog--active .v-btn__content', { hasText: 'Edit Shop' });
+        this.changeShopStatusButton = page.getByRole('button', { name: 'Change Shop Status' });
+        this.blackedListedButtonInModal = page.locator('v-chip__content', { hasText: 'BLACKLISTED' });
+        this.blackedListTextbox = page.locator('.v-input.v-textarea textarea');
+        this.confirmButton = page.locator('.v-btn__content', { hasText: 'Confirm' });
     }
 
     async selectFranchise(menu: Locator, franchise: Locator): Promise<void> {
@@ -107,5 +115,19 @@ export class AddShopPage extends BasePage {
 
     async enterPhoneNumber(field: Locator, shop: string): Promise<void> {
         return this.fillInputField(field, shop);
+    }
+
+    async moveShopToBlackedList(): Promise<void> {
+        await this.changeShopStatusButton.click();
+        await this.blackedListTextbox.fill("Blacked List Reason");
+        await this.confirmButton.click();
+        await this.blackedListTextbox.waitFor({ state: "hidden", timeout: 5000 });
+    }
+
+    async deleteShop(): Promise<void> {
+        await this.editShopButton.click();
+        await this.deleteShopButton.click();
+        await this.deleteButtonInModal.click();
+        await this.page.waitForLoadState('networkidle');
     }
 }

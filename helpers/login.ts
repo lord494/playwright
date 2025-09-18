@@ -16,8 +16,10 @@ export function getLatestOtpEmail(): Promise<string> {
     imap.once('ready', () => {
       imap.openBox('INBOX', false, (err, box) => {
         if (err) return reject(err);
+
         const fiveMinutesAgo = new Date();
         fiveMinutesAgo.setMinutes(fiveMinutesAgo.getMinutes() - 5);
+
         imap.search([
           ['SUBJECT', 'OTP TOKEN'],
           ['SINCE', fiveMinutesAgo]
@@ -47,17 +49,20 @@ export function getLatestOtpEmail(): Promise<string> {
                 }
 
                 const textContent = parsed.text || '';
-                console.log('Email text content:', textContent);
-                const textMatch = textContent.match(/.*?([A-Z0-9]{6,})$/i);
+                const htmlContent = parsed.html || '';
+
+                // 1. Traži OTP u textContent
+                const textMatch = textContent.match(/ACCESS\s+([A-Z0-9]{6,})/);
                 if (textMatch && textMatch[1]) {
-                  console.log('Found OTP in text:', textMatch[1]);
+                  console.log('Found OTP in text after ACCESS:', textMatch[1]);
+                  imap.end();
                   return resolve(textMatch[1]);
                 }
-                const htmlContent = parsed.html || '';
-                console.log('Email HTML content:', htmlContent);
-                const htmlMatch = htmlContent.match(/.*?([A-Z0-9]{6,})$/i);
+
+                // 2. Traži OTP u htmlContent
+                const htmlMatch = htmlContent.match(/ACCESS\s+([A-Z0-9]{6,})/);
                 if (htmlMatch && htmlMatch[1]) {
-                  console.log('Found OTP in HTML:', htmlMatch[1]);
+                  console.log('Found OTP in HTML after ACCESS:', htmlMatch[1]);
                   imap.end();
                   return resolve(htmlMatch[1]);
                 }
@@ -93,6 +98,8 @@ export function getLatestOtpEmail(): Promise<string> {
     imap.connect();
   });
 }
+
+
 
 export class Login {
   readonly page: Page;
