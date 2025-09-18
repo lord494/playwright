@@ -41,6 +41,8 @@ export class ShopPage extends BasePage {
     readonly leftArrowIcon: Locator;
     readonly card: Locator;
     readonly loader: Locator;
+    readonly cards: Locator;
+    readonly noShopMessage: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -83,6 +85,20 @@ export class ShopPage extends BasePage {
         this.leftArrowIcon = page.locator('.mdi-arrow-left');
         this.card = page.locator('.shop-card-data');
         this.loader = page.locator('.v-progress-linear__buffer');
+        this.cards = page.locator('.shop-card-data');
+        this.noShopMessage = page.getByText('No shops match.');
+    }
+
+    async waitForShopLoads(action: () => Promise<void>) {
+        await Promise.all([
+            this.page.waitForResponse(
+                response =>
+                    response.url().includes('/ms-shop/shop') &&
+                    (response.status() === 200 || response.status() === 304),
+                { timeout: 20_000 }
+            ),
+            action()
+        ]);
     }
 
     async check(checkbox: Locator): Promise<void> {
