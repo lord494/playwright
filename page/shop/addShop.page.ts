@@ -41,6 +41,7 @@ export class AddShopPage extends BasePage {
     readonly blackedListedButtonInModal: Locator;
     readonly blackedListTextbox: Locator;
     readonly confirmButton: Locator;
+    readonly addNewShopButton: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -84,6 +85,7 @@ export class AddShopPage extends BasePage {
         this.blackedListedButtonInModal = page.locator('v-chip__content', { hasText: 'BLACKLISTED' });
         this.blackedListTextbox = page.locator('.v-input.v-textarea textarea');
         this.confirmButton = page.locator('.v-btn__content', { hasText: 'Confirm' });
+        this.addNewShopButton = page.getByRole('button', { name: 'Add new shop' });
     }
 
     async selectFranchise(menu: Locator, franchise: Locator): Promise<void> {

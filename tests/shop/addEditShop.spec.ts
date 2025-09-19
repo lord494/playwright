@@ -2,8 +2,7 @@ import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { test } from '../fixtures/fixtures';
 
-test('Korisnik moze da doda Shop sa Any truck fransizom', async ({ shopWithDialog }) => {
-    const { addShopPage } = shopWithDialog;
+test('Korisnik moze da doda Shop sa Any truck fransizom', async ({ addShopPage }) => {
     const address = new RegExp(Constants.addressShop);
     await addShopPage.enterShopName(addShopPage.shopNameField, Constants.shopName);
     await addShopPage.selectFranchise(addShopPage.franchiseMenu, addShopPage.anyTruckFranchiseOption);
@@ -29,8 +28,7 @@ test('Korisnik moze da doda Shop sa Any truck fransizom', async ({ shopWithDialo
     await addShopPage.deleteShop();
 });
 
-test('Korisnik moze da doda Shop sa vise tipova shopa', async ({ shopWithDialog }) => {
-    const { addShopPage } = shopWithDialog;
+test('Korisnik moze da doda Shop sa vise tipova shopa', async ({ addShopPage }) => {
     const address = new RegExp(Constants.addressShop);
     await addShopPage.enterShopName(addShopPage.shopNameField, Constants.shopName);
     await addShopPage.selectFranchise(addShopPage.franchiseMenu, addShopPage.anyTruckFranchiseOption);
@@ -64,8 +62,7 @@ test('Korisnik moze da doda Shop sa vise tipova shopa', async ({ shopWithDialog 
     await addShopPage.deleteShop();
 });
 
-test('Shop name je obavezno polje', async ({ shopWithDialog }) => {
-    const { addShopPage } = shopWithDialog;
+test('Shop name je obavezno polje', async ({ addShopPage }) => {
     await addShopPage.selectFranchise(addShopPage.franchiseMenu, addShopPage.anyTruckFranchiseOption);
     await addShopPage.selectAddress(addShopPage.addressField, Constants.addressShop, addShopPage.addressOption);
     await addShopPage.check(addShopPage.partnerCategory);
@@ -81,8 +78,7 @@ test('Shop name je obavezno polje', async ({ shopWithDialog }) => {
     await expect(addShopPage.errorMessage).toContainText('The Name field is required');
 });
 
-test('Shop type je obavezno polje', async ({ shopWithDialog }) => {
-    const { addShopPage } = shopWithDialog;
+test('Shop type je obavezno polje', async ({ addShopPage }) => {
     await addShopPage.enterShopName(addShopPage.shopNameField, Constants.shopName);
     await addShopPage.selectFranchise(addShopPage.franchiseMenu, addShopPage.anyTruckFranchiseOption);
     await addShopPage.selectAddress(addShopPage.addressField, Constants.addressShop, addShopPage.addressOption);
@@ -95,8 +91,7 @@ test('Shop type je obavezno polje', async ({ shopWithDialog }) => {
     await expect(addShopPage.truckTypeCheckobx).toHaveClass('v-label theme--light error--text');
 });
 
-test('Address je obavezno polje', async ({ shopWithDialog }) => {
-    const { addShopPage } = shopWithDialog;
+test('Address je obavezno polje', async ({ addShopPage }) => {
     await addShopPage.enterShopName(addShopPage.shopNameField, Constants.shopName);
     await addShopPage.selectFranchise(addShopPage.franchiseMenu, addShopPage.anyTruckFranchiseOption);
     await addShopPage.check(addShopPage.truckTypeCheckobx);
@@ -109,8 +104,7 @@ test('Address je obavezno polje', async ({ shopWithDialog }) => {
     await expect(addShopPage.mapIcon).toHaveClass('v-icon notranslate mdi mdi-map-search theme--light error--text');
 });
 
-test('Korisnik moze da edituje Shop', async ({ shopWithDialog }) => {
-    const { addShopPage } = shopWithDialog;
+test('Korisnik moze da edituje Shop', async ({ addShopPage }) => {
     await addShopPage.enterShopName(addShopPage.shopNameField, Constants.shopName);
     await addShopPage.selectFranchise(addShopPage.franchiseMenu, addShopPage.anyTruckFranchiseOption);
     await addShopPage.selectAddress(addShopPage.addressField, Constants.addressShop, addShopPage.addressOption);
@@ -147,8 +141,7 @@ test('Korisnik moze da edituje Shop', async ({ shopWithDialog }) => {
     await addShopPage.deleteShop();
 });
 
-test('Korisnik moze da prebaci shop u Blacklisted', async ({ shopWithDialog }) => {
-    const { addShopPage } = shopWithDialog;
+test('Korisnik moze da prebaci shop u Blacklisted', async ({ addShopPage }) => {
     await addShopPage.enterShopName(addShopPage.shopNameField, Constants.shopName);
     await addShopPage.selectFranchise(addShopPage.franchiseMenu, addShopPage.anyTruckFranchiseOption);
     await addShopPage.selectAddress(addShopPage.addressField, Constants.addressShop, addShopPage.addressOption);

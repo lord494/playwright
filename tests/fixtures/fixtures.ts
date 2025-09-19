@@ -4,17 +4,11 @@ import { Constants } from '../../helpers/constants';
 import { EditAndWriteReview } from '../../page/shop/editAndWriteReview.page';
 import { AddShopPage } from '../../page/shop/addShop.page';
 
-type ShopDialogFixture = {
-    shopPage: ShopPage;
-    addShopPage: AddShopPage;
-};
-
 export const test = base.extend<{
     loggedPage: Page;
     shopPage: ShopPage;
     reviewPage: EditAndWriteReview;
     addShopPage: AddShopPage;
-    shopWithDialog: ShopDialogFixture;
 
 }>({
     loggedPage: async ({ browser }, use) => {
@@ -38,12 +32,11 @@ export const test = base.extend<{
         await use(review);
     },
 
-    shopWithDialog: async ({ loggedPage }, use: (pages: ShopDialogFixture) => Promise<void>) => {
-        const shopPage = new ShopPage(loggedPage);
-        const addShopPage = new AddShopPage(loggedPage);
-        await loggedPage.goto(Constants.shopUrl, { waitUntil: 'networkidle' });
-        await shopPage.addNewShopButton.click();
-        await addShopPage.activeDialogbox.waitFor({ state: 'visible', timeout: 5000 });
-        await use({ shopPage, addShopPage });
+    addShopPage: async ({ loggedPage }, use) => {
+        const addShop = new AddShopPage(loggedPage);
+        await loggedPage.goto(Constants.shopUrl, { waitUntil: 'networkidle', timeout: 20_000 });
+        await addShop.addNewShopButton.click();
+        await addShop.franchiseMenu.waitFor({ state: 'visible', timeout: 10000 });
+        await use(addShop);
     }
 });
