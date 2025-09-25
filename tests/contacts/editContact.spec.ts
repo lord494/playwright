@@ -1,90 +1,55 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
-import { ContactsPage } from '../../page/contacts/contactsOverview.page';
-import { AddContactsPage } from '../../page/contacts/addContact.page';
 import { generateRandomString } from '../../helpers/dateUtilis';
+import { test } from '../fixtures/fixtures';
 
-test.use({ storageState: 'auth.json' });
-
-test.beforeEach(async ({ page }) => {
-    const contact = new ContactsPage(page);
-    const addContact = new AddContactsPage(page);
-    await page.goto(Constants.contactsUrl, { waitUntil: 'networkidle' });
-    await contact.addContactButton.click();
-    await addContact.enterName(addContact.nameField, Constants.driverName);
-    await addContact.enterFloydExt(addContact.floydExtField, Constants.extField);
-    await addContact.enterTrytimeExt(addContact.trytimeExtField, Constants.extSecond);
-    await addContact.enterRocketExt(addContact.rocketExtField, Constants.extThird);
-    await addContact.enterJordanExt(addContact.jordanExtField, Constants.extFourth);
-    await addContact.enterPhoneNumber(addContact.phoneNumberField, Constants.phoneNumberOfUserApp);
-    const email = generateRandomString(8) + '@example.com';
-    await addContact.enterEmail(addContact.emailField, email);
-    await addContact.enterCompany(addContact.companyField, Constants.testCompany);
-    await addContact.enterPosition(addContact.positionField, Constants.newRole);
-    await addContact.selectAssistant(addContact.assistantField, Constants.boskoQA, addContact.assistantOption);
-    await addContact.isCheckedFC();
-    const [response] = await Promise.all([
-        page.waitForResponse(res =>
-            res.url().includes('/api/contacts')
-        ),
-        await addContact.clickElement(addContact.addButton)
-    ]);
-    expect([200, 304]).toContain(response.status());
-    await contact.searchContact(contact.searchField, email);
-});
-
-test('Korisnik moze da edituje Contact', async ({ page }) => {
-    const contact = new ContactsPage(page);
-    const addContact = new AddContactsPage(page);
-    page.on('dialog', async (dialog) => {
+test('Korisnik moze da edituje Contact', async ({ createdContact, contactPage, addContactPage }) => {
+    const emailBefore = createdContact.email;
+    contactPage.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
-    await contact.pencilIcon.click();
-    await addContact.nameField.fill('');
-    await addContact.enterName(addContact.nameField, Constants.driverNameFraser);
-    await addContact.phoneNumberField.fill('');
-    await addContact.enterPhoneNumber(addContact.phoneNumberField, Constants.adminPhone);
+    await contactPage.pencilIcon.click();
+    await addContactPage.nameField.fill('');
+    await addContactPage.enterName(addContactPage.nameField, Constants.driverNameFraser);
+    await addContactPage.phoneNumberField.fill('');
+    await addContactPage.enterPhoneNumber(addContactPage.phoneNumberField, Constants.adminPhone);
     const email2 = generateRandomString(8) + '@example.com';
-    await addContact.emailField.fill('');
-    await addContact.enterEmail(addContact.emailField, email2);
-    await addContact.companyField.fill('');
-    await addContact.enterCompany(addContact.companyField, Constants.rocketCompany);
-    await addContact.positionField.fill('');
-    await addContact.enterPosition(addContact.positionField, Constants.readRole);
-    await addContact.uncheck(addContact.isActiveCheckbox);
+    await addContactPage.emailField.fill('');
+    await addContactPage.enterEmail(addContactPage.emailField, email2);
+    await addContactPage.companyField.fill('');
+    await addContactPage.enterCompany(addContactPage.companyField, Constants.rocketCompany);
+    await addContactPage.positionField.fill('');
+    await addContactPage.enterPosition(addContactPage.positionField, Constants.readRole);
+    await addContactPage.uncheck(addContactPage.isActiveCheckbox);
     const [response] = await Promise.all([
-        page.waitForResponse(res =>
-            res.url().includes('/api/contacts')
-        ),
-        await addContact.clickElement(addContact.saveButton)
+        contactPage.page.waitForResponse(res => res.url().includes('/api/contacts')),
+        addContactPage.clickElement(addContactPage.saveButton)
     ]);
     expect([200, 304]).toContain(response.status());
-    await expect(contact.nameColumn).toContainText(Constants.driverNameFraser);
-    await expect(contact.phoneNumberColumn).toContainText(Constants.adminPhone);
-    await expect(contact.emailColumn).toContainText(email2);
-    await expect(contact.companyColumn).toContainText(Constants.rocketCompany);
-    await expect(contact.positionColumn).toContainText(Constants.readRole);
-    await expect(contact.isActiveColumn).toContainText("NO");
-    await contact.deleteIcon.click();
-    await expect(contact.snackMessage).toContainText(Constants.driverNameFraser + ' successfully deleted');
+    await expect(contactPage.nameColumn).toContainText(Constants.driverNameFraser);
+    await expect(contactPage.phoneNumberColumn).toContainText(Constants.adminPhone);
+    await expect(contactPage.emailColumn).toContainText(email2);
+    await expect(contactPage.companyColumn).toContainText(Constants.rocketCompany);
+    await expect(contactPage.positionColumn).toContainText(Constants.readRole);
+    await expect(contactPage.isActiveColumn).toContainText('NO');
+    await contactPage.deleteIcon.click();
+    await expect(contactPage.snackMessage).toContainText(Constants.driverNameFraser + ' successfully deleted');
 });
 
-test('Korisnik moze da edituje Contact pomocu populate fields', async ({ page }) => {
-    const contact = new ContactsPage(page);
-    const addContact = new AddContactsPage(page);
-    page.on('dialog', async (dialog) => {
+test('Korisnik moze da edituje Contact pomocu populate fields', async ({ createdContact, contactPage, addContactPage }) => {
+    contactPage.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
-    await contact.pencilIcon.click();
-    await addContact.selectPopulatedField(addContact.populatedField, Constants.boskoQA, addContact.assistantOption);
+    await contactPage.pencilIcon.click();
+    await addContactPage.selectPopulatedField(addContactPage.populatedField, Constants.boskoQA, addContactPage.assistantOption);
     const [response] = await Promise.all([
-        page.waitForResponse(res =>
+        contactPage.page.waitForResponse(res =>
             res.url().includes('/api/contacts')
         ),
-        await addContact.clickElement(addContact.saveButton)
+        await addContactPage.clickElement(addContactPage.saveButton)
     ]);
     expect([200, 304]).toContain(response.status());
-    await expect(contact.nameColumn).toContainText(Constants.boskoQA);
-    await expect(contact.emailColumn).toContainText(Constants.boskoQAEmail);
-    await expect(contact.positionColumn).toContainText(Constants.boskoQAPosition);
+    await expect(contactPage.nameColumn).toContainText(Constants.boskoQA);
+    await expect(contactPage.emailColumn).toContainText(Constants.boskoQAEmail);
+    await expect(contactPage.positionColumn).toContainText(Constants.boskoQAPosition);
 });

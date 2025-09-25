@@ -19,6 +19,7 @@ export class AddContactsPage extends BasePage {
     readonly assistantOption: Locator;
     readonly errorMessage: Locator;
     readonly saveButton: Locator;
+    readonly addContactButton: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -39,6 +40,7 @@ export class AddContactsPage extends BasePage {
         this.assistantOption = page.getByRole('option', { name: 'Bosko QA Test' });
         this.errorMessage = page.locator('.v-messages__message');
         this.saveButton = page.getByRole('button', { name: 'Save' });
+        this.addContactButton = page.locator('.mdi-plus');
     }
 
     async selectPopulatedField(field: Locator, text: string, name: Locator): Promise<void> {
