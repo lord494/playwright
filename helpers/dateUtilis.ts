@@ -1,5 +1,7 @@
 import fs from 'fs';
-import { Page } from '@playwright/test';
+import { expect, Page } from '@playwright/test';
+import { RecrutimentPage } from '../page/recruitment/recruitmentOverview.page';
+import { time } from 'console';
 
 
 export function getWeekRange(offset = 0): string {
@@ -123,3 +125,130 @@ export async function waitForDriver(page: Page, action: () => Promise<void>) {
         action()
     ]);
 }
+
+export async function saveNumbersForStatus(page: Page, recruiterName: any, statusKey: string, fileName: fs.PathOrFileDescriptor) {
+    const recruitment = new RecrutimentPage(page);
+    const recruiterLocator = page.locator('.v-list-item__title').filter({ hasText: recruiterName });
+    await recruitment.recruiterTab.click();
+    const dropdownList = page.locator('.v-menu__content');
+    await recruitment.searchRecruiterMenu.click();
+
+    let previousHeight = 0;
+    for (let i = 0; i < 10; i++) { // max 10 pokušaja, da ne uđe u beskonačnu petlju
+        const currentHeight = await dropdownList.evaluate(el => el.scrollHeight);
+
+        if (currentHeight === previousHeight) {
+            // ništa novo se nije učitalo → kraj skrola
+            break;
+        }
+
+        await dropdownList.evaluate(el => {
+            el.scrollTop = el.scrollHeight;
+        });
+
+        previousHeight = currentHeight;
+        await page.waitForTimeout(300); // malo sačekaj za novo učitavanje
+    }
+
+    await recruitment.selectRecruiter(recruitment.searchRecruiterMenu, recruiterLocator);
+
+    const allCheckboxes = {
+        employed: recruitment.employedCheckbox,
+        unemployed: recruitment.unemployedCheckbox,
+        blocked: recruitment.blocedCheckbox,
+        retired: recruitment.retiredCheckbox,
+        thirdCompany: recruitment.thirdCompanyCheckbox,
+        ownerOperator: recruitment.onwerOperatorCheckbox,
+        hold: recruitment.holdCheckbox,
+        incContact: recruitment.incContactCheckbox
+    };
+
+    // Odcekiraj sve osim statusa koji testiramo
+    for (const [key, locator] of Object.entries(allCheckboxes)) {
+        if (key !== statusKey) {
+            await recruitment.uncheck(locator);
+            await page.waitForResponse((r: { url: () => string | string[]; status: () => number; }) => r.url().includes('/api/employees') && (r.status() === 200 || r.status() === 304));
+            await page.locator('.v-data-table__progress .v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 10000 });
+            await expect(locator).not.toBeChecked({ timeout: 5000 });
+        }
+    }
+
+    await recruitment.progressBar.waitFor({ state: 'hidden' });
+
+    // Load more employees
+    while (true) {
+        const loadMoreButton = page.locator('text=Load more employees').first();
+        if (!(await loadMoreButton.isVisible() && await loadMoreButton.isEnabled())) break;
+
+        try {
+            await Promise.all([
+                loadMoreButton.click(),
+                page.waitForResponse((r: { url: () => string | string[]; status: () => number; }) => r.url().includes('/api/employees') && (r.status() === 200 || r.status() === 304)),
+                page.waitForLoadState('networkidle')
+            ]);
+            await recruitment.progressBar.waitFor({ state: 'hidden' });
+        } catch {
+            break;
+        }
+    }
+
+    const numbers = await page.$$eval('tr td:nth-child(7)', (cells: any[]) => cells.map((c: { textContent: string; }) => c.textContent?.trim() || ''));
+    fs.writeFileSync(fileName, JSON.stringify(numbers, null, 2));
+    console.log(`Sacuvano ${numbers.length} brojeva za ${recruiterName} - ${statusKey}`);
+}
+
+
+export async function filterByStatus(page: Page, recruitment: RecrutimentPage, statusKey: string) {
+    const checkboxes: Record<string, any> = {
+        employed: recruitment.employedCheckbox,
+        unemployed: recruitment.unemployedCheckbox,
+        retired: recruitment.retiredCheckbox,
+        thirdCompany: recruitment.thirdCompanyCheckbox,
+        ownerOperator: recruitment.onwerOperatorCheckbox,
+        hold: recruitment.holdCheckbox,
+        incContact: recruitment.incContactCheckbox,
+        blocked: recruitment.blocedCheckbox,
+    };
+
+    for (const [key, checkbox] of Object.entries(checkboxes)) {
+        if (key !== statusKey) {
+            if (await checkbox.isChecked()) {
+                await checkbox.uncheck();
+
+                await Promise.all([
+                    page.waitForResponse(r =>
+                        r.url().includes('/api/employees') && (r.status() === 200 || r.status() === 304)
+                    ),
+                    await page.locator('.v-data-table__progress .v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 10000 })
+                ]);
+                await page.locator('.v-data-table__progress .v-progress-linear__buffer').waitFor({ state: 'hidden', timeout: 10000 });
+                await page.waitForTimeout(2000);
+            }
+        }
+    }
+}
+
+export async function getNumbersFromTable(page: Page, recruitment: RecrutimentPage): Promise<string[]> {
+    // Load more dokle god ima
+    while (true) {
+        const loadMoreButton = page.locator('text=Load more employees').first();
+        if (!(await loadMoreButton.isVisible() && await loadMoreButton.isEnabled())) break;
+
+        await Promise.all([
+            loadMoreButton.click(),
+            page.waitForResponse(r =>
+                r.url().includes('/api/employees') && (r.status() === 200 || r.status() === 304)
+            ),
+            page.waitForLoadState('networkidle'),
+        ]);
+
+        await recruitment.progressBar.waitFor({ state: 'hidden' });
+    }
+
+    // pokupi brojeve iz 7. kolone (proveri index!)
+    return await page.$$eval('tr td:nth-child(7)', cells =>
+        cells.map(cell => cell.textContent?.trim() || '')
+    );
+}
+
+
