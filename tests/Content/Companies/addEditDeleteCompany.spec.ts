@@ -1,97 +1,84 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { Constants } from '../../../helpers/constants';
-import { CompaniesPage } from '../../../page/Content/companies.page';
+import { test } from '../../fixtures/fixtures';
 
-test.use({ storageState: 'auth.json' });
-
-test.beforeEach(async ({ page }) => {
-    await page.goto(Constants.companiesUrl, { waitUntil: 'networkidle', timeout: 20000 });
-});
-
-test('Korisnik moze da doda Company', async ({ page }) => {
-    const companies = new CompaniesPage(page);
-    await companies.clickElement(companies.addCompany);
-    await companies.fillCompanyName(companies.nameCompanyField, Constants.playwrightCompany);
-    await companies.fillShortName(companies.shortNameField, Constants.shortName);
-    await companies.clickAddButton();
-    await companies.addModal.waitFor({ state: "detached", timeout: 5000 });
-    await expect(companies.shortNameColumn.last()).toContainText(Constants.shortName);
-    await expect(companies.companyNameColumn.last()).toContainText(Constants.playwrightCompany);
-    page.on('dialog', async (dialog) => {
+test('Korisnik moze da doda Company', async ({ companiesPageSetup }) => {
+    await companiesPageSetup.clickElement(companiesPageSetup.addCompany);
+    await companiesPageSetup.fillCompanyName(companiesPageSetup.nameCompanyField, Constants.playwrightCompany);
+    await companiesPageSetup.fillShortName(companiesPageSetup.shortNameField, Constants.shortName);
+    await companiesPageSetup.clickAddButton();
+    await companiesPageSetup.addModal.waitFor({ state: "detached", timeout: 5000 });
+    await expect(companiesPageSetup.shortNameColumn.last()).toContainText(Constants.shortName);
+    await expect(companiesPageSetup.companyNameColumn.last()).toContainText(Constants.playwrightCompany);
+    companiesPageSetup.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
-    await companies.clickElement(companies.grayDeleteIcon.last());
-    await expect(companies.snackMessage).toContainText(Constants.playwrightCompany + " successfully deleted");
+    await companiesPageSetup.clickElement(companiesPageSetup.grayDeleteIcon.last());
+    await expect(companiesPageSetup.snackMessage).toContainText(Constants.playwrightCompany + " successfully deleted");
 });
 
-test('Company name polje je obavezno', async ({ page }) => {
-    const companies = new CompaniesPage(page);
-    await companies.clickElement(companies.addCompany);
-    await companies.fillShortName(companies.shortNameField, Constants.shortName);
-    await companies.clickAddButton();
-    await expect(companies.errorMessage.first()).toContainText('The name field is required');
+test('Company name polje je obavezno', async ({ companiesPageSetup }) => {
+    await companiesPageSetup.clickElement(companiesPageSetup.addCompany);
+    await companiesPageSetup.fillShortName(companiesPageSetup.shortNameField, Constants.shortName);
+    await companiesPageSetup.clickAddButton();
+    await expect(companiesPageSetup.errorMessage.first()).toContainText('The name field is required');
 });
 
-test('Company short name polje je obavezno', async ({ page }) => {
-    const companies = new CompaniesPage(page);
-    await companies.clickElement(companies.addCompany);
-    await companies.fillCompanyName(companies.nameCompanyField, Constants.playwrightCompany);
-    await companies.clickAddButton();
-    await expect(companies.errorMessage.last()).toContainText('The short_name field is required');
+test('Company short name polje je obavezno', async ({ companiesPageSetup }) => {
+    await companiesPageSetup.clickElement(companiesPageSetup.addCompany);
+    await companiesPageSetup.fillCompanyName(companiesPageSetup.nameCompanyField, Constants.playwrightCompany);
+    await companiesPageSetup.clickAddButton();
+    await expect(companiesPageSetup.errorMessage.last()).toContainText('The short_name field is required');
 });
 
-test('Korisnik moze da obrise Company', async ({ page }) => {
-    const companies = new CompaniesPage(page);
-    await companies.clickElement(companies.addCompany);
-    await companies.fillCompanyName(companies.nameCompanyField, Constants.playwrightCompany);
-    await companies.fillShortName(companies.shortNameField, Constants.shortName);
-    await companies.clickAddButton();
-    await companies.addModal.waitFor({ state: "detached", timeout: 5000 });
-    await expect(companies.companyNameColumn.last()).toContainText(Constants.playwrightCompany);
-    page.on('dialog', async (dialog) => {
+test('Korisnik moze da obrise Company', async ({ companiesPageSetup }) => {
+    await companiesPageSetup.clickElement(companiesPageSetup.addCompany);
+    await companiesPageSetup.fillCompanyName(companiesPageSetup.nameCompanyField, Constants.playwrightCompany);
+    await companiesPageSetup.fillShortName(companiesPageSetup.shortNameField, Constants.shortName);
+    await companiesPageSetup.clickAddButton();
+    await companiesPageSetup.addModal.waitFor({ state: "detached", timeout: 5000 });
+    await expect(companiesPageSetup.companyNameColumn.last()).toContainText(Constants.playwrightCompany);
+    companiesPageSetup.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
-    await companies.clickElement(companies.grayDeleteIcon.last());
-    await expect(companies.snackMessage).toContainText(Constants.playwrightCompany + " successfully deleted");
+    await companiesPageSetup.clickElement(companiesPageSetup.grayDeleteIcon.last());
+    await expect(companiesPageSetup.snackMessage).toContainText(Constants.playwrightCompany + " successfully deleted");
 });
 
-test('Korisnik moze da edituje Board', async ({ page }) => {
-    const companies = new CompaniesPage(page);
-    await companies.clickElement(companies.addCompany);
-    await companies.fillCompanyName(companies.nameCompanyField, Constants.playwrightCompany);
-    await companies.fillShortName(companies.shortNameField, Constants.shortName);
-    await companies.clickAddButton();
-    await companies.addModal.waitFor({ state: "detached", timeout: 5000 });
-    await expect(companies.companyNameColumn.last()).toContainText(Constants.playwrightCompany);
-    await companies.clickElement(companies.pencilIcon.last());
-    await companies.nameCompanyField.clear();
-    await companies.fillCompanyName(companies.nameCompanyField, Constants.playwrightCompanyEdit);
-    await companies.shortNameField.clear();
-    await companies.fillShortName(companies.shortNameField, Constants.shortNameEdit);
-    await companies.uncheck(companies.isActiveCheckbox.last());
-    await companies.clickSaveButton();
-    await expect(companies.companyNameColumn.last()).toContainText(Constants.playwrightCompany);
-    await expect(companies.shortNameColumn.last()).toContainText(Constants.shortNameEdit);
-    await expect(companies.isActiveColumn.last()).toContainText('NO');
-    page.on('dialog', async (dialog) => {
+test('Korisnik moze da edituje Board', async ({ companiesPageSetup }) => {
+    await companiesPageSetup.clickElement(companiesPageSetup.addCompany);
+    await companiesPageSetup.fillCompanyName(companiesPageSetup.nameCompanyField, Constants.playwrightCompany);
+    await companiesPageSetup.fillShortName(companiesPageSetup.shortNameField, Constants.shortName);
+    await companiesPageSetup.clickAddButton();
+    await companiesPageSetup.addModal.waitFor({ state: "detached", timeout: 5000 });
+    await expect(companiesPageSetup.companyNameColumn.last()).toContainText(Constants.playwrightCompany);
+    await companiesPageSetup.clickElement(companiesPageSetup.pencilIcon.last());
+    await companiesPageSetup.nameCompanyField.clear();
+    await companiesPageSetup.fillCompanyName(companiesPageSetup.nameCompanyField, Constants.playwrightCompanyEdit);
+    await companiesPageSetup.shortNameField.clear();
+    await companiesPageSetup.fillShortName(companiesPageSetup.shortNameField, Constants.shortNameEdit);
+    await companiesPageSetup.uncheck(companiesPageSetup.isActiveCheckbox.last());
+    await companiesPageSetup.clickSaveButton();
+    await expect(companiesPageSetup.companyNameColumn.last()).toContainText(Constants.playwrightCompany);
+    await expect(companiesPageSetup.shortNameColumn.last()).toContainText(Constants.shortNameEdit);
+    await expect(companiesPageSetup.isActiveColumn.last()).toContainText('NO');
+    companiesPageSetup.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
-    await companies.clickElement(companies.grayDeleteIcon.last());
-    await expect(companies.snackMessage).toContainText(" " + Constants.playwrightCompanyEdit + " successfully deleted");
+    await companiesPageSetup.clickElement(companiesPageSetup.grayDeleteIcon.last());
+    await expect(companiesPageSetup.snackMessage).toContainText(" " + Constants.playwrightCompanyEdit + " successfully deleted");
 });
 
-test('Company name polje je obavezno u edit modalu', async ({ page }) => {
-    const companies = new CompaniesPage(page);
-    await companies.clickElement(companies.pencilIcon.first());
-    await companies.nameCompanyField.clear();
-    await companies.clickSaveButton();
-    await expect(companies.errorMessage.first()).toContainText('The name field is required');
+test('Company name polje je obavezno u edit modalu', async ({ companiesPageSetup }) => {
+    await companiesPageSetup.clickElement(companiesPageSetup.pencilIcon.first());
+    await companiesPageSetup.nameCompanyField.clear();
+    await companiesPageSetup.clickSaveButton();
+    await expect(companiesPageSetup.errorMessage.first()).toContainText('The name field is required');
 });
 
-test('Short name polje je obavezno u edit modalu', async ({ page }) => {
-    const companies = new CompaniesPage(page);
-    await companies.clickElement(companies.pencilIcon.first());
-    await companies.shortNameField.clear();
-    await companies.clickSaveButton();
-    await expect(companies.errorMessage.last()).toContainText('The short_name field is required');
+test('Short name polje je obavezno u edit modalu', async ({ companiesPageSetup }) => {
+    await companiesPageSetup.clickElement(companiesPageSetup.pencilIcon.first());
+    await companiesPageSetup.shortNameField.clear();
+    await companiesPageSetup.clickSaveButton();
+    await expect(companiesPageSetup.errorMessage.last()).toContainText('The short_name field is required');
 });

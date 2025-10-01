@@ -6,6 +6,15 @@ import { AddShopPage } from '../../page/shop/addShop.page';
 import { ContactsPage } from '../../page/contacts/contactsOverview.page';
 import { AddContactsPage } from '../../page/contacts/addContact.page';
 import { generateRandomString } from '../../helpers/dateUtilis';
+import { BoardsPage } from '../../page/Content/boards.page';
+import { CompaniesPage } from '../../page/Content/companies.page';
+import { DocumentPage } from '../../page/Content/documentModal.page';
+import { InsertPermitBookPage } from '../../page/Content/uploadDocuments.page';
+import { AddAndEditLoadModal } from '../../page/dispatchDashboard/addAndEditLoad.page';
+import { TruckPage } from '../../page/truck/truck.page';
+import { TrailersPage } from '../../page/trailer/trailer.page';
+import { DriverOverviewPage } from '../../page/drivers/drriversOverview.page';
+import { PermitBookPage } from '../../page/permitBook/permitBookOvervire.page';
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -15,7 +24,17 @@ export const test = base.extend<{
     contactPage: ContactsPage;
     addContactPage: AddContactsPage;
     createdContact: { email: string };
-
+    boardPage: BoardsPage;
+    companiesPage: CompaniesPage;
+    document: DocumentPage;
+    uploadDocumentPage: InsertPermitBookPage;
+    addLoadModal: AddAndEditLoadModal;
+    companiesPageSetup: CompaniesPage;
+    documentSetup: DocumentPage;
+    uploadDocument: InsertPermitBookPage;
+    truckPage: TruckPage;
+    trailerPage: TrailersPage;
+    permitBookPage: PermitBookPage;
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -78,4 +97,78 @@ export const test = base.extend<{
         await contactPage.searchContact(contactPage.searchField, email);
         await use({ email });
     },
+
+    boardPage: async ({ loggedPage }, use) => {
+        const board = new BoardsPage(loggedPage);
+        await loggedPage.goto(Constants.boardsUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await use(board);
+    },
+
+    companiesPageSetup: async ({ loggedPage }, use) => {
+        const companySetup = new CompaniesPage(loggedPage);
+        await loggedPage.goto(Constants.companiesUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await use(companySetup);
+    },
+
+    companiesPage: async ({ loggedPage }, use) => {
+        const company = new CompaniesPage(loggedPage);
+        await use(company);
+    },
+
+    document: async ({ loggedPage }, use) => {
+        const document = new DocumentPage(loggedPage);
+        await use(document);
+    },
+
+    documentSetup: async ({ loggedPage, companiesPage, uploadDocument }, use) => {
+        const documentSetup = new DocumentPage(loggedPage);
+        await loggedPage.goto(Constants.companiesUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await companiesPage.clickElement(companiesPage.documentIcon.first());
+        await documentSetup.deleteAllItemsWithDeleteIconForDrivers();
+        await companiesPage.clickElement(companiesPage.uploadIcon.first());
+        await uploadDocument.uploadDocument();
+        await uploadDocument.selectPastExpiringDate();
+        await uploadDocument.selectSubtypeFromMenu(uploadDocument.documentSubtypeField, uploadDocument.eldDocumentsSubtype);
+        await loggedPage.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
+        await uploadDocument.clickElement(uploadDocument.savePermitButton);
+        await loggedPage.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached' });
+        await companiesPage.clickElement(companiesPage.documentIcon.first());
+        await uploadDocument.loader.waitFor({ state: 'hidden', timeout: 10000 });
+        await use(documentSetup);
+    },
+
+    uploadDocumentPage: async ({ loggedPage, document, companiesPage }, use) => {
+        const upload = new InsertPermitBookPage(loggedPage);
+        await loggedPage.goto(Constants.companiesUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await companiesPage.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        await companiesPage.clickElement(companiesPage.documentIcon.first());
+        await document.deleteAllItemsWithDeleteIcon();
+        await use(upload);
+    },
+
+    uploadDocument: async ({ loggedPage }, use) => {
+        const uploadDocument = new InsertPermitBookPage(loggedPage);
+        await use(uploadDocument);
+    },
+
+    addLoadModal: async ({ loggedPage }, use) => {
+        const addLoad = new AddAndEditLoadModal(loggedPage);
+        await use(addLoad);
+    },
+
+    truckPage: async ({ loggedPage }, use) => {
+        const truck = new TruckPage(loggedPage);
+        await use(truck);
+    },
+
+    trailerPage: async ({ loggedPage }, use) => {
+        const trailer = new TrailersPage(loggedPage);
+        await use(trailer);
+    },
+
+    permitBookPage: async ({ loggedPage }, use) => {
+        const permitBook = new PermitBookPage(loggedPage);
+        await use(permitBook);
+    },
+
 });
