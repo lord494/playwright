@@ -1,7 +1,7 @@
 import { Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 
-export class addDealership extends BasePage {
+export class AddDealership extends BasePage {
     readonly page: Page;
     readonly nameField: Locator;
     readonly isActiveCheckbox: Locator;

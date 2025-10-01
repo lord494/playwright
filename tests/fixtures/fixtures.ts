@@ -15,6 +15,8 @@ import { TruckPage } from '../../page/truck/truck.page';
 import { TrailersPage } from '../../page/trailer/trailer.page';
 import { DriverOverviewPage } from '../../page/drivers/drriversOverview.page';
 import { PermitBookPage } from '../../page/permitBook/permitBookOvervire.page';
+import { DealershipPage } from '../../page/dealership/dealership.page';
+import { AddDealership } from '../../page/dealership/addDealership.page';
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -35,6 +37,9 @@ export const test = base.extend<{
     truckPage: TruckPage;
     trailerPage: TrailersPage;
     permitBookPage: PermitBookPage;
+    delareshipPage: DealershipPage;
+    delaershipPageSetup: DealershipPage;
+    addDealership: AddDealership;
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -171,4 +176,15 @@ export const test = base.extend<{
         await use(permitBook);
     },
 
+    delaershipPageSetup: async ({ loggedPage }, use) => {
+        const delaership = new DealershipPage(loggedPage);
+        await loggedPage.goto(Constants.dealersshipUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await delaership.addDealership.click();
+        await use(delaership);
+    },
+
+    addDealership: async ({ loggedPage }, use) => {
+        const addDealership = new AddDealership(loggedPage);
+        await use(addDealership);
+    },
 });

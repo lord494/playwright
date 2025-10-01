@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { get6RandomNumber } from '../../helpers/dateUtilis';
 import { DealershipPage } from '../../page/dealership/dealership.page';
-import { addDealership as AddDealershipPage } from '../../page/dealership/addDealership.page';
+import { AddDealership as AddDealershipPage } from '../../page/dealership/addDealership.page';
 import { YardsPage } from '../../page/yards/yards.page';
 import { AddYard } from '../../page/yards/addYard.page';
 
