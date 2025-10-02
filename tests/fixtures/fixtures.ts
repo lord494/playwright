@@ -17,6 +17,8 @@ import { DriverOverviewPage } from '../../page/drivers/drriversOverview.page';
 import { PermitBookPage } from '../../page/permitBook/permitBookOvervire.page';
 import { DealershipPage } from '../../page/dealership/dealership.page';
 import { AddDealership } from '../../page/dealership/addDealership.page';
+import { DispatchDashboardOverview } from '../../page/dispatchDashboard/dispatchDashboardOverview.page';
+import { EditDriver } from '../../page/dispatchDashboard/editDriver.page';
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -37,9 +39,14 @@ export const test = base.extend<{
     truckPage: TruckPage;
     trailerPage: TrailersPage;
     permitBookPage: PermitBookPage;
-    delareshipPage: DealershipPage;
     delaershipPageSetup: DealershipPage;
     addDealership: AddDealership;
+    dispatchDashboardSetup: DispatchDashboardOverview;
+    dispatcDashboard: DispatchDashboardOverview;
+    editDriverDIspatchDashboardSetup: DispatchDashboardOverview;
+    editDrive: EditDriver;
+    addLoadSetup: AddAndEditLoadModal;
+    editLoadSetup: AddAndEditLoadModal;
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -186,5 +193,84 @@ export const test = base.extend<{
     addDealership: async ({ loggedPage }, use) => {
         const addDealership = new AddDealership(loggedPage);
         await use(addDealership);
+    },
+
+    dispatchDashboardSetup: async ({ loggedPage }, use) => {
+        const dispatch = new DispatchDashboardOverview(loggedPage);
+        await loggedPage.goto(Constants.dashboardUrl, { waitUntil: 'networkidle', timeout: 15000 });
+        await use(dispatch);
+    },
+
+    dispatcDashboard: async ({ loggedPage }, use) => {
+        const dispatchDashboard = new DispatchDashboardOverview(loggedPage);
+        await use(dispatchDashboard);
+    },
+
+    addLoadSetup: async ({ loggedPage, dispatcDashboard }, use) => {
+        const addLoad = new AddAndEditLoadModal(loggedPage);
+        await loggedPage.goto(Constants.dashboardUrl, { waitUntil: 'networkidle', timeout: 15000 });
+        await loggedPage.waitForLoadState('networkidle');
+        await dispatcDashboard.loadColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+        await dispatcDashboard.fillInputField(dispatcDashboard.nameSearchInput, Constants.driverName);
+        const nameText = dispatcDashboard.driverNameColumn.filter({ hasText: Constants.driverName });
+        await nameText.waitFor({ state: 'visible', timeout: 5000 });
+        const text = await dispatcDashboard.loadColumn.first().textContent();
+        dispatcDashboard.page.on('dialog', async (dialog: { accept: () => any; }) => {
+            await dialog.accept();
+        });
+        if (text && text.trim() !== '') {
+            await dispatcDashboard.loadColumn.first().click({ button: "right" });
+            await addLoad.deleteLoadButton.click();
+            await addLoad.addLoadModal.waitFor({ state: 'detached', timeout: 5000 });
+            await expect(dispatcDashboard.loadColumn.first()).toHaveText('');
+        }
+        await dispatcDashboard.loadColumn.first().click({ button: "right" });
+        await use(addLoad);
+    },
+
+    editLoadSetup: async ({ loggedPage, dispatcDashboard }, use) => {
+        const editLoad = new AddAndEditLoadModal(loggedPage);
+        await loggedPage.goto(Constants.dashboardUrl, { waitUntil: 'networkidle', timeout: 15000 });
+        const [response] = await Promise.all([
+            dispatcDashboard.page.waitForResponse(resp =>
+                resp.url().includes('/api/drivers/dashboard') &&
+                (resp.status() === 200 || resp.status() === 304)
+            ),
+            await dispatcDashboard.fillInputField(dispatcDashboard.nameSearchInput, Constants.driverName)
+        ]);
+        const text = await dispatcDashboard.loadColumn.first().textContent();
+        dispatcDashboard.page.on('dialog', async (dialog) => {
+            await dialog.accept();
+        });
+        if (!text || text.trim() === '') {
+            await dispatcDashboard.loadColumn.first().click({ button: "right" });
+            await editLoad.fillAndSelectOption(editLoad.deliveryCityLabel, Constants.deliveryCity, editLoad.deliveryCity);
+            await editLoad.page.waitForLoadState("networkidle");
+            await editLoad.saveButton.click();
+            await editLoad.addLoadModal.waitFor({ state: 'detached', timeout: 10000 });
+            await expect(dispatcDashboard.loadColumn.first()).toContainText(Constants.deliveryCity);
+        };
+        await dispatcDashboard.loadColumn.first().click({ button: 'right' });
+        await use(editLoad);
+    },
+
+    editDriverDIspatchDashboardSetup: async ({ loggedPage }, use) => {
+        const editDriver = new DispatchDashboardOverview(loggedPage);
+        await loggedPage.goto(Constants.dashboardUrl, { waitUntil: 'networkidle', timeout: 15000 });
+        await editDriver.driveNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+        const [response] = await Promise.all([
+            editDriver.page.waitForResponse(resp =>
+                resp.url().includes('/api/drivers/dashboard') &&
+                (resp.status() === 200 || resp.status() === 304)
+            ),
+            editDriver.fillInputField(editDriver.nameSearchInput, Constants.driverName)
+        ]);
+        await editDriver.driveNameColumn.first().click({ button: "right" });
+        await use(editDriver);
+    },
+
+    editDrive: async ({ loggedPage }, use) => {
+        const editDriver = new EditDriver(loggedPage);
+        await use(editDriver);
     },
 });

@@ -1,207 +1,167 @@
-import { test, expect } from '@playwright/test';
-import { DispatchDashboardOverview } from '../../page/dispatchDashboard/dispatchDashboardOverview.page';
+import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { EditDriver } from '../../page/dispatchDashboard/editDriver.page';
-
-test.use({ storageState: 'auth.json' });
-
-test.beforeEach(async ({ page }) => {
-    const dashboard = new DispatchDashboardOverview(page);
-    await page.goto(Constants.dashboardUrl, { waitUntil: 'networkidle', timeout: 15000 });
-    await dashboard.driveNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-    const [response] = await Promise.all([
-        page.waitForResponse(resp =>
-            resp.url().includes('/api/drivers/dashboard') &&
-            (resp.status() === 200 || resp.status() === 304)
-        ),
-        dashboard.fillInputField(dashboard.nameSearchInput, Constants.driverName)
-    ]);
-    await dashboard.driveNameColumn.first().click({ button: "right" });
-});
+import { test } from '../fixtures/fixtures';
 
 test.describe('Testovi bez afterAll', () => {
-    test('Driver name je obavezno polje', async ({ page }) => {
-        const edit = new EditDriver(page);
-        await edit.driverName.clear();
-        await edit.saveButton.click();
-        await page.waitForLoadState('networkidle');
-        await expect(edit.errorMessage).toContainText('The name field is required');
+    test('Driver name je obavezno polje', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.driverName.clear();
+        await editDrive.saveButton.click();
+        await editDrive.page.waitForLoadState('networkidle');
+        await expect(editDrive.errorMessage).toContainText('The name field is required');
     });
 
-    test('Dispatcher je obavezno polje', async ({ page }) => {
-        const edit = new EditDriver(page);
-        await edit.dispatcher.clear();
-        await edit.saveButton.click();
-        await expect(edit.errorMessage.nth(0)).toBeVisible();
+    test('Dispatcher je obavezno polje', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.dispatcher.clear();
+        await editDrive.saveButton.click();
+        await expect(editDrive.errorMessage.nth(0)).toBeVisible();
     });
 
-    test('Phone je obavezno polje', async ({ page }) => {
-        const edit = new EditDriver(page);
-        await edit.phone.clear();
-        await edit.saveButton.click();
-        await expect(edit.errorMessage).toContainText('The phone field is required');
+    test('Phone je obavezno polje', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.phone.clear();
+        await editDrive.saveButton.click();
+        await expect(editDrive.errorMessage).toContainText('The phone field is required');
     });
 
-    test('Truck je obavezno polje', async ({ page }) => {
-        const edit = new EditDriver(page);
-        await edit.truck.clear();
-        await edit.saveButton.click();
-        await expect(edit.errorMessage).toContainText('The Truck field is required');
+    test('Truck je obavezno polje', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.truck.clear();
+        await editDrive.saveButton.click();
+        await expect(editDrive.errorMessage).toContainText('The Truck field is required');
     });
 
-    test('Korisnik ne moze da unese brojeve i specijalne karaktere u Name polje', async ({ page }) => {
-        const edit = new EditDriver(page);
-        await edit.fillInputField(edit.driverName, "123!@#")
-        await expect(edit.invalidMessage.first()).toContainText('The name field format is invalid');
+    test('Korisnik ne moze da unese brojeve i specijalne karaktere u Name polje', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.fillInputField(editDrive.driverName, "123!@#")
+        await expect(editDrive.invalidMessage.first()).toContainText('The name field format is invalid');
     });
 
-    test('Korisnik ne moze da unese brojeve i specijalne karaktere u Second driver name polje', async ({ page }) => {
-        const edit = new EditDriver(page);
-        await edit.fillInputField(edit.secondDrverName, "123!@#")
-        await expect(edit.invalidMessage.first()).toContainText("The second_driver field format is invalid");
+    test('Korisnik ne moze da unese brojeve i specijalne karaktere u Second driver name polje', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.fillInputField(editDrive.secondDrverName, "123!@#")
+        await expect(editDrive.invalidMessage.first()).toContainText("The second_driver field format is invalid");
     });
 
-    test('Korisnik moze da ukljuci "Is priority" toggle button', async ({ page }) => {
-        const edit = new EditDriver(page);
-        const dashboard = new DispatchDashboardOverview(page);
-        await edit.check(edit.isPriorityToggleButton);
-        await edit.saveButton.click();
-        await edit.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-        await page.waitForLoadState('networkidle');
-        await expect(dashboard.driverNameColumn).toContainText('*');
+    test('Korisnik moze da ukljuci "Is priority" toggle button', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.check(editDrive.isPriorityToggleButton);
+        await editDrive.saveButton.click();
+        await editDrive.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
+        await editDrive.page.waitForLoadState('networkidle');
+        await expect(editDriverDIspatchDashboardSetup.driverNameColumn).toContainText('*');
     });
 
-    test('Korisnik moze da ukljuci "FC" toggle button', async ({ page }) => {
-        const edit = new EditDriver(page);
-        const dashboard = new DispatchDashboardOverview(page);
-        await page.waitForLoadState('networkidle');
-        await edit.unCheckFC();
-        await edit.saveButton.click();
-        await page.waitForLoadState('networkidle');
-
-        await edit.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-        await expect(dashboard.fcColumn).toContainText("ON");
+    test('Korisnik moze da ukljuci "FC" toggle button', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.page.waitForLoadState('networkidle');
+        await editDrive.unCheckFC();
+        await editDrive.saveButton.click();
+        await editDrive.page.waitForLoadState('networkidle');
+        await editDrive.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
+        await expect(editDriverDIspatchDashboardSetup.fcColumn).toContainText("ON");
     });
 
-    test('Korisnik moze da ukljuci "Is new" toggle button', async ({ page }) => {
-        const edit = new EditDriver(page);
-        const dashboard = new DispatchDashboardOverview(page);
-        await edit.check(edit.isNewToggleButton);
-        await edit.saveButton.click();
-        await edit.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-        await page.waitForLoadState('networkidle');
-        await expect(dashboard.driverNameColumn).toContainText('(NEW)');
+    test('Korisnik moze da ukljuci "Is new" toggle button', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.check(editDrive.isNewToggleButton);
+        await editDrive.saveButton.click();
+        await editDrive.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
+        await editDrive.page.waitForLoadState('networkidle');
+        await expect(editDriverDIspatchDashboardSetup.driverNameColumn).toContainText('(NEW)');
     });
 
-    test('Korisnik moze da ukljuci "Is company" toggle button', async ({ page }) => {
-        const edit = new EditDriver(page);
-        const dashboard = new DispatchDashboardOverview(page);
-        await edit.check(edit.isCompanyToggleButton);
-        await edit.saveButton.click();
-        await edit.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-        await page.waitForLoadState('networkidle');
-        await expect(dashboard.driverNameColumn).toContainText('(company driver)');
+    test('Korisnik moze da ukljuci "Is company" toggle button', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.check(editDrive.isCompanyToggleButton);
+        await editDrive.saveButton.click();
+        await editDrive.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
+        await editDrive.page.waitForLoadState('networkidle');
+        await expect(editDriverDIspatchDashboardSetup.driverNameColumn).toContainText('(company driver)');
     });
 
-    test('Korisnik moze da ukljuci "Is time" toggle button', async ({ page }) => {
-        const edit = new EditDriver(page);
-        const dashboard = new DispatchDashboardOverview(page);
-        await edit.check(edit.isTimeToggleButton);
-        await edit.saveButton.click();
-        await edit.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-        await page.waitForLoadState('networkidle');
-        await expect(dashboard.driverNameColumn).toContainText('(time)');
+    test('Korisnik moze da ukljuci "Is time" toggle button', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.check(editDrive.isTimeToggleButton);
+        await editDrive.saveButton.click();
+        await editDrive.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
+        await editDrive.page.waitForLoadState('networkidle');
+        await expect(editDriverDIspatchDashboardSetup.driverNameColumn).toContainText('(time)');
     });
 
-    test('Korisnik moze da cekira checkboxove', async ({ page }) => {
-        const edit = new EditDriver(page);
-        const dashboard = new DispatchDashboardOverview(page);
-        await edit.check(edit.isActiveCheckbox);
-        await edit.check(edit.noCutCheckbox);
-        await edit.check(edit.hassAnAppAccount);
-        await edit.saveButton.click();
-        await edit.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-        await page.waitForLoadState('networkidle');
-        await dashboard.driveNameColumn.click({ button: "right" });
-        await page.waitForLoadState('networkidle');
-        await expect(edit.isActiveCheckbox).toBeChecked();
-        await expect(edit.noCutCheckbox).toBeChecked();
-        await expect(edit.hassAnAppAccount).toBeChecked();
+    test('Korisnik moze da cekira checkboxove', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.check(editDrive.isActiveCheckbox);
+        await editDrive.check(editDrive.noCutCheckbox);
+        await editDrive.check(editDrive.hassAnAppAccount);
+        await editDrive.saveButton.click();
+        await editDrive.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
+        await editDrive.page.waitForLoadState('networkidle');
+        await editDriverDIspatchDashboardSetup.driveNameColumn.click({ button: "right" });
+        await editDriverDIspatchDashboardSetup.page.waitForLoadState('networkidle');
+        await expect(editDrive.isActiveCheckbox).toBeChecked();
+        await expect(editDrive.noCutCheckbox).toBeChecked();
+        await expect(editDrive.hassAnAppAccount).toBeChecked();
     });
 
-    test('Korisnik moze da otvori trailer history kada klikne na "Show trailer history" toggle button', async ({ page }) => {
-        const edit = new EditDriver(page);
-        await edit.check(edit.showTrailerHistoryToggleButton);
-        await expect(edit.trailerHistoryList).toBeVisible();
+    test('Korisnik moze da otvori trailer history kada klikne na "Show trailer history" toggle button', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.check(editDrive.showTrailerHistoryToggleButton);
+        await expect(editDrive.trailerHistoryList).toBeVisible();
     });
 
-    test('Korisnik moze da obrise trailer history', async ({ page }) => {
-        const edit = new EditDriver(page);
-        await edit.check(edit.showTrailerHistoryToggleButton);
-        page.on('dialog', async (dialog) => {
+    test('Korisnik moze da obrise trailer history', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.check(editDrive.showTrailerHistoryToggleButton);
+        editDrive.page.on('dialog', async (dialog) => {
             await dialog.accept();
         });
-        await edit.firtsDeleteIconOnHistoryTrailer.click();
-        await expect(edit.snackContent).toContainText(Constants.snackContentHistorySuccessfullyDeleted);
+        await editDrive.firtsDeleteIconOnHistoryTrailer.click();
+        await expect(editDrive.snackContent).toContainText(Constants.snackContentHistorySuccessfullyDeleted);
     });
 
-    test('Korisnik moze da izadje iz modala na Cancel dugme', async ({ page }) => {
-        const edit = new EditDriver(page);
-        await edit.cancelButton.click();
-        await page.waitForLoadState('networkidle');
-        await expect(edit.editDriverTitle).not.toBeVisible();
+    test('Korisnik moze da izadje iz modala na Cancel dugme', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.cancelButton.click();
+        await editDrive.page.waitForLoadState('networkidle');
+        await expect(editDrive.editDriverTitle).not.toBeVisible();
     });
 });
 
 test.describe('Testovi sa afterAll', () => {
-    test('Driver moze da se edituje', async ({ page }) => {
-        const edit = new EditDriver(page);
-        const dashboard = new DispatchDashboardOverview(page);
-        await edit.fillInputField(edit.driverName, Constants.secondDriverName);
-        await edit.fillInputField(edit.secondDrverName, Constants.secondDriverTest);
-        await edit.selectFromMenu(edit.owner, edit.secondOwnerOption);
-        await edit.selectFromMenu(edit.board, edit.b2Board);
-        await page.waitForTimeout(1000);
-        await edit.selectFromMenu(edit.dispatcher, edit.testPassDispatcher);
-        await edit.fillAndSelectOption(edit.substituteDispatcher, Constants.test, edit.secondSubstituteDsipatcher);
-        await edit.selectFromMenu(edit.payroll, edit.secondPayroll);
-        await edit.selectFromMenu(edit.trailerManager, edit.secondTrailerManager);
-        await edit.fillInputField(edit.dissField, Constants.secondDiss);
-        await edit.fillInputField(edit.diss2Field, Constants.secondDiss);
-        await edit.fillInputField(edit.diss3Field, Constants.secondDiss);
-        await edit.fillInputField(edit.diss4Field, Constants.secondDiss);
-        await edit.selectFromMenu(edit.company, edit.secondCompany);
-        await edit.fillInputField(edit.phone, Constants.secondPhone);
-        await edit.fillInputField(edit.ownerPhone, Constants.secondOwnerPhone);
-        await edit.fillAndSelectOption(edit.truck, Constants.secondTruckName, edit.secondTruckName);
-        await edit.fillAndSelectOption(edit.trailer, Constants.secondTrailerName, edit.secondTrailerName);
-        await edit.fillInputField(edit.trailerType, Constants.secondTrailerType);
-        await edit.fillInputField(edit.noteBox, Constants.noteSecond);
-        await edit.saveButton.click();
-        await edit.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-        await page.waitForLoadState('networkidle');
-        await page.locator('.v-input__slot').first().click();
-        await dashboard.xIconInInputField.first().click();
-        await dashboard.fillInputField(dashboard.nameSearchInput, Constants.secondDriverName);
-        const nameText = dashboard.driverNameColumn.filter({ hasText: Constants.secondDriverName });
+    test('Driver moze da se edituje', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+        await editDrive.fillInputField(editDrive.driverName, Constants.secondDriverName);
+        await editDrive.fillInputField(editDrive.secondDrverName, Constants.secondDriverTest);
+        await editDrive.selectFromMenu(editDrive.owner, editDrive.secondOwnerOption);
+        await editDrive.selectFromMenu(editDrive.board, editDrive.b2Board);
+        await editDrive.page.waitForTimeout(1000);
+        await editDrive.selectFromMenu(editDrive.dispatcher, editDrive.testPassDispatcher);
+        await editDrive.fillAndSelectOption(editDrive.substituteDispatcher, Constants.test, editDrive.secondSubstituteDsipatcher);
+        await editDrive.selectFromMenu(editDrive.payroll, editDrive.secondPayroll);
+        await editDrive.selectFromMenu(editDrive.trailerManager, editDrive.secondTrailerManager);
+        await editDrive.fillInputField(editDrive.dissField, Constants.secondDiss);
+        await editDrive.fillInputField(editDrive.diss2Field, Constants.secondDiss);
+        await editDrive.fillInputField(editDrive.diss3Field, Constants.secondDiss);
+        await editDrive.fillInputField(editDrive.diss4Field, Constants.secondDiss);
+        await editDrive.selectFromMenu(editDrive.company, editDrive.secondCompany);
+        await editDrive.fillInputField(editDrive.phone, Constants.secondPhone);
+        await editDrive.fillInputField(editDrive.ownerPhone, Constants.secondOwnerPhone);
+        await editDrive.fillAndSelectOption(editDrive.truck, Constants.secondTruckName, editDrive.secondTruckName);
+        await editDrive.fillAndSelectOption(editDrive.trailer, Constants.secondTrailerName, editDrive.secondTrailerName);
+        await editDrive.fillInputField(editDrive.trailerType, Constants.secondTrailerType);
+        await editDrive.fillInputField(editDrive.noteBox, Constants.noteSecond);
+        await editDrive.saveButton.click();
+        await editDrive.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
+        await editDrive.page.waitForLoadState('networkidle');
+        await editDrive.page.locator('.v-input__slot').first().click();
+        await editDriverDIspatchDashboardSetup.xIconInInputField.first().click();
+        await editDriverDIspatchDashboardSetup.fillInputField(editDriverDIspatchDashboardSetup.nameSearchInput, Constants.secondDriverName);
+        const nameText = editDriverDIspatchDashboardSetup.driverNameColumn.filter({ hasText: Constants.secondDriverName });
         await nameText.waitFor({ state: 'visible', timeout: 5000 });
-        await expect(dashboard.noteIcon).toBeVisible();
-        await expect(dashboard.driverNameColumn).toContainText(Constants.secondDriverName);
-        await expect(dashboard.driverNameColumn).toContainText(Constants.secondOwner);
-        await expect(dashboard.driverNameColumn).toContainText(Constants.secondDriverTest);
-        await expect(dashboard.typeColumn).toContainText(Constants.secondTrailerType);
-        await expect(dashboard.companyColumn).toContainText(Constants.secondSCompany);
-        await expect(dashboard.extColumn).toContainText(Constants.secondDispatcher);
-        await expect(dashboard.extColumn).toContainText(Constants.secondSubstitutleDispatcher);
-        await expect(dashboard.extColumn).toContainText(Constants.secondDiss);
-        await expect(dashboard.tryTimeExtColumn).toContainText(Constants.secondDiss);
-        await expect(dashboard.rocketExtColumn).toContainText(Constants.secondDiss);
-        await expect(dashboard.jordanExt).toContainText(Constants.secondDiss);
-        await expect(dashboard.truckColumn).toContainText(Constants.secondTruckName);
-        await expect(dashboard.trailerColumn).toContainText(Constants.secondTrailerName);
-        await expect(dashboard.phoneColumn).toContainText(Constants.secondPhone);
-        await expect(dashboard.phoneColumn).toContainText(Constants.secondOwnerPhone);
-        await expect(dashboard.boardColumn).toContainText(Constants.secondBoard);
+        await expect(editDriverDIspatchDashboardSetup.noteIcon).toBeVisible();
+        await expect(editDriverDIspatchDashboardSetup.driverNameColumn).toContainText(Constants.secondDriverName);
+        await expect(editDriverDIspatchDashboardSetup.driverNameColumn).toContainText(Constants.secondOwner);
+        await expect(editDriverDIspatchDashboardSetup.driverNameColumn).toContainText(Constants.secondDriverTest);
+        await expect(editDriverDIspatchDashboardSetup.typeColumn).toContainText(Constants.secondTrailerType);
+        await expect(editDriverDIspatchDashboardSetup.companyColumn).toContainText(Constants.secondSCompany);
+        await expect(editDriverDIspatchDashboardSetup.extColumn).toContainText(Constants.secondDispatcher);
+        await expect(editDriverDIspatchDashboardSetup.extColumn).toContainText(Constants.secondSubstitutleDispatcher);
+        await expect(editDriverDIspatchDashboardSetup.extColumn).toContainText(Constants.secondDiss);
+        await expect(editDriverDIspatchDashboardSetup.tryTimeExtColumn).toContainText(Constants.secondDiss);
+        await expect(editDriverDIspatchDashboardSetup.rocketExtColumn).toContainText(Constants.secondDiss);
+        await expect(editDriverDIspatchDashboardSetup.jordanExt).toContainText(Constants.secondDiss);
+        await expect(editDriverDIspatchDashboardSetup.truckColumn).toContainText(Constants.secondTruckName);
+        await expect(editDriverDIspatchDashboardSetup.trailerColumn).toContainText(Constants.secondTrailerName);
+        await expect(editDriverDIspatchDashboardSetup.phoneColumn).toContainText(Constants.secondPhone);
+        await expect(editDriverDIspatchDashboardSetup.phoneColumn).toContainText(Constants.secondOwnerPhone);
+        await expect(editDriverDIspatchDashboardSetup.boardColumn).toContainText(Constants.secondBoard);
     });
 
     test.afterAll(async ({ browser }) => {
