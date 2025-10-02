@@ -19,6 +19,7 @@ import { AddDealership } from '../../page/dealership/addDealership.page';
 import { DispatchDashboardOverview } from '../../page/dispatchDashboard/dispatchDashboardOverview.page';
 import { EditDriver } from '../../page/dispatchDashboard/editDriver.page';
 import { DispatchInfoPage } from '../../page/dispatchInfo/dispatcInfo.page';
+import { DriverOverviewPage } from '../../page/drivers/drriversOverview.page';
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -48,6 +49,10 @@ export const test = base.extend<{
     addLoadSetup: AddAndEditLoadModal;
     editLoadSetup: AddAndEditLoadModal;
     dispatchInfo: DispatchInfoPage;
+    driverOverviewSetup: DriverOverviewPage;
+    driverOverview: DriverOverviewPage;
+    addDriverSetup: EditDriver;
+    editDriverSetup: EditDriver;
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -279,5 +284,42 @@ export const test = base.extend<{
         const dispatchInfo = new DispatchInfoPage(loggedPage);
         await loggedPage.goto(Constants.dispatchInfoUrl, { waitUntil: 'networkidle', timeout: 15000 });
         await use(dispatchInfo);
+    },
+
+    driverOverviewSetup: async ({ loggedPage }, use) => {
+        const driver = new DriverOverviewPage(loggedPage);
+        await loggedPage.goto(Constants.driverUrl, { waitUntil: 'networkidle', timeout: 15000 });
+        await use(driver);
+    },
+
+    driverOverview: async ({ loggedPage }, use) => {
+        const driverOverview = new DriverOverviewPage(loggedPage);
+        await use(driverOverview);
+    },
+
+    addDriverSetup: async ({ loggedPage, driverOverview }, use) => {
+        const addDriver = new EditDriver(loggedPage);
+        await loggedPage.goto(Constants.driverUrl, { waitUntil: 'networkidle', timeout: 20000 })
+        await driverOverview.driverNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+        await driverOverview.addDriverButton.click();
+        await use(addDriver);
+    },
+
+    editDriverSetup: async ({ loggedPage, driverOverview }, use) => {
+        const editDriver = new EditDriver(loggedPage);
+        await loggedPage.goto(Constants.driverUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await driverOverview.driverNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+        const [response] = await Promise.all([
+            driverOverview.page.waitForResponse(res =>
+                res.url().includes('/api/drivers')
+            ),
+            await driverOverview.enterDriverNameInSearchField(driverOverview.searchInputField, Constants.markLabatDriver)
+        ]);
+        const driverName = driverOverview.page.locator('tr', {
+            has: driverOverview.page.locator('td:nth-child(1)', { hasText: 'Mark Labat' })
+        });
+        await driverName.first().waitFor({ state: 'visible', timeout: 10000 });
+        await driverOverview.pencilIcon.first().click();
+        await use(editDriver);
     },
 });
