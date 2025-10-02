@@ -13,12 +13,12 @@ import { InsertPermitBookPage } from '../../page/Content/uploadDocuments.page';
 import { AddAndEditLoadModal } from '../../page/dispatchDashboard/addAndEditLoad.page';
 import { TruckPage } from '../../page/truck/truck.page';
 import { TrailersPage } from '../../page/trailer/trailer.page';
-import { DriverOverviewPage } from '../../page/drivers/drriversOverview.page';
 import { PermitBookPage } from '../../page/permitBook/permitBookOvervire.page';
 import { DealershipPage } from '../../page/dealership/dealership.page';
 import { AddDealership } from '../../page/dealership/addDealership.page';
 import { DispatchDashboardOverview } from '../../page/dispatchDashboard/dispatchDashboardOverview.page';
 import { EditDriver } from '../../page/dispatchDashboard/editDriver.page';
+import { DispatchInfoPage } from '../../page/dispatchInfo/dispatcInfo.page';
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -47,6 +47,7 @@ export const test = base.extend<{
     editDrive: EditDriver;
     addLoadSetup: AddAndEditLoadModal;
     editLoadSetup: AddAndEditLoadModal;
+    dispatchInfo: DispatchInfoPage;
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -272,5 +273,11 @@ export const test = base.extend<{
     editDrive: async ({ loggedPage }, use) => {
         const editDriver = new EditDriver(loggedPage);
         await use(editDriver);
+    },
+
+    dispatchInfo: async ({ loggedPage }, use) => {
+        const dispatchInfo = new DispatchInfoPage(loggedPage);
+        await loggedPage.goto(Constants.dispatchInfoUrl, { waitUntil: 'networkidle', timeout: 15000 });
+        await use(dispatchInfo);
     },
 });
