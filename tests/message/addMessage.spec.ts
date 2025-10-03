@@ -1,64 +1,49 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
-import { MessagePage } from '../../page/messages/messages.page';
-import { AddMessagePage } from '../../page/messages/addMessage.page';
+import { test } from '../fixtures/fixtures';
 
-test.use({ storageState: 'auth.json' });
-
-test.beforeEach(async ({ page }) => {
-    const message = new MessagePage(page);
-    await page.goto(Constants.messageUrl, { waitUntil: 'networkidle' });
-    await message.addMessageButton.click();
+test('Korisnik moze da doda message', async ({ messagesPage, addMessage }) => {
+    await addMessage.enterTitle(addMessage.titleField, Constants.messagTitle);
+    await addMessage.enterMessageContent(addMessage.contentField, Constants.messageContent);
+    await addMessage.uncheck(addMessage.dailyReportCheckbox);
+    await addMessage.uncheck(addMessage.weeklyReportCheckbox);
+    await addMessage.selectRole(addMessage.roleField, addMessage.userRole);
+    await addMessage.contentField.click();
+    await addMessage.sendButton.click();
+    await addMessage.page.reload({ waitUntil: 'networkidle' });
+    await expect(messagesPage.nameColumn.first()).toHaveText(Constants.messagTitle);
+    await expect(messagesPage.contentColumn.first()).toHaveText(Constants.messageContent);
+    await messagesPage.eyeIcon.first().click();
+    await expect(addMessage.roleField).toHaveText('USER');
 });
 
-test('Korisnik moze da doda message', async ({ page }) => {
-    const message = new MessagePage(page);
-    const addMessagePage = new AddMessagePage(page);
-    await addMessagePage.enterTitle(addMessagePage.titleField, Constants.messagTitle);
-    await addMessagePage.enterMessageContent(addMessagePage.contentField, Constants.messageContent);
-    await addMessagePage.uncheck(addMessagePage.dailyReportCheckbox);
-    await addMessagePage.uncheck(addMessagePage.weeklyReportCheckbox);
-    await addMessagePage.selectRole(addMessagePage.roleField, addMessagePage.userRole);
-    await addMessagePage.contentField.click();
-    await addMessagePage.sendButton.click();
-    await page.reload({ waitUntil: 'networkidle' });
-    await expect(message.nameColumn.first()).toHaveText(Constants.messagTitle);
-    await expect(message.contentColumn.first()).toHaveText(Constants.messageContent);
-    await message.eyeIcon.first().click();
-    await expect(addMessagePage.roleField).toHaveText('USER');
+test('Svi podaci o poruci su prikazani u modalu kada korisnik klikne na eye ikonicu', async ({ messagesPage, addMessage }) => {
+    await addMessage.enterTitle(addMessage.titleField, Constants.messagTitle);
+    await addMessage.enterMessageContent(addMessage.contentField, Constants.messageContent);
+    await addMessage.uncheck(addMessage.dailyReportCheckbox);
+    await addMessage.uncheck(addMessage.weeklyReportCheckbox);
+    await addMessage.selectRole(addMessage.roleField, addMessage.userRole);
+    await addMessage.contentField.click();
+    await addMessage.sendButton.click();
+    await addMessage.page.reload({ waitUntil: 'networkidle' });
+    await messagesPage.eyeIcon.first().click();
+    await expect(addMessage.titleField).toHaveValue(Constants.messagTitle);
+    await expect(addMessage.contentField).toHaveValue(Constants.messageContent);
+    await expect(addMessage.roleField).toHaveText('USER');
 });
 
-test('Svi podaci o poruci su prikazani u modalu kada korisnik klikne na eye ikonicu', async ({ page }) => {
-    const message = new MessagePage(page);
-    const addMessagePage = new AddMessagePage(page);
-    await addMessagePage.enterTitle(addMessagePage.titleField, Constants.messagTitle);
-    await addMessagePage.enterMessageContent(addMessagePage.contentField, Constants.messageContent);
-    await addMessagePage.uncheck(addMessagePage.dailyReportCheckbox);
-    await addMessagePage.uncheck(addMessagePage.weeklyReportCheckbox);
-    await addMessagePage.selectRole(addMessagePage.roleField, addMessagePage.userRole);
-    await addMessagePage.contentField.click();
-    await addMessagePage.sendButton.click();
-    await page.reload({ waitUntil: 'networkidle' });
-    await message.eyeIcon.first().click();
-    await expect(addMessagePage.titleField).toHaveValue(Constants.messagTitle);
-    await expect(addMessagePage.contentField).toHaveValue(Constants.messageContent);
-    await expect(addMessagePage.roleField).toHaveText('USER');
+test('Kada korisnik selektuje Weekly report for market updates? checkbox, role polje bude popunjeno automatski', async ({ messagesPage, addMessage }) => {
+    await addMessage.enterTitle(addMessage.titleField, Constants.messagTitle);
+    await addMessage.enterMessageContent(addMessage.contentField, Constants.messageContent);
+    await addMessage.check(addMessage.weeklyReportCheckbox);
+    await expect(addMessage.roleField).toHaveText('DISPATCHER, BROKER, ADMIN, SUPERADMIN');
 });
 
-test('Kada korisnik selektuje Weekly report for market updates? checkbox, role polje bude popunjeno automatski', async ({ page }) => {
-    const addMessagePage = new AddMessagePage(page);
-    await addMessagePage.enterTitle(addMessagePage.titleField, Constants.messagTitle);
-    await addMessagePage.enterMessageContent(addMessagePage.contentField, Constants.messageContent);
-    await addMessagePage.check(addMessagePage.weeklyReportCheckbox);
-    await expect(addMessagePage.roleField).toHaveText('DISPATCHER, BROKER, ADMIN, SUPERADMIN');
-});
-
-test('Kada korisnik selektuje Daily report for market updates? checkbox, role polje bude popunjeno automatski', async ({ page }) => {
-    const addMessagePage = new AddMessagePage(page);
-    await addMessagePage.enterTitle(addMessagePage.titleField, Constants.messagTitle);
-    await addMessagePage.enterMessageContent(addMessagePage.contentField, Constants.messageContent);
-    await addMessagePage.check(addMessagePage.dailyReportCheckbox);
-    await expect(addMessagePage.roleField).toHaveText('DISPATCHER, BROKER, ADMIN, SUPERADMIN');
+test('Kada korisnik selektuje Daily report for market updates? checkbox, role polje bude popunjeno automatski', async ({ messagesPage, addMessage }) => {
+    await addMessage.enterTitle(addMessage.titleField, Constants.messagTitle);
+    await addMessage.enterMessageContent(addMessage.contentField, Constants.messageContent);
+    await addMessage.check(addMessage.dailyReportCheckbox);
+    await expect(addMessage.roleField).toHaveText('DISPATCHER, BROKER, ADMIN, SUPERADMIN');
 });
 
 /////////////////////////////////// SALJU SE MEJLOVI SVIMA //////////////////////////////////////////////

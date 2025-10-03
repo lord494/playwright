@@ -28,6 +28,8 @@ import { InactiveDriverPage } from '../../page/inactiveDrivers/inactiveDriversOv
 import { EditInactiveDriver } from '../../page/inactiveDrivers/editInactiveDriver.page';
 import { TrailerDocumentPage } from '../../page/trailer/trailerDocument.page';
 import { InsertPage } from '../../page/insertPermitBook/insertPermitBook.page';
+import { MessagePage } from '../../page/messages/messages.page';
+import { AddMessagePage } from '../../page/messages/addMessage.page';
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -72,6 +74,8 @@ export const test = base.extend<{
     insertPermit: InsertPage;
     trailerDocument: TrailerDocumentPage;
     cleanupSetup: Page;
+    messagesPage: MessagePage;
+    addMessage: AddMessagePage;
 
 }>({
     loggedPage: async ({ browser }, use) => {
@@ -414,9 +418,6 @@ export const test = base.extend<{
     },
 
     cleanupSetup: async ({ loggedPage, trailerPage, trailerDocument }, use) => {
-
-
-        // truck
         await loggedPage.goto(Constants.truckUrl, { waitUntil: 'networkidle' });
         await trailerPage.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
         await loggedPage.locator('.v-text-field input').fill(Constants.truckName);
@@ -424,8 +425,6 @@ export const test = base.extend<{
         await trailerPage.clickElement(trailerPage.documentIcon);
         await loggedPage.waitForLoadState('networkidle');
         await trailerDocument.deleteAllItemsWithDeleteIconForDrivers();
-
-        // trailer
         await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
         await trailerPage.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
         await loggedPage.locator('.v-text-field input').nth(6).fill(Constants.trailerTest);
@@ -435,8 +434,6 @@ export const test = base.extend<{
         await targetRow.locator('.mdi-file-document-multiple').click();
         await loggedPage.waitForLoadState('networkidle');
         await trailerDocument.deleteAllItemsWithDeleteIconForDrivers();
-
-        // permit
         await loggedPage.goto(Constants.permitBookUrl, { waitUntil: 'networkidle' });
         await trailerDocument.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
         await loggedPage.locator('.v-text-field input').first().fill(Constants.testUser);
@@ -444,15 +441,22 @@ export const test = base.extend<{
         await trailerPage.clickElement(trailerDocument.eyeIcon);
         await loggedPage.waitForLoadState('networkidle');
         await trailerDocument.deleteAllItemsWithDeleteIconForDrivers();
-
-        // companies
         await loggedPage.goto(Constants.companiesUrl, { waitUntil: 'networkidle' });
         await trailerPage.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
         await trailerPage.clickElement(trailerPage.documentIcon.first());
         await trailerDocument.deleteAllItemsWithDeleteIcon();
-
-        // koristi se dalje
         await use(loggedPage);
     },
 
+    messagesPage: async ({ loggedPage }, use) => {
+        const message = new MessagePage(loggedPage);
+        await loggedPage.goto(Constants.messageUrl, { waitUntil: 'networkidle' });
+        await message.addMessageButton.click();
+        await use(message);
+    },
+
+    addMessage: async ({ loggedPage }, use) => {
+        const addMessage = new AddMessagePage(loggedPage);
+        await use(addMessage);
+    },
 });
