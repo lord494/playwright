@@ -12,7 +12,7 @@ export default defineConfig({
     trace: 'on-first-retry',
     storageState: 'auth.json',
     screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    video: 'on',
   },
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }]],
   globalSetup: require.resolve('./globalSetup'),

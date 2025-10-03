@@ -20,6 +20,9 @@ import { DispatchDashboardOverview } from '../../page/dispatchDashboard/dispatch
 import { EditDriver } from '../../page/dispatchDashboard/editDriver.page';
 import { DispatchInfoPage } from '../../page/dispatchInfo/dispatcInfo.page';
 import { DriverOverviewPage } from '../../page/drivers/drriversOverview.page';
+import { DotInspectionsPage } from '../../page/eld/dotInspections.page';
+import { EldTypesPage } from '../../page/eld/eldTypes.page';
+import { EldShiftsPage } from '../../page/eld/shifts.page';
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -53,6 +56,9 @@ export const test = base.extend<{
     driverOverview: DriverOverviewPage;
     addDriverSetup: EditDriver;
     editDriverSetup: EditDriver;
+    dotInspection: DotInspectionsPage;
+    eldTypes: EldTypesPage;
+    eldShiftsPage: EldShiftsPage;
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -321,5 +327,25 @@ export const test = base.extend<{
         await driverName.first().waitFor({ state: 'visible', timeout: 10000 });
         await driverOverview.pencilIcon.first().click();
         await use(editDriver);
+    },
+
+    dotInspection: async ({ loggedPage }, use) => {
+        const dotInspection = new DotInspectionsPage(loggedPage);
+        await loggedPage.goto(Constants.dotInspectionUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await use(dotInspection);
+    },
+
+    eldTypes: async ({ loggedPage }, use) => {
+        const eldTypes = new EldTypesPage(loggedPage);
+        await loggedPage.goto(Constants.eldTypesUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await eldTypes.typeColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+        await use(eldTypes);
+    },
+
+    eldShiftsPage: async ({ loggedPage }, use) => {
+        const eldShift = new EldShiftsPage(loggedPage);
+        await loggedPage.goto(Constants.eldShifts, { waitUntil: 'networkidle', timeout: 20000 });
+        await eldShift.removeUserFromShift(Constants.eldPlaywright);
+        await use(eldShift);
     },
 });
