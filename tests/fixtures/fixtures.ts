@@ -30,6 +30,8 @@ import { TrailerDocumentPage } from '../../page/trailer/trailerDocument.page';
 import { InsertPage } from '../../page/insertPermitBook/insertPermitBook.page';
 import { MessagePage } from '../../page/messages/messages.page';
 import { AddMessagePage } from '../../page/messages/addMessage.page';
+import { OwnersPage } from '../../page/owner/ownerOverview.page';
+import { AddOwner } from '../../page/owner/addOwner.page';
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -76,6 +78,8 @@ export const test = base.extend<{
     cleanupSetup: Page;
     messagesPage: MessagePage;
     addMessage: AddMessagePage;
+    ownerStup: OwnersPage;
+    addOwner: AddOwner;
 
 }>({
     loggedPage: async ({ browser }, use) => {
@@ -458,5 +462,17 @@ export const test = base.extend<{
     addMessage: async ({ loggedPage }, use) => {
         const addMessage = new AddMessagePage(loggedPage);
         await use(addMessage);
+    },
+
+    ownerStup: async ({ loggedPage }, use) => {
+        const owner = new OwnersPage(loggedPage);
+        await loggedPage.goto(Constants.ownerUrl, { waitUntil: 'networkidle' });
+        await owner.addOwnerButton.click();
+        await use(owner);
+    },
+
+    addOwner: async ({ loggedPage }, use) => {
+        const addOwner = new AddOwner(loggedPage);
+        await use(addOwner);
     },
 });

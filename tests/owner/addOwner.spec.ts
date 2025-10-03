@@ -1,23 +1,12 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { get6RandomNumber } from '../../helpers/dateUtilis';
-import { OwnersPage } from '../../page/owner/ownerOverview.page';
-import { AddOwner } from '../../page/owner/addOwner.page';
+import { test } from '../fixtures/fixtures';
 
-test.use({ storageState: 'auth.json' });
-
-test.beforeEach(async ({ page }) => {
-    const owner = new OwnersPage(page);
-    await page.goto(Constants.ownerUrl, { waitUntil: 'networkidle' });
-    await owner.addOwnerButton.click();
-});
-
-test('Korisnik moze da doda novog Ownera i da ga obrise', async ({ page }) => {
-    page.on('dialog', async (dialog) => {
+test('Korisnik moze da doda novog Ownera i da ga obrise', async ({ ownerStup, addOwner }) => {
+    addOwner.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
-    const owner = new OwnersPage(page);
-    const addOwner = new AddOwner(page);
     const randomCdl = get6RandomNumber().join('');
     const randomName = `Owner ${Math.floor(Math.random() * 1000)}`;
     await addOwner.enterName(addOwner.nameField, randomName);
@@ -25,29 +14,26 @@ test('Korisnik moze da doda novog Ownera i da ga obrise', async ({ page }) => {
     await addOwner.enterCdl(addOwner.cdlField, randomCdl);
     await addOwner.isChecked(addOwner.isActiveCheckbox);
     await addOwner.addButton.click();
-    await owner.dialogBox.waitFor({ state: 'detached' });
-    await owner.searchOwner(owner.searchField, randomName);
-    await expect(owner.nameColumn).toContainText(randomName);
-    await expect(owner.cdlColumn).toContainText(randomCdl);
-    await expect(owner.isActiveColumn).toContainText('YES');
-    await owner.deleteIcon.click();
-    await expect(owner.snackMessage).toContainText(' ' + randomName + ' successfully deleted');
+    await ownerStup.dialogBox.waitFor({ state: 'detached' });
+    await ownerStup.searchOwner(ownerStup.searchField, randomName);
+    await expect(ownerStup.nameColumn).toContainText(randomName);
+    await expect(ownerStup.cdlColumn).toContainText(randomCdl);
+    await expect(ownerStup.isActiveColumn).toContainText('YES');
+    await ownerStup.deleteIcon.click();
+    await expect(ownerStup.snackMessage).toContainText(' ' + randomName + ' successfully deleted');
 });
 
-test('Name field je obavezno polje', async ({ page }) => {
-    const addOwner = new AddOwner(page);
+test('Name field je obavezno polje', async ({ ownerStup, addOwner }) => {
     await addOwner.addButton.click();
     await expect(addOwner.errorMessage).toContainText('The name field is required');
 });
 
-test('Dot broj mora biti unique', async ({ page }) => {
-    const addOwner = new AddOwner(page);
-    const owner = new OwnersPage(page);
-    await owner.cdlColumn.first().waitFor();
+test('Dot broj mora biti unique', async ({ ownerStup, addOwner }) => {
+    await ownerStup.cdlColumn.first().waitFor();
     let existingCdl = '';
-    const dotCount = await owner.cdlColumn.count();
+    const dotCount = await ownerStup.cdlColumn.count();
     for (let i = 0; i < dotCount; i++) {
-        const dotText = await owner.cdlColumn.nth(i).textContent();
+        const dotText = await ownerStup.cdlColumn.nth(i).textContent();
         if (dotText && dotText.trim() !== '') {
             existingCdl = dotText.trim();
             break;
