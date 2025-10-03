@@ -24,6 +24,8 @@ import { DotInspectionsPage } from '../../page/eld/dotInspections.page';
 import { EldTypesPage } from '../../page/eld/eldTypes.page';
 import { EldShiftsPage } from '../../page/eld/shifts.page';
 import { EldDashboardPage } from '../../page/eldDashboard/eldDashboard.page';
+import { InactiveDriverPage } from '../../page/inactiveDrivers/inactiveDriversOverview.page';
+import { EditInactiveDriver } from '../../page/inactiveDrivers/editInactiveDriver.page';
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -61,6 +63,10 @@ export const test = base.extend<{
     eldTypes: EldTypesPage;
     eldShiftsPage: EldShiftsPage;
     eldDashboard: EldDashboardPage;
+    inactiveDriverSetup: InactiveDriverPage;
+    inactiveDriver: InactiveDriverPage;
+    addInactiveDriverSetup: EditDriver;
+    editInactiveDriverSetup: EditInactiveDriver;
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -355,5 +361,38 @@ export const test = base.extend<{
         const eldDashboard = new EldDashboardPage(loggedPage);
         await loggedPage.goto(Constants.eldDashboardUrl, { waitUntil: 'networkidle', timeout: 20000 });
         await use(eldDashboard);
+    },
+
+    inactiveDriverSetup: async ({ loggedPage }, use) => {
+        const inactiveDriver = new InactiveDriverPage(loggedPage);
+        await loggedPage.goto(Constants.inactiveDriveUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await use(inactiveDriver);
+    },
+
+    inactiveDriver: async ({ loggedPage }, use) => {
+        const inactiveDriver = new InactiveDriverPage(loggedPage);
+        await use(inactiveDriver);
+    },
+
+    addInactiveDriverSetup: async ({ loggedPage, driverOverview }, use) => {
+        const addInactiveDriver = new EditDriver(loggedPage);
+        await loggedPage.goto(Constants.inactiveDriveUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await driverOverview.driverNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+        await driverOverview.addDriverButton.click();
+        await use(addInactiveDriver);
+    },
+
+    editInactiveDriverSetup: async ({ loggedPage, driverOverview }, use) => {
+        const editInactiveDriverSetup = new EditInactiveDriver(loggedPage);
+        await loggedPage.goto(Constants.inactiveDriveUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await driverOverview.driverNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+        const [response] = await Promise.all([
+            loggedPage.waitForResponse(res =>
+                res.url().includes('/api/drivers')
+            ),
+            await driverOverview.enterDriverNameInSearchField(driverOverview.searchInputField, Constants.johnsonDriver)
+        ]);
+        await driverOverview.pencilIcon.first().click();
+        await use(editInactiveDriverSetup);
     },
 });

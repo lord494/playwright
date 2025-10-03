@@ -1,148 +1,113 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
-import { DriverOverviewPage } from '../../page/drivers/drriversOverview.page';
 import { EditInactiveDriver } from '../../page/inactiveDrivers/editInactiveDriver.page';
-import { InactiveDriverPage } from '../../page/inactiveDrivers/inactiveDriversOverview.page';
-
-test.use({ storageState: 'auth.json' });
-
-test.beforeEach(async ({ page }) => {
-    const driver = new DriverOverviewPage(page);
-    await page.goto(Constants.inactiveDriveUrl, { waitUntil: 'networkidle' });
-    await driver.driverNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-    const [response] = await Promise.all([
-        page.waitForResponse(res =>
-            res.url().includes('/api/drivers')
-        ),
-        await driver.enterDriverNameInSearchField(driver.searchInputField, Constants.johnsonDriver)
-    ]);
-    await driver.pencilIcon.first().click();
-});
+import { test } from '../fixtures/fixtures';
 
 test.describe('Testovi bez afterAll', () => {
-    test('Driver name je obavezno polje', async ({ page }) => {
-        const edit = new EditInactiveDriver(page);
-        await edit.driverName.clear();
-        await edit.saveButton.click();
-        await page.waitForLoadState('networkidle');
-        await expect(edit.errorMessage).toContainText('The name field is required');
+    test('Driver name je obavezno polje', async ({ editInactiveDriverSetup }) => {
+        await editInactiveDriverSetup.driverName.clear();
+        await editInactiveDriverSetup.saveButton.click();
+        await editInactiveDriverSetup.page.waitForLoadState('networkidle');
+        await expect(editInactiveDriverSetup.errorMessage).toContainText('The name field is required');
     });
 
-    test('Phone je obavezno polje', async ({ page }) => {
-        const edit = new EditInactiveDriver(page);
-        await edit.phone.clear();
-        await edit.saveButton.click();
-        await expect(edit.errorMessage.last()).toContainText('The phone field is required');
+    test('Phone je obavezno polje', async ({ editInactiveDriverSetup }) => {
+        await editInactiveDriverSetup.phone.clear();
+        await editInactiveDriverSetup.saveButton.click();
+        await expect(editInactiveDriverSetup.errorMessage.last()).toContainText('The phone field is required');
     });
 
-    test('Truck je obavezno polje', async ({ page }) => {
-        const edit = new EditInactiveDriver(page);
-        await edit.truck.clear();
-        await edit.saveButton.click();
-        await expect(edit.errorMessage).toContainText('The Truck field is required');
+    test('Truck je obavezno polje', async ({ editInactiveDriverSetup }) => {
+        await editInactiveDriverSetup.truck.clear();
+        await editInactiveDriverSetup.saveButton.click();
+        await expect(editInactiveDriverSetup.errorMessage).toContainText('The Truck field is required');
     });
 
-    test('Korisnik ne moze da unese brojeve i specijalne karaktere u Name polje', async ({ page }) => {
-        const edit = new EditInactiveDriver(page);
-        await edit.fillInputField(edit.driverName, "123!@#")
-        await expect(edit.invalidMessage.first()).toContainText('The name field format is invalid');
+    test('Korisnik ne moze da unese brojeve i specijalne karaktere u Name polje', async ({ editInactiveDriverSetup }) => {
+        await editInactiveDriverSetup.fillInputField(editInactiveDriverSetup.driverName, "123!@#")
+        await expect(editInactiveDriverSetup.invalidMessage.first()).toContainText('The name field format is invalid');
     });
 
-    test('Korisnik ne moze da unese brojeve i specijalne karaktere u Second driver name polje', async ({ page }) => {
-        const edit = new EditInactiveDriver(page);
-        await edit.fillInputField(edit.secondDrverName, "123!@#")
-        await expect(edit.invalidMessage.first()).toContainText("The second_driver field format is invalid");
+    test('Korisnik ne moze da unese brojeve i specijalne karaktere u Second driver name polje', async ({ editInactiveDriverSetup }) => {
+        await editInactiveDriverSetup.fillInputField(editInactiveDriverSetup.secondDrverName, "123!@#")
+        await expect(editInactiveDriverSetup.invalidMessage.first()).toContainText("The second_driver field format is invalid");
     });
 
-    test('Korisnik moze da ukljuci "Is priority" toggle button', async ({ page }) => {
-        const edit = new EditInactiveDriver(page);
-        const driver = new InactiveDriverPage(page);
-        await edit.check(edit.isPriorityToggleButton);
-        await edit.saveButton.click();
-        await edit.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-        await page.waitForLoadState('networkidle');
-        await expect(driver.driverNameColumn).toContainText('*');
+    test('Korisnik moze da ukljuci "Is priority" toggle button', async ({ inactiveDriver, editInactiveDriverSetup }) => {
+        await editInactiveDriverSetup.check(editInactiveDriverSetup.isPriorityToggleButton);
+        await editInactiveDriverSetup.saveButton.click();
+        await editInactiveDriverSetup.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
+        await editInactiveDriverSetup.page.waitForLoadState('networkidle');
+        await expect(inactiveDriver.driverNameColumn).toContainText('*');
     });
 
-    test('Korisnik moze da ukljuci "Is new" toggle button', async ({ page }) => {
-        const edit = new EditInactiveDriver(page);
-        const driver = new InactiveDriverPage(page);
-        await edit.check(edit.isNewToggleButton);
-        await edit.saveButton.click();
-        await edit.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-        await page.waitForLoadState('networkidle');
-        await expect(driver.driverNameColumn).toContainText('(NEW)');
+    test('Korisnik moze da ukljuci "Is new" toggle button', async ({ inactiveDriver, editInactiveDriverSetup }) => {
+        await editInactiveDriverSetup.check(editInactiveDriverSetup.isNewToggleButton);
+        await editInactiveDriverSetup.saveButton.click();
+        await editInactiveDriverSetup.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
+        await editInactiveDriverSetup.page.waitForLoadState('networkidle');
+        await expect(inactiveDriver.driverNameColumn).toContainText('(NEW)');
     });
 
-    test('Korisnik moze da ukljuci "Is company" toggle button', async ({ page }) => {
-        const edit = new EditInactiveDriver(page);
-        const driver = new InactiveDriverPage(page);
-        await edit.check(edit.isCompanyToggleButton);
-        await edit.saveButton.click();
-        await edit.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-        await page.waitForLoadState('networkidle');
-        await expect(driver.driverNameColumn).toContainText('(company driver)');
+    test('Korisnik moze da ukljuci "Is company" toggle button', async ({ inactiveDriver, editInactiveDriverSetup }) => {
+        await editInactiveDriverSetup.check(editInactiveDriverSetup.isCompanyToggleButton);
+        await editInactiveDriverSetup.saveButton.click();
+        await editInactiveDriverSetup.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
+        await editInactiveDriverSetup.page.waitForLoadState('networkidle');
+        await expect(inactiveDriver.driverNameColumn).toContainText('(company driver)');
     });
 
-    test('Korisnik moze da ukljuci "Is time" toggle button', async ({ page }) => {
-        const edit = new EditInactiveDriver(page);
-        const driver = new InactiveDriverPage(page);
-        await edit.check(edit.isTimeToggleButton);
-        await edit.saveButton.click();
-        await edit.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-        await page.waitForLoadState('networkidle');
-        await expect(driver.driverNameColumn).toContainText('(time)');
+    test('Korisnik moze da ukljuci "Is time" toggle button', async ({ inactiveDriver, editInactiveDriverSetup }) => {
+        await editInactiveDriverSetup.check(editInactiveDriverSetup.isTimeToggleButton);
+        await editInactiveDriverSetup.saveButton.click();
+        await editInactiveDriverSetup.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
+        await editInactiveDriverSetup.page.waitForLoadState('networkidle');
+        await expect(inactiveDriver.driverNameColumn).toContainText('(time)');
     });
 
-    test('Korisnik moze da cekira checkboxove', async ({ page }) => {
-        const edit = new EditInactiveDriver(page);
-        const driver = new InactiveDriverPage(page);
-        await edit.check(edit.noCutCheckbox);
-        await edit.check(edit.hassAnAppAccount);
-        await edit.saveButton.click();
-        await edit.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-        await page.waitForLoadState('networkidle');
-        await driver.pencilIcon.click();
-        await page.waitForLoadState('networkidle');
-        await expect(edit.noCutCheckbox).toBeChecked();
-        await expect(edit.hassAnAppAccount).toBeChecked();
+    test('Korisnik moze da cekira checkboxove', async ({ inactiveDriver, editInactiveDriverSetup }) => {
+        await editInactiveDriverSetup.check(editInactiveDriverSetup.noCutCheckbox);
+        await editInactiveDriverSetup.check(editInactiveDriverSetup.hassAnAppAccount);
+        await editInactiveDriverSetup.saveButton.click();
+        await editInactiveDriverSetup.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
+        await editInactiveDriverSetup.page.waitForLoadState('networkidle');
+        await inactiveDriver.pencilIcon.click();
+        await inactiveDriver.page.waitForLoadState('networkidle');
+        await expect(editInactiveDriverSetup.noCutCheckbox).toBeChecked();
+        await expect(editInactiveDriverSetup.hassAnAppAccount).toBeChecked();
     });
 
-    test('Korisnik moze da otvori trailer history kada klikne na "Show trailer history" toggle button', async ({ page }) => {
-        const edit = new EditInactiveDriver(page);
-        const driver = new InactiveDriverPage(page);
-        await edit.driverName.waitFor({ state: 'visible', timeout: 10000 });
+    test('Korisnik moze da otvori trailer history kada klikne na "Show trailer history" toggle button', async ({ inactiveDriver, editInactiveDriverSetup }) => {
+        await editInactiveDriverSetup.driverName.waitFor({ state: 'visible', timeout: 10000 });
         await Promise.all([
-            page.waitForResponse(response =>
+            editInactiveDriverSetup.page.waitForResponse(response =>
                 response.url().includes('/api/owners/all') &&
                 (response.status() === 200 || response.status() === 304)
             ),
-            await edit.check(edit.showTrailerHistoryToggleButton)
+            await editInactiveDriverSetup.check(editInactiveDriverSetup.showTrailerHistoryToggleButton)
         ]);
-        if (await driver.noHistoryLocator.isVisible()) {
-            expect(await driver.noHistoryLocator.isVisible()).toBeTruthy();
+        if (await inactiveDriver.noHistoryLocator.isVisible()) {
+            expect(await inactiveDriver.noHistoryLocator.isVisible()).toBeTruthy();
         } else {
-            await expect(edit.trailerHistoryList.first()).toBeVisible();
+            await expect(editInactiveDriverSetup.trailerHistoryList.first()).toBeVisible();
         }
     });
 
-    test('Korisnik moze da obrise trailer history', async ({ page }) => {
-        const edit = new EditInactiveDriver(page);
-        const driver = new InactiveDriverPage(page);
-        await edit.check(edit.showTrailerHistoryToggleButton);
-        page.on('dialog', async (dialog) => {
+    test('Korisnik moze da obrise trailer history', async ({ inactiveDriver, editInactiveDriverSetup }) => {
+        await editInactiveDriverSetup.check(editInactiveDriverSetup.showTrailerHistoryToggleButton);
+        editInactiveDriverSetup.page.on('dialog', async (dialog) => {
             await dialog.accept();
         });
-        const isEmptyVisible = await driver.noHistoryLocator.isVisible();
+        const isEmptyVisible = await inactiveDriver.noHistoryLocator.isVisible();
         if (isEmptyVisible) {
             expect(isEmptyVisible).toBeTruthy();
         } const deleteSelector = '.history-actions .v-icon--link.mdi.mdi-delete';
         try {
-            await page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
-            while (await page.locator(deleteSelector).count() > 0) {
-                const previousCount = await page.locator(deleteSelector).count();
-                await page.locator(deleteSelector).first().click();
-                await page.waitForFunction(
+            await inactiveDriver.page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
+            while (await inactiveDriver.page.locator(deleteSelector).count() > 0) {
+                const previousCount = await inactiveDriver.page.locator(deleteSelector).count();
+                await inactiveDriver.page.locator(deleteSelector).first().click();
+                await inactiveDriver.page.waitForFunction(
                     ({ selector, prevCount }) => {
                         return document.querySelectorAll(selector).length < prevCount;
                     },
@@ -151,47 +116,45 @@ test.describe('Testovi bez afterAll', () => {
             }
         } catch (e) {
         }
-        await expect(edit.trailerHistoryList).not.toBeVisible();
+        await expect(editInactiveDriverSetup.trailerHistoryList).not.toBeVisible();
     });
 });
 
 test.describe('Testovi sa afterAll', () => {
-    test('Driver moze da se edituje', async ({ page }) => {
-        const edit = new EditInactiveDriver(page);
-        const driver = new InactiveDriverPage(page);
-        await edit.fillInputField(edit.driverName, Constants.brianDriver);
-        await edit.fillInputField(edit.secondDrverName, Constants.secondDriverTest);
-        await edit.selectFromMenu(edit.owner, edit.secondOwnerOption);
-        await edit.selectFromMenu(edit.board, edit.b2Board);
-        await page.waitForTimeout(1000);
-        await edit.selectFromMenu(edit.dispatcher, edit.testPassDispatcher);
-        await edit.fillAndSelectOption(edit.substituteDispatcher, Constants.test, edit.secondSubstituteDsipatcher);
-        await edit.selectFromMenu(edit.payroll, edit.secondPayroll);
-        await edit.selectFromMenu(edit.trailerManager, edit.secondTrailerManager);
-        await edit.fillInputField(edit.dissField, Constants.secondDiss);
-        await edit.fillInputField(edit.diss2Field, Constants.secondDiss);
-        await edit.fillInputField(edit.diss3Field, Constants.secondDiss);
-        await edit.fillInputField(edit.diss4Field, Constants.secondDiss);
-        await edit.selectFromMenu(edit.company, edit.secondCompany);
-        await edit.fillInputField(edit.phone, Constants.secondPhone);
-        await edit.fillInputField(edit.ownerPhone, Constants.secondOwnerPhone);
-        await edit.fillAndSelectOption(edit.truck, Constants.secondTruckName, edit.secondTruckName);
-        await edit.fillAndSelectOption(edit.trailer, Constants.secondTrailerName, edit.secondTrailerName);
-        await edit.fillInputField(edit.trailerType, Constants.secondTrailerType);
-        await edit.fillInputField(edit.noteBox, Constants.noteSecond);
-        await edit.saveButton.click();
-        await edit.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-        await page.waitForLoadState('networkidle');
-        await expect(driver.driverNameColumn).toContainText(Constants.brianDriver);
-        await expect(driver.driverNameColumn).toContainText(Constants.secondOwner);
-        await expect(driver.driverNameColumn).toContainText(Constants.secondDriverTest);
-        await expect(driver.trailerTypeColumn).toContainText(Constants.secondTrailerType);
-        await expect(driver.companyColumn).toContainText(Constants.secondSCompany);
-        await expect(driver.dispExtColumn).toContainText(Constants.secDis);
-        await expect(driver.truckColumn).toContainText(Constants.secondTruckName);
-        await expect(driver.trailerColumn).toContainText(Constants.secondTrailerName);
-        await expect(driver.phoneColumn).toContainText(Constants.secondPhone);
-        await expect(driver.boardColumn).toContainText(Constants.secondBoard);
+    test('Driver moze da se edituje', async ({ inactiveDriver, editInactiveDriverSetup }) => {
+        await editInactiveDriverSetup.fillInputField(editInactiveDriverSetup.driverName, Constants.brianDriver);
+        await editInactiveDriverSetup.fillInputField(editInactiveDriverSetup.secondDrverName, Constants.secondDriverTest);
+        await editInactiveDriverSetup.selectFromMenu(editInactiveDriverSetup.owner, editInactiveDriverSetup.secondOwnerOption);
+        await editInactiveDriverSetup.selectFromMenu(editInactiveDriverSetup.board, editInactiveDriverSetup.b2Board);
+        await editInactiveDriverSetup.page.waitForTimeout(1000);
+        await editInactiveDriverSetup.selectFromMenu(editInactiveDriverSetup.dispatcher, editInactiveDriverSetup.testPassDispatcher);
+        await editInactiveDriverSetup.fillAndSelectOption(editInactiveDriverSetup.substituteDispatcher, Constants.test, editInactiveDriverSetup.secondSubstituteDsipatcher);
+        await editInactiveDriverSetup.selectFromMenu(editInactiveDriverSetup.payroll, editInactiveDriverSetup.secondPayroll);
+        await editInactiveDriverSetup.selectFromMenu(editInactiveDriverSetup.trailerManager, editInactiveDriverSetup.secondTrailerManager);
+        await editInactiveDriverSetup.fillInputField(editInactiveDriverSetup.dissField, Constants.secondDiss);
+        await editInactiveDriverSetup.fillInputField(editInactiveDriverSetup.diss2Field, Constants.secondDiss);
+        await editInactiveDriverSetup.fillInputField(editInactiveDriverSetup.diss3Field, Constants.secondDiss);
+        await editInactiveDriverSetup.fillInputField(editInactiveDriverSetup.diss4Field, Constants.secondDiss);
+        await editInactiveDriverSetup.selectFromMenu(editInactiveDriverSetup.company, editInactiveDriverSetup.secondCompany);
+        await editInactiveDriverSetup.fillInputField(editInactiveDriverSetup.phone, Constants.secondPhone);
+        await editInactiveDriverSetup.fillInputField(editInactiveDriverSetup.ownerPhone, Constants.secondOwnerPhone);
+        await editInactiveDriverSetup.fillAndSelectOption(editInactiveDriverSetup.truck, Constants.secondTruckName, editInactiveDriverSetup.secondTruckName);
+        await editInactiveDriverSetup.fillAndSelectOption(editInactiveDriverSetup.trailer, Constants.secondTrailerName, editInactiveDriverSetup.secondTrailerName);
+        await editInactiveDriverSetup.fillInputField(editInactiveDriverSetup.trailerType, Constants.secondTrailerType);
+        await editInactiveDriverSetup.fillInputField(editInactiveDriverSetup.noteBox, Constants.noteSecond);
+        await editInactiveDriverSetup.saveButton.click();
+        await editInactiveDriverSetup.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
+        await editInactiveDriverSetup.page.waitForLoadState('networkidle');
+        await expect(inactiveDriver.driverNameColumn).toContainText(Constants.brianDriver);
+        await expect(inactiveDriver.driverNameColumn).toContainText(Constants.secondOwner);
+        await expect(inactiveDriver.driverNameColumn).toContainText(Constants.secondDriverTest);
+        await expect(inactiveDriver.trailerTypeColumn).toContainText(Constants.secondTrailerType);
+        await expect(inactiveDriver.companyColumn).toContainText(Constants.secondSCompany);
+        await expect(inactiveDriver.dispExtColumn).toContainText(Constants.secDis);
+        await expect(inactiveDriver.truckColumn).toContainText(Constants.secondTruckName);
+        await expect(inactiveDriver.trailerColumn).toContainText(Constants.secondTrailerName);
+        await expect(inactiveDriver.phoneColumn).toContainText(Constants.secondPhone);
+        await expect(inactiveDriver.boardColumn).toContainText(Constants.secondBoard);
     });
 
     test.afterAll(async ({ browser }) => {
