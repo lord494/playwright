@@ -23,6 +23,7 @@ import { DriverOverviewPage } from '../../page/drivers/drriversOverview.page';
 import { DotInspectionsPage } from '../../page/eld/dotInspections.page';
 import { EldTypesPage } from '../../page/eld/eldTypes.page';
 import { EldShiftsPage } from '../../page/eld/shifts.page';
+import { EldDashboardPage } from '../../page/eldDashboard/eldDashboard.page';
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -59,6 +60,7 @@ export const test = base.extend<{
     dotInspection: DotInspectionsPage;
     eldTypes: EldTypesPage;
     eldShiftsPage: EldShiftsPage;
+    eldDashboard: EldDashboardPage;
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -347,5 +349,11 @@ export const test = base.extend<{
         await loggedPage.goto(Constants.eldShifts, { waitUntil: 'networkidle', timeout: 20000 });
         await eldShift.removeUserFromShift(Constants.eldPlaywright);
         await use(eldShift);
+    },
+
+    eldDashboard: async ({ loggedPage }, use) => {
+        const eldDashboard = new EldDashboardPage(loggedPage);
+        await loggedPage.goto(Constants.eldDashboardUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await use(eldDashboard);
     },
 });
