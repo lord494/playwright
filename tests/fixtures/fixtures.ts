@@ -26,6 +26,8 @@ import { EldShiftsPage } from '../../page/eld/shifts.page';
 import { EldDashboardPage } from '../../page/eldDashboard/eldDashboard.page';
 import { InactiveDriverPage } from '../../page/inactiveDrivers/inactiveDriversOverview.page';
 import { EditInactiveDriver } from '../../page/inactiveDrivers/editInactiveDriver.page';
+import { TrailerDocumentPage } from '../../page/trailer/trailerDocument.page';
+import { InsertPage } from '../../page/insertPermitBook/insertPermitBook.page';
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -67,6 +69,10 @@ export const test = base.extend<{
     inactiveDriver: InactiveDriverPage;
     addInactiveDriverSetup: EditDriver;
     editInactiveDriverSetup: EditInactiveDriver;
+    insertPermit: InsertPage;
+    trailerDocument: TrailerDocumentPage;
+    cleanupSetup: Page;
+
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -395,4 +401,58 @@ export const test = base.extend<{
         await driverOverview.pencilIcon.first().click();
         await use(editInactiveDriverSetup);
     },
+
+    insertPermit: async ({ loggedPage, driverOverview }, use) => {
+        const insertPermit = new InsertPage(loggedPage);
+        await loggedPage.goto(Constants.permitBookUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await use(insertPermit);
+    },
+
+    trailerDocument: async ({ loggedPage }, use) => {
+        const trailerDocument = new TrailerDocumentPage(loggedPage);
+        await use(trailerDocument);
+    },
+
+    cleanupSetup: async ({ loggedPage, trailerPage, trailerDocument }, use) => {
+
+
+        // truck
+        await loggedPage.goto(Constants.truckUrl, { waitUntil: 'networkidle' });
+        await trailerPage.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        await loggedPage.locator('.v-text-field input').fill(Constants.truckName);
+        await trailerPage.documentIcon.nth(9).waitFor({ state: 'hidden', timeout: 10000 });
+        await trailerPage.clickElement(trailerPage.documentIcon);
+        await loggedPage.waitForLoadState('networkidle');
+        await trailerDocument.deleteAllItemsWithDeleteIconForDrivers();
+
+        // trailer
+        await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
+        await trailerPage.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        await loggedPage.locator('.v-text-field input').nth(6).fill(Constants.trailerTest);
+        const targetRow = loggedPage.locator('tr', {
+            has: loggedPage.locator('td:nth-child(2)', { hasText: Constants.trailerTest }),
+        });
+        await targetRow.locator('.mdi-file-document-multiple').click();
+        await loggedPage.waitForLoadState('networkidle');
+        await trailerDocument.deleteAllItemsWithDeleteIconForDrivers();
+
+        // permit
+        await loggedPage.goto(Constants.permitBookUrl, { waitUntil: 'networkidle' });
+        await trailerDocument.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        await loggedPage.locator('.v-text-field input').first().fill(Constants.testUser);
+        await trailerDocument.eyeIcon.nth(9).waitFor({ state: 'hidden', timeout: 10000 });
+        await trailerPage.clickElement(trailerDocument.eyeIcon);
+        await loggedPage.waitForLoadState('networkidle');
+        await trailerDocument.deleteAllItemsWithDeleteIconForDrivers();
+
+        // companies
+        await loggedPage.goto(Constants.companiesUrl, { waitUntil: 'networkidle' });
+        await trailerPage.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        await trailerPage.clickElement(trailerPage.documentIcon.first());
+        await trailerDocument.deleteAllItemsWithDeleteIcon();
+
+        // koristi se dalje
+        await use(loggedPage);
+    },
+
 });
