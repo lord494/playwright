@@ -1,6 +1,5 @@
 import { expect, Page } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
-import { PostTrucksPage } from '../../page/preBook/postTrucks.page';
 import { test } from '../fixtures/fixtures';
 
 // test.use({ storageState: 'auth.json' });
