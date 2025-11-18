@@ -5,3 +5,5 @@ node_modules/
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+/tests/recruitment/compareNumbers.spec.ts
+/tests/recruitment/saveNumbers.spec.ts
