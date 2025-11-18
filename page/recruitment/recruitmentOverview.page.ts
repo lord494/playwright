@@ -95,7 +95,7 @@ export class RecrutimentPage extends BasePage {
     }
 
     async selectRecruiter(menu: Locator, recruiter: Locator): Promise<void> {
-        return this.selectFromMenu(menu, recruiter);
+        return this.selectRecruiterFromMenu(menu, recruiter);
     }
 }
 

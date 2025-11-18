@@ -2,7 +2,7 @@ import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { test } from '../fixtures/fixtures';
 
-test('Korisnik moze da doda load ako popuni samo Deliver city polje i "Default" load type je izabran po dafault-u', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda load ako popuni samo Deliver city polje i "Default" load type je izabran po dafault-u', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.saveButton.click();
@@ -14,7 +14,7 @@ test('Korisnik moze da doda load ako popuni samo Deliver city polje i "Default" 
     await expect(dispatcDashboard.loadColumn.first()).toContainText(Constants.deliveryCity);
 });
 
-test('Korisnik moze da doda "Empty, Need Load" load', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "Empty, Need Load" load', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.emptyNeedLoad);
@@ -27,7 +27,7 @@ test('Korisnik moze da doda "Empty, Need Load" load', async ({ addLoadSetup, dis
     await expect(bgColor).toBe(Constants.emptyNeedLoadColor);
 });
 
-test('Korisnik moze da doda "Loaded" load', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "Loaded" load', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.loadedLoad)
@@ -40,7 +40,7 @@ test('Korisnik moze da doda "Loaded" load', async ({ addLoadSetup, dispatcDashbo
     await expect(bgColor).toBe(Constants.loadedLoadColor);
 });
 
-test('Korisnik moze da doda "Dispatched, not Loaded" load', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "Dispatched, not Loaded" load', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.dispatcherNotLoadedLoad)
@@ -53,7 +53,7 @@ test('Korisnik moze da doda "Dispatched, not Loaded" load', async ({ addLoadSetu
     await expect(bgColor).toBe(Constants.dispatchedNotLoadedColor);
 });
 
-test('Korisnik moze da doda "Load problem" load', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "Load problem" load', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.loadProblemLoad)
@@ -66,7 +66,7 @@ test('Korisnik moze da doda "Load problem" load', async ({ addLoadSetup, dispatc
     await expect(bgColor).toBe(Constants.loadProblemLoadColor);
 });
 
-test('Korisnik moze da doda "Broken" load', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "Broken" load', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.brokenLoad)
@@ -79,7 +79,7 @@ test('Korisnik moze da doda "Broken" load', async ({ addLoadSetup, dispatcDashbo
     await expect(bgColor).toBe(Constants.brokenLoadColor);
 });
 
-test('Korisnik moze da doda "Special note" load', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "Special note" load', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.specialNote)
@@ -92,7 +92,7 @@ test('Korisnik moze da doda "Special note" load', async ({ addLoadSetup, dispatc
     await expect(bgColor).toBe(Constants.specialNoteLoadColor);
 });
 
-test('Korisnik moze da doda "PM SERVICE" load', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "PM SERVICE" load', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.pmService)
@@ -105,7 +105,7 @@ test('Korisnik moze da doda "PM SERVICE" load', async ({ addLoadSetup, dispatcDa
     await expect(bgColor).toBe(Constants.pmServiceLoadColor);
 });
 
-test('Korisnik moze da doda "Repo" load', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "Repo" load', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.repoLoad)
@@ -118,7 +118,7 @@ test('Korisnik moze da doda "Repo" load', async ({ addLoadSetup, dispatcDashboar
     await expect(bgColor).toBe(Constants.repoLoadColor);
 });
 
-test('Korisnik moze da doda "L.O.T.R" load', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "L.O.T.R" load', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.lotrLoad)
@@ -131,7 +131,7 @@ test('Korisnik moze da doda "L.O.T.R" load', async ({ addLoadSetup, dispatcDashb
     await expect(bgColor).toBe(Constants.lotrLoadColor);
 });
 
-test('Korisnik moze da cekira "dedicated load" checkbox', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da cekira "dedicated load" checkbox', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.check(addLoadSetup.dedicatetLoadCheckbox);
@@ -142,7 +142,7 @@ test('Korisnik moze da cekira "dedicated load" checkbox', async ({ addLoadSetup,
     await expect(title).toContain(Constants.dedicatedLoad);
 });
 
-test('Datumi u proslosti su onemoguceni (disabled)', async ({ addLoadSetup }) => {
+test('Datumi u proslosti su onemoguceni (disabled)', async ({ addPostLoadSetup: addLoadSetup }) => {
     const today = new Date();
     const pastDate = new Date();
     pastDate.setDate(today.getDate() - 6);
@@ -154,7 +154,7 @@ test('Datumi u proslosti su onemoguceni (disabled)', async ({ addLoadSetup }) =>
     await expect(pastDateElement).toHaveClass(/v-btn--disabled/);
 });
 
-test('Korisnik moze da izabere datume koji su u buducnosti u odnosu na selektovani datum', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da izabere datume koji su u buducnosti u odnosu na selektovani datum', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.selectFromMenu(addLoadSetup.typeOfAbsence, addLoadSetup.hometimeAbsence);
     await addLoadSetup.dateField.click();
     const dateText = await addLoadSetup.selectedDate.textContent();
@@ -182,7 +182,7 @@ test('Korisnik moze da izabere datume koji su u buducnosti u odnosu na selektova
 
 });
 
-test('Korisnik moze da promjeni mjesec unaprijed kada klikne na desnu strelicu', async ({ addLoadSetup }) => {
+test('Korisnik moze da promjeni mjesec unaprijed kada klikne na desnu strelicu', async ({ addPostLoadSetup: addLoadSetup }) => {
     await addLoadSetup.selectFromMenu(addLoadSetup.typeOfAbsence, addLoadSetup.hometimeAbsence);
     await addLoadSetup.dateField.click();
     const headerLocator = await addLoadSetup.headerDatePicker;
@@ -205,7 +205,7 @@ test('Korisnik moze da promjeni mjesec unaprijed kada klikne na desnu strelicu',
     }
 });
 
-test('Korisnik moze da promjeni mjesec unazad kada klikne na lijevu strelicu', async ({ addLoadSetup }) => {
+test('Korisnik moze da promjeni mjesec unazad kada klikne na lijevu strelicu', async ({ addPostLoadSetup: addLoadSetup }) => {
     await addLoadSetup.selectFromMenu(addLoadSetup.typeOfAbsence, addLoadSetup.hometimeAbsence);
     await addLoadSetup.dateField.click();
     const headerLocator = await addLoadSetup.headerDatePicker;
@@ -228,7 +228,7 @@ test('Korisnik moze da promjeni mjesec unazad kada klikne na lijevu strelicu', a
     }
 });
 
-test('Datum je po defaultu izabran kada izaberemo absence', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Datum je po defaultu izabran kada izaberemo absence', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.selectFromMenu(addLoadSetup.typeOfAbsence, addLoadSetup.hometimeAbsence);
     await addLoadSetup.dateField.click();
     const dateText = await addLoadSetup.selectedDate.textContent();
@@ -250,40 +250,40 @@ test('Datum je po defaultu izabran kada izaberemo absence', async ({ addLoadSetu
     ).toBeTruthy();
 });
 
-test("Korisnik moze da izabere 'Hometime' absence", async ({ addLoadSetup, dispatcDashboard }) => {
+test("Korisnik moze da izabere 'Hometime' absence", async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.selectFromMenu(addLoadSetup.typeOfAbsence, addLoadSetup.hometimeAbsence);
     await addLoadSetup.saveButton.click();
     await addLoadSetup.addLoadModal.waitFor({ state: 'detached', timeout: 5000 });
     await expect(dispatcDashboard.loadColumn.first()).toContainText(Constants.hometimeAbsence);
 });
 
-test("Korisnik moze da izabere 'Vacation' absence", async ({ addLoadSetup, dispatcDashboard }) => {
+test("Korisnik moze da izabere 'Vacation' absence", async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.selectFromMenu(addLoadSetup.typeOfAbsence, addLoadSetup.vacationAbsence);
     await addLoadSetup.saveButton.click();
     await addLoadSetup.addLoadModal.waitFor({ state: 'detached', timeout: 5000 });
     await expect(dispatcDashboard.loadColumn.first()).toContainText(Constants.vacationAbsence);
 });
 
-test("Korisnik moze da izabere 'Off' absence", async ({ addLoadSetup, dispatcDashboard }) => {
+test("Korisnik moze da izabere 'Off' absence", async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.selectFromMenu(addLoadSetup.typeOfAbsence, addLoadSetup.offAbsence);
     await addLoadSetup.saveButton.click();
     await addLoadSetup.addLoadModal.waitFor({ state: 'detached', timeout: 5000 });
     await expect(dispatcDashboard.loadColumn.first()).toContainText(Constants.offAbsence);
 });
 
-test("Korisnik moze da doda komentar", async ({ addLoadSetup }) => {
+test("Korisnik moze da doda komentar", async ({ addPostLoadSetup: addLoadSetup }) => {
     await addLoadSetup.enterComment(addLoadSetup.commentTextfield, Constants.driverName, addLoadSetup.addCommentButton);
     await addLoadSetup.page.waitForLoadState('networkidle');
     await expect(addLoadSetup.comments).toContainText(Constants.driverName);
 });
 
-test("Korisnik moze da zatvori modal na Close button", async ({ addLoadSetup }) => {
+test("Korisnik moze da zatvori modal na Close button", async ({ addPostLoadSetup: addLoadSetup }) => {
     await addLoadSetup.closeButton.click();
     await addLoadSetup.addLoadModal.waitFor({ state: 'detached', timeout: 5000 });
     await expect(addLoadSetup.addLoadModal).not.toBeVisible();
 });
 
-test('Korisnik moze da doda "Empty, Need Load" load i provjeri filter load-a', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "Empty, Need Load" load i provjeri filter load-a', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.emptyNeedLoad);
@@ -308,7 +308,7 @@ test('Korisnik moze da doda "Empty, Need Load" load i provjeri filter load-a', a
     );
 });
 
-test('Korisnik moze da doda "Loaded" load i provjeri filter load-a', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "Loaded" load i provjeri filter load-a', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.loadedLoad);
@@ -333,7 +333,7 @@ test('Korisnik moze da doda "Loaded" load i provjeri filter load-a', async ({ ad
     );
 });
 
-test('Korisnik moze da doda "Dispatched not loaded" load i provjeri filter load-a', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "Dispatched not loaded" load i provjeri filter load-a', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.dispatcherNotLoadedLoad);
@@ -358,7 +358,7 @@ test('Korisnik moze da doda "Dispatched not loaded" load i provjeri filter load-
     );
 });
 
-test('Korisnik moze da doda "Load problem" load i provjeri filter load-a', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "Load problem" load i provjeri filter load-a', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.loadProblemLoad);
@@ -383,7 +383,7 @@ test('Korisnik moze da doda "Load problem" load i provjeri filter load-a', async
     );
 });
 
-test('Korisnik moze da doda "Broken" load i provjeri filter load-a', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "Broken" load i provjeri filter load-a', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.brokenLoad);
@@ -408,7 +408,7 @@ test('Korisnik moze da doda "Broken" load i provjeri filter load-a', async ({ ad
     );
 });
 
-test('Korisnik moze da doda "Special Note" load i provjeri filter load-a', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "Special Note" load i provjeri filter load-a', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.specialNote);
@@ -433,7 +433,7 @@ test('Korisnik moze da doda "Special Note" load i provjeri filter load-a', async
     );
 });
 
-test('Korisnik moze da doda "PM Setvice" load i provjeri filter load-a', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "PM Setvice" load i provjeri filter load-a', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.pmService);
@@ -458,7 +458,7 @@ test('Korisnik moze da doda "PM Setvice" load i provjeri filter load-a', async (
     );
 });
 
-test('Korisnik moze da doda "Repo" load i provjeri filter load-a', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "Repo" load i provjeri filter load-a', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.repoLoad);
@@ -483,7 +483,7 @@ test('Korisnik moze da doda "Repo" load i provjeri filter load-a', async ({ addL
     );
 });
 
-test('Korisnik moze da doda "LOTR" load i provjeri filter load-a', async ({ addLoadSetup, dispatcDashboard }) => {
+test('Korisnik moze da doda "LOTR" load i provjeri filter load-a', async ({ addPostLoadSetup: addLoadSetup, dispatcDashboard }) => {
     await addLoadSetup.fillAndSelectOption(addLoadSetup.deliveryCityLabel, Constants.deliveryCity, addLoadSetup.deliveryCity);
     await addLoadSetup.page.waitForLoadState("networkidle");
     await addLoadSetup.selectFromMenu(addLoadSetup.loadType, addLoadSetup.lotrLoad);

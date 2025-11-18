@@ -184,7 +184,7 @@ export async function saveNumbersForStatus(page: Page, recruiterName: any, statu
             await Promise.all([
                 loadMoreButton.click(),
                 page.waitForResponse((r: { url: () => string | string[]; status: () => number; }) => r.url().includes('/api/employees') && (r.status() === 200 || r.status() === 304)),
-                page.waitForLoadState('networkidle')
+                page.waitForTimeout(1000)
             ]);
             await recruitment.progressBar.waitFor({ state: 'hidden' });
         } catch {
@@ -237,9 +237,10 @@ export async function getNumbersFromTable(page: Page, recruitment: RecrutimentPa
         await Promise.all([
             loadMoreButton.click(),
             page.waitForResponse(r =>
-                r.url().includes('/api/employees') && (r.status() === 200 || r.status() === 304)
+                r.url().includes('/api/employees') && (r.status() === 200 || r.status() === 304),
             ),
-            page.waitForLoadState('networkidle'),
+            //page.waitForLoadState('networkidle'),
+            page.waitForTimeout(1000)
         ]);
 
         await recruitment.progressBar.waitFor({ state: 'hidden' });

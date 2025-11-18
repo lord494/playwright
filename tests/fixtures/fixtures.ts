@@ -5,7 +5,7 @@ import { EditAndWriteReview } from '../../page/shop/editAndWriteReview.page';
 import { AddShopPage } from '../../page/shop/addShop.page';
 import { ContactsPage } from '../../page/contacts/contactsOverview.page';
 import { AddContactsPage } from '../../page/contacts/addContact.page';
-import { generateRandomString } from '../../helpers/dateUtilis';
+import { generateRandomString, waitForPrebookLoads } from '../../helpers/dateUtilis';
 import { BoardsPage } from '../../page/Content/boards.page';
 import { CompaniesPage } from '../../page/Content/companies.page';
 import { DocumentPage } from '../../page/Content/documentModal.page';
@@ -32,6 +32,10 @@ import { MessagePage } from '../../page/messages/messages.page';
 import { AddMessagePage } from '../../page/messages/addMessage.page';
 import { OwnersPage } from '../../page/owner/ownerOverview.page';
 import { AddOwner } from '../../page/owner/addOwner.page';
+import { PostLoadsPage } from '../../page/preBook/postLoads.page';
+import { AddEditPostLoadPage } from '../../page/preBook/addEditPostLoad.page';
+import { CompaniesPrebookPage } from '../../page/preBook/companiesPrebook.page';
+import { PostTrucksPage } from '../../page/preBook/postTrucks.page';
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -80,7 +84,15 @@ export const test = base.extend<{
     addMessage: AddMessagePage;
     ownerStup: OwnersPage;
     addOwner: AddOwner;
-
+    postLoad: PostLoadsPage;
+    addPostLoadSetup: AddEditPostLoadPage;
+    cleanupSetupPostLoad: Page;
+    addPostLoad: AddEditPostLoadPage;
+    postLoadSetup: PostLoadsPage;
+    editPostLoadSetup: AddEditPostLoadPage;
+    companiesPreBookSetup: CompaniesPrebookPage;
+    cleanupSetupAddPostTruck: PostTrucksPage;
+    addPostTruckSetup: PostTrucksPage;
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -474,5 +486,146 @@ export const test = base.extend<{
     addOwner: async ({ loggedPage }, use) => {
         const addOwner = new AddOwner(loggedPage);
         await use(addOwner);
+    },
+
+    postLoad: async ({ loggedPage }, use) => {
+        const postLoad = new PostLoadsPage(loggedPage);
+        await use(postLoad);
+    },
+
+    addPostLoadSetup: async ({ loggedPage }, use) => {
+        const addPostLoad = new AddEditPostLoadPage(loggedPage);
+        await loggedPage.goto(Constants.postLoadPrebookUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await use(addPostLoad);
+    },
+
+    addPostLoad: async ({ loggedPage }, use) => {
+        const addPostLoad = new AddEditPostLoadPage(loggedPage);
+        await use(addPostLoad);
+    },
+
+    cleanupSetupPostLoad: async ({ loggedPage, addPostLoad, postLoad }, use) => {
+        const loadId = generateRandomString();
+        await loggedPage.goto(Constants.postLoadPrebookUrl);
+        await loggedPage.waitForLoadState('networkidle');
+        await postLoad.newLoadButton.click();
+        await addPostLoad.saveButton.last().waitFor({ state: 'visible', timeout: 5000 });
+        await addPostLoad.enterLoadId(addPostLoad.loadId, loadId);
+        await addPostLoad.selectOrigin(addPostLoad.originMenu, Constants.miamiOriginCity, addPostLoad.miamiOption);
+        await addPostLoad.selecDestination(addPostLoad.destinatinMenu, Constants.newYorkCity, addPostLoad.newYorkOption);
+        await addPostLoad.selectTodayDate(addPostLoad.pickupDateField, loggedPage.getByRole('button', { name: '20', exact: true }).locator('div').first());
+        await addPostLoad.page.locator('.v-picker__body').waitFor({ state: 'hidden', timeout: 5000 });
+        await addPostLoad.selectTodayDate(addPostLoad.deliveryDateField, loggedPage.getByRole('button', { name: '22', exact: true }).locator('div').last());
+        await addPostLoad.selectTime(addPostLoad.pickupTimeField, addPostLoad.hours, addPostLoad.minutes);
+        await addPostLoad.selectTime(addPostLoad.toPickupTimeField, addPostLoad.secondHours, addPostLoad.secondMinutes);
+        await addPostLoad.selectTime(addPostLoad.deliveryTimeField, addPostLoad.secondHours, addPostLoad.secondMinutes);
+        await addPostLoad.selectTime(addPostLoad.toDilevryTimeField, addPostLoad.hours, addPostLoad.minutes);
+        await addPostLoad.selectCompany(addPostLoad.companyField, addPostLoad.editTestCompanyOption);
+        await addPostLoad.enterBrokerName(addPostLoad.brokerNameField, Constants.appTestUser);
+        await addPostLoad.enterBrokerEmail(addPostLoad.brokerEmailField, Constants.fndPlaywrightEmail);
+        await addPostLoad.enterBrokerPhone(addPostLoad.brokerPhoneField, Constants.secondPhone);
+        await addPostLoad.selectTrailerType(addPostLoad.trailerTypeMenu, addPostLoad.trailerTypeOption);
+        await addPostLoad.enterWeight(addPostLoad.weightField, Constants.weight);
+        await addPostLoad.enterRate(addPostLoad.rateField, Constants.amount);
+        await addPostLoad.enterSyggestedRate(addPostLoad.suggestedRateField, Constants.suggestedRate);
+        await addPostLoad.check(addPostLoad.dedicaterCheckbox);
+        await addPostLoad.enterNote(addPostLoad.noteField, Constants.noteSecond);
+        await waitForPrebookLoads(loggedPage, async () => {
+            await addPostLoad.saveButton.last().click();
+        });
+        await addPostLoad.addEditDialogbox.waitFor({ state: 'detached', timeout: 5000 });
+        await loggedPage.waitForLoadState('networkidle');
+        await use(loggedPage)
+    },
+
+    postLoadSetup: async ({ loggedPage }, use) => {
+        const postLoad = new PostLoadsPage(loggedPage);
+        await loggedPage.goto(Constants.postLoadPrebookUrl);
+        await loggedPage.waitForLoadState('networkidle');
+        await waitForPrebookLoads(loggedPage, async () => {
+            postLoad.xButtonInField.nth(1).click()
+        });
+        await waitForPrebookLoads(loggedPage, async () => {
+            loggedPage.locator('.v-input__control').nth(7).locator('input').fill('0')
+        });
+        await waitForPrebookLoads(loggedPage, async () => {
+            postLoad.xButtonInField.nth(2).click()
+        });
+        await waitForPrebookLoads(loggedPage, async () => {
+            loggedPage.locator('.v-input__control').nth(8).locator('input').fill('0')
+        });
+        await loggedPage.waitForLoadState('networkidle');
+        await use(postLoad);
+    },
+
+    editPostLoadSetup: async ({ loggedPage, postLoad }, use) => {
+        const editPostLoad = new AddEditPostLoadPage(loggedPage);
+        const loadId = generateRandomString();
+        await loggedPage.goto(Constants.postLoadPrebookUrl);
+        await loggedPage.waitForLoadState('networkidle');
+        await postLoad.newLoadButton.click();
+        await editPostLoad.saveButton.waitFor({ state: 'visible', timeout: 5000 });
+        await editPostLoad.enterLoadId(editPostLoad.loadId, loadId);
+        await editPostLoad.selectOrigin(editPostLoad.originMenu, Constants.deliveryCity, editPostLoad.originOption);
+        await editPostLoad.selecDestination(editPostLoad.destinatinMenu, Constants.seconDeliveryCity, editPostLoad.destinationOption);
+        await editPostLoad.selectTodayDate(editPostLoad.pickupDateField, editPostLoad.todayDate);
+        await editPostLoad.selectTodayDate(editPostLoad.deliveryDateField, editPostLoad.todayDate.last());
+        await editPostLoad.selectCompany(editPostLoad.companyField, editPostLoad.companyOption);
+        await editPostLoad.enterBrokerName(editPostLoad.brokerNameField, Constants.playWrightUser);
+        await editPostLoad.enterBrokerEmail(editPostLoad.brokerEmailField, Constants.testEmail);
+        await editPostLoad.enterBrokerPhone(editPostLoad.brokerPhoneField, Constants.phoneNumberOfUserApp);
+        await editPostLoad.enterWeight(editPostLoad.weightField, Constants.weight);
+        await editPostLoad.enterRate(editPostLoad.rateField, Constants.amount);
+        await editPostLoad.enterSyggestedRate(editPostLoad.suggestedRateField, Constants.suggestedRate);
+        await editPostLoad.check(editPostLoad.dedicaterCheckbox);
+        await editPostLoad.enterNote(editPostLoad.noteField, Constants.noteFirst);
+        await editPostLoad.saveButton.click();
+        await editPostLoad.addEditDialogbox.waitFor({ state: 'detached', timeout: 5000 });
+        await loggedPage.waitForLoadState('networkidle');
+        await postLoad.loadIdSearchInputField.click();
+        await loggedPage.waitForTimeout(100);
+        for (const char of loadId) {
+            await postLoad.loadIdSearchInputField.type(char);
+            await loggedPage.waitForTimeout(300);
+            await postLoad.loadIdSearchInputField.click();
+        }
+        const truckCell = loggedPage.locator(`tr:nth-child(1) td:nth-child(1):has-text("${loadId}")`);
+        await truckCell.waitFor({ state: 'visible', timeout: 10000 });
+        await expect(postLoad.loadIdColumn.first()).toContainText(loadId);
+        await use(editPostLoad);
+    },
+
+    companiesPreBookSetup: async ({ loggedPage }, use) => {
+        const companiesPrebook = new CompaniesPrebookPage(loggedPage);
+        await loggedPage.goto(Constants.companiesPrebookUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await use(companiesPrebook);
+    },
+
+    addPostTruckSetup: async ({ loggedPage }, use) => {
+        const addPostTruck = new PostTrucksPage(loggedPage);
+        await loggedPage.goto(Constants.postTruckPrebookUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await use(addPostTruck);
+    },
+
+    cleanupSetupAddPostTruck: async ({ loggedPage, addPostTruckSetup }, use) => {
+        await addPostTruckSetup.addCompnayIcon.waitFor({ state: 'visible', timeout: 10000 });
+        await addPostTruckSetup.addCompnayIcon.click();
+        await addPostTruckSetup.selectAvail(addPostTruckSetup.availField, addPostTruckSetup.todayDateInDatepicker);
+        await addPostTruckSetup.selectOrigin(addPostTruckSetup.originField, Constants.deliveryCity, addPostTruckSetup.originOption);
+        await addPostTruckSetup.selecDestination(addPostTruckSetup.destinatinField, Constants.seconDeliveryCity, addPostTruckSetup.destinationOption);
+        await addPostTruckSetup.selectTrailerType(addPostTruckSetup.trailerTypeField, addPostTruckSetup.trailerTypeOption);
+        await addPostTruckSetup.fillNote(addPostTruckSetup.noteField, Constants.noteFirst);
+        await addPostTruckSetup.saveButton.click();
+        await addPostTruckSetup.dialogbox.waitFor({ state: 'detached', timeout: 5000 });
+        await loggedPage.waitForLoadState('networkidle');
+        await loggedPage.goto(Constants.postTruckPrebookUrl, { waitUntil: 'networkidle', timeout: 10000 });
+        await expect(addPostTruckSetup.originColumn.first()).toContainText(Constants.deliveryCity);
+        await expect(addPostTruckSetup.destinationColumn.first()).toContainText(Constants.seconDeliveryCity);
+        await expect(addPostTruckSetup.trailerTypeColumn.first()).toContainText('R');
+        await expect(addPostTruckSetup.noteColumn.first()).toContainText(Constants.noteFirst);
+        const today = new Date();
+        const formattedDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
+        await expect(addPostTruckSetup.availColumn.first()).toContainText(formattedDate);
+        await use(addPostTruckSetup)
     },
 });

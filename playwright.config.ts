@@ -9,7 +9,7 @@ export default defineConfig({
     headless: true,
     baseURL: 'https://staging.superegoholding.app',
     browserName: 'chromium',
-    trace: 'on-first-retry',
+    trace: 'retain-on-failure',
     storageState: 'auth.json',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
