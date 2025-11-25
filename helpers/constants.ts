@@ -24,6 +24,7 @@ export class Constants {
     static dispatcherDispecko = 'Dispecko';
     static firtsSubstitutleDispatcher = 'QA Test';
     static playWrightUser = 'PlaywrightUser';
+    static temporaryUser = 'TemporaryUser';
     static playWrightUserEmail = 'testplaywright@test.net';
     static fndPlaywrightEmail = 'fndTestplaywright@test.net';
     static wrongEmailFormat = 'test@mail.n';
@@ -145,6 +146,7 @@ export class Constants {
     static dailyRepor = 'Daily report for market updates';
     static weeklyReport = 'Weekly report for market updates';
     static plawrightRecruiter = 'Playwright Regruter';
+    static recruiterPetarPetrovic = 'Petar Petrovic';
     static seconPlaywrightRecruiter = 'Test Automation';
     static unemployedStatus = 'Unemployed';
     static employedStatus = 'Employed';

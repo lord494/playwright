@@ -1,40 +1,12 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
-import { RecrutimentPage } from '../../page/recruitment/recruitmentOverview.page';
-import { AddNewEmployeePage } from '../../page/recruitment/addNewEmployee.page';
-import { get6RandomNumber, getRandom10Number } from '../../helpers/dateUtilis';
+import { get6RandomNumber, get8RandomNumber, get9RandomNumber, getRandom10Number } from '../../helpers/dateUtilis';
+import { test } from '../fixtures/fixtures';
 
-test.use({ storageState: 'auth.json' });
-
-test.beforeEach(async ({ page }) => {
-    await page.goto(Constants.recruitmentUrl, { waitUntil: 'networkidle' });
-});
-
-test('Korisnik moze da filtrira zaposlene da se prikazu samo unemployed statusi', async ({ page }) => {
-    const recruitment = new RecrutimentPage(page);
-    await recruitment.uncheck(recruitment.employedCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.employedCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.blocedCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.blocedCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.retiredCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.retiredCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.thirdCompanyCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.thirdCompanyCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.onwerOperatorCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.onwerOperatorCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.holdCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.holdCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.incContactCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.incContactCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.progressBar.waitFor({ state: 'hidden' });
-    const statusCells = await recruitment.stausColumn.all();
+test('Korisnik moze da filtrira zaposlene da se prikazu samo unemployed statusi', async ({ recruitmentOverviewSetup }) => {
+    await recruitmentOverviewSetup.selectOnlyStatus('unemployed');
+    await recruitmentOverviewSetup.progressBar.waitFor({ state: 'hidden' });
+    const statusCells = await recruitmentOverviewSetup.stausColumn.all();
     for (const cell of statusCells) {
         await expect(cell).toHaveText(Constants.unemployedStatus);
         const backgroundColor = await cell.evaluate((el) => window.getComputedStyle(el).backgroundColor);
@@ -42,31 +14,10 @@ test('Korisnik moze da filtrira zaposlene da se prikazu samo unemployed statusi'
     }
 });
 
-test('Korisnik moze da filtrira zaposlene da se prikazu samo employed statusi', async ({ page }) => {
-    const recruitment = new RecrutimentPage(page);
-    await recruitment.uncheck(recruitment.unemployedCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.unemployedCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.blocedCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.blocedCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.retiredCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.retiredCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.thirdCompanyCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.thirdCompanyCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.onwerOperatorCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.onwerOperatorCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.holdCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.holdCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.incContactCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.incContactCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.progressBar.waitFor({ state: 'hidden' });
-    const statusCells = await recruitment.stausColumn.all();
+test('Korisnik moze da filtrira zaposlene da se prikazu samo employed statusi', async ({ recruitmentOverviewSetup }) => {
+    await recruitmentOverviewSetup.selectOnlyStatus('employed');
+    await recruitmentOverviewSetup.progressBar.waitFor({ state: 'hidden' });
+    const statusCells = await recruitmentOverviewSetup.stausColumn.all();
     for (const cell of statusCells) {
         await expect(cell).toHaveText(Constants.employedStatus);
         const backgroundColor = await cell.evaluate((el) => window.getComputedStyle(el).backgroundColor);
@@ -74,31 +25,10 @@ test('Korisnik moze da filtrira zaposlene da se prikazu samo employed statusi', 
     }
 });
 
-test('Korisnik moze da filtrira zaposlene da se prikazu samo blocked statusi', async ({ page }) => {
-    const recruitment = new RecrutimentPage(page);
-    await recruitment.uncheck(recruitment.employedCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.employedCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.unemployedCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.unemployedCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.retiredCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.retiredCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.thirdCompanyCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.thirdCompanyCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.onwerOperatorCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.onwerOperatorCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.holdCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.holdCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.incContactCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.incContactCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.progressBar.waitFor({ state: 'hidden' });
-    const statusCells = await recruitment.stausColumn.all();
+test('Korisnik moze da filtrira zaposlene da se prikazu samo blocked statusi', async ({ recruitmentOverviewSetup }) => {
+    await recruitmentOverviewSetup.selectOnlyStatus('blocked');
+    await recruitmentOverviewSetup.progressBar.waitFor({ state: 'hidden' });
+    const statusCells = await recruitmentOverviewSetup.stausColumn.all();
     for (const cell of statusCells) {
         await expect(cell).toHaveText(Constants.blockedStatus);
         const backgroundColor = await cell.evaluate((el) => window.getComputedStyle(el).backgroundColor);
@@ -106,31 +36,10 @@ test('Korisnik moze da filtrira zaposlene da se prikazu samo blocked statusi', a
     }
 });
 
-test('Korisnik moze da filtrira zaposlene da se prikazu samo ex drivers statusi', async ({ page }) => {
-    const recruitment = new RecrutimentPage(page);
-    await recruitment.uncheck(recruitment.employedCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.employedCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.unemployedCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.unemployedCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.blocedCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.blocedCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.thirdCompanyCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.thirdCompanyCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.onwerOperatorCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.onwerOperatorCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.holdCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.holdCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.incContactCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.incContactCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.progressBar.waitFor({ state: 'hidden' });
-    const statusCells = await recruitment.stausColumn.all();
+test('Korisnik moze da filtrira zaposlene da se prikazu samo ex drivers statusi', async ({ recruitmentOverviewSetup }) => {
+    await recruitmentOverviewSetup.selectOnlyStatus('retired');
+    await recruitmentOverviewSetup.progressBar.waitFor({ state: 'hidden' });
+    const statusCells = await recruitmentOverviewSetup.stausColumn.all();
     for (const cell of statusCells) {
         await expect(cell).toHaveText(Constants.exDriversStatus);
         const backgroundColor = await cell.evaluate((el) => window.getComputedStyle(el).backgroundColor);
@@ -138,31 +47,10 @@ test('Korisnik moze da filtrira zaposlene da se prikazu samo ex drivers statusi'
     }
 });
 
-test('Korisnik moze da filtrira zaposlene da se prikazu samo hold statusi', async ({ page }) => {
-    const recruitment = new RecrutimentPage(page);
-    await recruitment.uncheck(recruitment.employedCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.employedCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.unemployedCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.unemployedCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.blocedCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.blocedCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.thirdCompanyCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.thirdCompanyCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.onwerOperatorCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.onwerOperatorCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.retiredCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.retiredCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.uncheck(recruitment.incContactCheckbox);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await expect(recruitment.incContactCheckbox).not.toBeChecked({ timeout: 5000 });
-    await recruitment.progressBar.waitFor({ state: 'hidden' });
-    const statusCells = await recruitment.stausColumn.all();
+test('Korisnik moze da filtrira zaposlene da se prikazu samo hold statusi', async ({ recruitmentOverviewSetup }) => {
+    await recruitmentOverviewSetup.selectOnlyStatus('hold');
+    await recruitmentOverviewSetup.progressBar.waitFor({ state: 'hidden' });
+    const statusCells = await recruitmentOverviewSetup.stausColumn.all();
     for (const cell of statusCells) {
         await expect(cell).toHaveText(Constants.holdStatus);
         const backgroundColor = await cell.evaluate((el) => window.getComputedStyle(el).backgroundColor);
@@ -170,95 +58,172 @@ test('Korisnik moze da filtrira zaposlene da se prikazu samo hold statusi', asyn
     }
 });
 
-test('Korisnik moze da se prebaci na recruiter tab', async ({ page }) => {
-    const recruitment = new RecrutimentPage(page);
-    await recruitment.recruiterTab.click();
-    await expect(recruitment.recruiterTab).toHaveClass(/v-tab--active/);
+test('Korisnik moze da se prebaci na recruiter tab', async ({ recruitmentOverviewSetup }) => {
+    await recruitmentOverviewSetup.recruiterTab.click();
+    await expect(recruitmentOverviewSetup.recruiterTab).toHaveClass(/v-tab--active/);
 });
 
-test('Korisnik moze da bira regrutera iz Search regruter menija na recuriter tabu', async ({ page }) => {
-    const recruitment = new RecrutimentPage(page);
-    await recruitment.recruiterTab.click();
-    await recruitment.selectRecruiter(recruitment.searchRecruiterMenu, recruitment.secondRecruiterOption);
-    await page.waitForLoadState('networkidle');
-    await expect(recruitment.employeesTable).toContainText(Constants.seconPlaywrightRecruiter);
+test('Korisnik moze da bira regrutera iz Search regruter menija na recuriter tabu', async ({ recruitmentOverviewSetup }) => {
+    await recruitmentOverviewSetup.recruiterTab.click();
+    await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.secondRecruiterOption);
+    await recruitmentOverviewSetup.page.waitForLoadState('networkidle');
+    await expect(recruitmentOverviewSetup.employeesTable).toContainText(Constants.seconPlaywrightRecruiter);
 });
 
-test('Korisnik moze da prebaci broj na drugog regrutera sa Move akcijom', async ({ page }) => {
-    const recruitment = new RecrutimentPage(page);
-    const addEmployee = new AddNewEmployeePage(page);
+test('Korisnik moze da prebaci broj na drugog regrutera sa Move akcijom', async ({ recruitmentOverviewSetup, addNewEmployee }) => {
     const randomPhone = getRandom10Number().join('');
     const randomCdl = get6RandomNumber().join('');
-    await recruitment.addNewEmployeeButton.click();
-    await addEmployee.enterCdl(addEmployee.cdlField, randomCdl)
-    await addEmployee.selectRecruiter(addEmployee.recruiterMenu, addEmployee.recruiterOption);
-    await addEmployee.enterName(addEmployee.nameField, Constants.driverName);
-    await addEmployee.enterEmail(addEmployee.emailField, Constants.testEmail);
-    await addEmployee.enterPhone(addEmployee.phoneField, randomPhone);
-    await addEmployee.enterCountry(addEmployee.countryField, Constants.state);
-    await addEmployee.enterNote(addEmployee.noteField, Constants.noteFirst);
-    await addEmployee.selectStatus(addEmployee.stausMenu, addEmployee.unemployedStatus);
-    await addEmployee.saveButton.click();
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await recruitment.dialogBox.waitFor({ state: 'detached' });
-    await recruitment.recruiterTab.click();
-    await recruitment.selectRecruiter(recruitment.searchRecruiterMenu, recruitment.recruiterOption);
-    await recruitment.searchField.fill(randomPhone);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await recruitment.clickElement(recruitment.checkboxOfEmployee);
-    await recruitment.moveButton.click();
-    await recruitment.dialogBox.waitFor({ state: 'visible' });
-    await recruitment.selectRecruiter(recruitment.searchRecruiterMenuInMoveModal, recruitment.secondRecruiterOption.last());
-    await recruitment.okButton.click();
-    await recruitment.dialogBox.waitFor({ state: 'detached' });
-    await recruitment.selectRecruiter(recruitment.searchRecruiterMenu, recruitment.secondRecruiterOption.last());
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await recruitment.searchField.fill(randomPhone);
-    await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-    await recruitment.clickElement(recruitment.pencilIcon);
-    await expect(recruitment.recruiterFieldValue).toContainText(Constants.seconPlaywrightRecruiter);
+    await recruitmentOverviewSetup.addNewEmployeeButton.click();
+    await addNewEmployee.enterCdl(addNewEmployee.cdlField, randomCdl)
+    await addNewEmployee.selectRecruiter(addNewEmployee.recruiterMenu, addNewEmployee.recruiterOption);
+    await addNewEmployee.enterName(addNewEmployee.nameField, Constants.driverName);
+    await addNewEmployee.enterEmail(addNewEmployee.emailField, Constants.testEmail);
+    await addNewEmployee.enterPhone(addNewEmployee.phoneField, randomPhone);
+    await addNewEmployee.enterCountry(addNewEmployee.countryField, Constants.state);
+    await addNewEmployee.enterNote(addNewEmployee.noteField, Constants.noteFirst);
+    await addNewEmployee.selectStatus(addNewEmployee.stausMenu, addNewEmployee.unemployedStatus);
+    await addNewEmployee.saveButton.click();
+    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
+    await recruitmentOverviewSetup.dialogBox.waitFor({ state: 'detached' });
+    await recruitmentOverviewSetup.recruiterTab.click();
+    await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.recruiterOption);
+    await recruitmentOverviewSetup.searchPhoneNumber(recruitmentOverviewSetup.searchPhoneNumberField.last(), randomPhone);
+    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
+    await recruitmentOverviewSetup.clickElement(recruitmentOverviewSetup.checkboxOfEmployee);
+    await recruitmentOverviewSetup.moveButton.click();
+    await recruitmentOverviewSetup.dialogBox.waitFor({ state: 'visible' });
+    await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenuInMoveModal, recruitmentOverviewSetup.secondRecruiterOption.last());
+    await recruitmentOverviewSetup.okButton.click();
+    await recruitmentOverviewSetup.dialogBox.waitFor({ state: 'detached' });
+    await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.secondRecruiterOption.first());
+    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
+    await recruitmentOverviewSetup.searchPhoneNumber(recruitmentOverviewSetup.searchPhoneNumberField.last(), randomPhone);
+    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
+    await recruitmentOverviewSetup.clickElement(recruitmentOverviewSetup.pencilIcon);
+    await expect(recruitmentOverviewSetup.recruiterFieldValue).toContainText(Constants.seconPlaywrightRecruiter);
 });
 
-test('Korisnik moze da prebaci sve brojeve na drugog regrutera sa Move All akcijom', async ({ page }) => {
-    const recruitment = new RecrutimentPage(page);
-    const addEmployee = new AddNewEmployeePage(page);
-    const phoneList: string[] = [];
-    let firstPhone: string;
-    let secondPhone: string;
-    for (let i = 0; i < 2; i++) {
-        const randomCdlNew = get6RandomNumber().join('');
-        const randomPhoneNew = getRandom10Number().join('');
-        phoneList.push(randomPhoneNew);
-        if (i === 0) firstPhone = randomPhoneNew;
-        else if (i === 1) secondPhone = randomPhoneNew;
-        await recruitment.addNewEmployeeButton.click();
-        await addEmployee.enterCdl(addEmployee.cdlField, randomCdlNew);
-        await addEmployee.selectRecruiter(addEmployee.recruiterMenu, addEmployee.recruiterOption);
-        await addEmployee.enterName(addEmployee.nameField, Constants.driverName);
-        await addEmployee.enterEmail(addEmployee.emailField, Constants.testEmail);
-        await addEmployee.enterPhone(addEmployee.phoneField, randomPhoneNew);
-        await addEmployee.enterCountry(addEmployee.countryField, Constants.state);
-        await addEmployee.enterNote(addEmployee.noteField, Constants.noteFirst);
-        await addEmployee.selectStatus(addEmployee.stausMenu, addEmployee.unemployedStatus);
-        await addEmployee.saveButton.click();
-        await recruitment.dialogBox.waitFor({ state: 'detached' });
+test('Test koji dodaje novog usera, radi se Move All akcija i brise se dodati user', async ({ recruitmentOverviewSetup, inviteAddEditModal, user }) => {
+    recruitmentOverviewSetup.page.on('dialog', async (dialog) => {
+        await dialog.accept();
+    });
+    const email = inviteAddEditModal.generateUniqueEmail();
+    await user.page.goto(Constants.userUrl, { waitUntil: 'networkidle', timeout: 50000 });
+    await user.emailColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+    await user.clickElement(user.accountIcon);
+    await user.clickElement(user.addUserIcon);
+    await inviteAddEditModal.enterData(inviteAddEditModal.emailField, email);
+    await inviteAddEditModal.enterData(inviteAddEditModal.nameField, Constants.temporaryUser);
+    await inviteAddEditModal.selectOptionFromMenu(inviteAddEditModal.roleField, inviteAddEditModal.recruitingRole);
+    await inviteAddEditModal.enterData(inviteAddEditModal.passwordField, Constants.password);
+    await inviteAddEditModal.clickElement(inviteAddEditModal.saveButton);
+    await inviteAddEditModal.page.waitForLoadState('networkidle', { timeout: 50000 });
+    await expect(inviteAddEditModal.snackMessage).toContainText("User: " + email + " successfully added");
+    await recruitmentOverviewSetup.page.goto(Constants.recruitmentUrl, { waitUntil: 'networkidle', timeout: 50000 });
+    await recruitmentOverviewSetup.recruiterTab.click();
+    await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.stagingRecruiterOption);
+    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+    await recruitmentOverviewSetup.progressBar.waitFor({ state: 'hidden', timeout: 15000 });
+    const phoneColumnTexts = await recruitmentOverviewSetup.phoneColumn.allTextContents();
+    await recruitmentOverviewSetup.moveAllButton.click();
+    await recruitmentOverviewSetup.dialogBox.waitFor({ state: 'visible' });
+    await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenuInMoveModal, recruitmentOverviewSetup.temporaryUserOption.last());
+    await recruitmentOverviewSetup.okButton.click();
+    await recruitmentOverviewSetup.dialogBox.waitFor({ state: 'detached', timeout: 80000 });
+    await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.temporaryUserOption.first());
+    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+    const phoneColumnTextsAfterMove = await recruitmentOverviewSetup.phoneColumn.allTextContents();
+    for (const phone of phoneColumnTexts) {
+        expect(phoneColumnTextsAfterMove).toContain(phone);
     }
-    await recruitment.recruiterTab.click();
-    await recruitment.selectRecruiter(recruitment.searchRecruiterMenu, recruitment.recruiterOption.last());
-    await page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
-    await recruitment.moveAllButton.click();
-    await recruitment.dialogBox.waitFor({ state: 'visible' });
-    await recruitment.selectRecruiter(recruitment.searchRecruiterMenuInMoveModal, recruitment.secondRecruiterOption.last());
-    await recruitment.okButton.click();
-    await page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
-    await recruitment.selectRecruiter(recruitment.searchRecruiterMenu, recruitment.secondRecruiterOption.last());
-    await page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
-    const phoneColumnTexts = await recruitment.phoneColumn.allTextContents();
-    expect(phoneColumnTexts).toContain(firstPhone!);
-    expect(phoneColumnTexts).toContain(secondPhone!);
+    await user.page.goto(Constants.userUrl, { waitUntil: 'networkidle', timeout: 50000 });
+    await user.searchInputField.fill(email);
+    await user.page.waitForResponse(response => response.url().includes('/api/users') && (response.status() == 200 || response.status() == 304));
+    await user.redDeleteIcon.click();
+    await user.page.waitForResponse(response => response.url().includes('/api/users') && (response.status() == 200 || response.status() == 304));
 });
+
+test('Korisnik ne moze da doda hold status ako je ispunjen max capacity', async ({ recruitmentOverviewSetup, addNewEmployee }) => {
+    test.setTimeout(180_000);
+    const randomCdl = get6RandomNumber().join('');
+    const randomPhone = getRandom10Number().join('');
+    await recruitmentOverviewSetup.recruiterTab.click();
+    await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.recruiterPetarPetrovicOption);
+    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+    await recruitmentOverviewSetup.selectOnlyStatus('hold');
+    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+    const neededCount = 20;
+    const currentCount = await recruitmentOverviewSetup.deleteIcon.count();
+    if (currentCount < neededCount) {
+        const howManyToAdd = neededCount - currentCount;
+        for (let i = 0; i < howManyToAdd; i++) {
+            await addNewEmployee.addHoldNumbers();
+        }
+    } else {
+        await recruitmentOverviewSetup.employeesTab.click();
+    }
+    await recruitmentOverviewSetup.addNewEmployeeButton.click();
+    await addNewEmployee.enterCdl(addNewEmployee.cdlField, randomCdl)
+    await addNewEmployee.selectRecruiter(addNewEmployee.recruiterMenu, addNewEmployee.recruiterPetarPetrovicOption);
+    await addNewEmployee.enterName(addNewEmployee.nameField, Constants.driverName);
+    await addNewEmployee.enterEmail(addNewEmployee.emailField, Constants.testEmail);
+    await addNewEmployee.enterPhone(addNewEmployee.phoneField, randomPhone);
+    await addNewEmployee.enterCountry(addNewEmployee.countryField, Constants.state);
+    await addNewEmployee.enterNote(addNewEmployee.noteField, Constants.noteFirst);
+    await addNewEmployee.selectStatus(addNewEmployee.stausMenu, addNewEmployee.holdStatus);
+    await addNewEmployee.saveButton.click();
+    await expect(addNewEmployee.alertMessage).toBeVisible({ timeout: 5000 });
+    await expect(addNewEmployee.alertMessage).toContainText('Recruiter Petar Petrovic has reached their maximum HOLD capacity (20/20). Cannot add new HOLD employee. Please free up space by moving or changing the status of existing HOLD employees.');
+});
+
+test('Korisnik moze da stopira hold broj', async ({ recruitmentOverviewSetup, addNewEmployee }) => {
+    await recruitmentOverviewSetup.recruiterTab.click();
+    await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.recruiterPetarPetrovicOption);
+    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+    await recruitmentOverviewSetup.selectOnlyStatus('hold');
+    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+    const count = await recruitmentOverviewSetup.deleteIcon.count();
+    if (count === 0) {
+        await addNewEmployee.addHoldNumbers();
+        await recruitmentOverviewSetup.recruiterTab.click();
+        await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.recruiterPetarPetrovicOption);
+        await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+        await recruitmentOverviewSetup.selectOnlyStatus('hold');
+        await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+    }
+    const numberOfPauseIcon = await recruitmentOverviewSetup.pauseIcon.count();
+    let found = false;
+    for (let i = 0; i < numberOfPauseIcon; i++) {
+        await recruitmentOverviewSetup.pauseIcon.nth(i).click();
+
+        await recruitmentOverviewSetup.snackMessage.last().waitFor({ timeout: 2000 }).catch(() => { });
+        const messageText = await recruitmentOverviewSetup.snackMessage.last().textContent();
+        if (messageText?.includes('Employee excluded from next rotation')) {
+            found = true;
+            break;
+        }
+    }
+    expect(found).toBeTruthy();
+});
+
+test('Search button je onemoguceno ako broj ima manje od 9 cifara', async ({ recruitmentOverviewSetup }) => {
+    const randomPhone = get8RandomNumber().join('');
+    await recruitmentOverviewSetup.searchPhoneNumberField.click();
+    await recruitmentOverviewSetup.searchPhoneNumberField.type(randomPhone);
+    await expect(recruitmentOverviewSetup.disabledSearchButton).toBeVisible();
+});
+
+test('Search button je omoguceno kada unesemo 9 cifara', async ({ recruitmentOverviewSetup }) => {
+    const randomPhone = get9RandomNumber().join('');
+    await recruitmentOverviewSetup.searchPhoneNumberField.click();
+    await recruitmentOverviewSetup.searchPhoneNumberField.type(randomPhone);
+    await expect(recruitmentOverviewSetup.searchButton).toBeEnabled();
+});
+
+
 
 //////////////////////////////////////////// KORISTI SE POVREMENO ZA BRISANJE BAZE /////////////////////////////////////////////////
+// i ovo mozda nece treba jer ce se sada posle svake rotacije ravnomjerno rasporedjivati brojevi
 // test('Korisnik moze da obrise brojeve', async ({ page }) => {
 //     const recruitment = new RecrutimentPage(page);
 //     page.on('dialog', async (dialog) => {

@@ -40,7 +40,7 @@ export class UsersPage extends BasePage {
         this.closeIcon = page.locator('.mdi.mdi-close');
         this.inviteUserIcon = page.locator('.mdi.mdi-link');
         this.addUserIcon = page.locator('.mdi-account-plus');
-        this.searchInputField = page.locator('.v-input--dense.theme--light.v-text-field').last();
+        this.searchInputField = page.locator('.v-input--dense.theme--light.v-text-field').last().locator('input');
         this.rowsPerPageDropdownMenu = page.locator('.v-select__selection--comma');
         this.rows25PerPage = page.getByRole('option', { name: '25' });
         this.rows10PerPage = page.getByRole('option', { name: '10' });

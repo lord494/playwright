@@ -17,6 +17,7 @@ export class InviteAddEditModalPage extends BasePage {
     readonly isActiveCheckbox: Locator;
     readonly infoIcon: Locator;
     readonly dispatcherRole: Locator;
+    readonly recruitingRole: Locator;
     readonly safetyRole: Locator;
     readonly b1Board: Locator;
     readonly snackMessage: Locator;
@@ -50,6 +51,7 @@ export class InviteAddEditModalPage extends BasePage {
         this.isActiveCheckbox = page.getByText('Is active', { exact: true });
         this.infoIcon = page.locator('.permisions-card .mdi.mdi-information-outline');
         this.dispatcherRole = page.getByRole('option', { name: 'Dispatcher' });
+        this.recruitingRole = page.getByRole('option', { name: 'Recruiting' });
         this.fleetManager = page.getByRole('option', { name: 'Fleet Manager' });
         this.safetyRole = page.getByRole('option', { name: 'Safety' });
         this.b1Board = page.getByRole('option', { name: 'B1' });

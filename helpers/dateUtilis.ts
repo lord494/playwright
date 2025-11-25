@@ -46,6 +46,14 @@ export function get6RandomNumber(): number[] {
     return Array.from({ length: 6 }, () => Math.floor(Math.random() * 10));
 }
 
+export function get8RandomNumber(): number[] {
+    return Array.from({ length: 8 }, () => Math.floor(Math.random() * 10));
+}
+
+export function get9RandomNumber(): number[] {
+    return Array.from({ length: 9 }, () => Math.floor(Math.random() * 10));
+}
+
 export function getRandom10Number(): number[] {
     return Array.from({ length: 10 }, () => Math.floor(Math.random() * 10));
 }

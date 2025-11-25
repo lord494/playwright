@@ -5,7 +5,7 @@ import { EditAndWriteReview } from '../../page/shop/editAndWriteReview.page';
 import { AddShopPage } from '../../page/shop/addShop.page';
 import { ContactsPage } from '../../page/contacts/contactsOverview.page';
 import { AddContactsPage } from '../../page/contacts/addContact.page';
-import { generateRandomString, waitForPrebookLoads } from '../../helpers/dateUtilis';
+import { generateRandomString, get6RandomNumber, waitForPrebookLoads } from '../../helpers/dateUtilis';
 import { BoardsPage } from '../../page/Content/boards.page';
 import { CompaniesPage } from '../../page/Content/companies.page';
 import { DocumentPage } from '../../page/Content/documentModal.page';
@@ -36,6 +36,10 @@ import { PostLoadsPage } from '../../page/preBook/postLoads.page';
 import { AddEditPostLoadPage } from '../../page/preBook/addEditPostLoad.page';
 import { CompaniesPrebookPage } from '../../page/preBook/companiesPrebook.page';
 import { PostTrucksPage } from '../../page/preBook/postTrucks.page';
+import { RecrutimentPage } from '../../page/recruitment/recruitmentOverview.page';
+import { AddNewEmployeePage } from '../../page/recruitment/addNewEmployee.page';
+import { InviteAddEditModalPage } from '../../page/userManagement/users/inviteAddEditUser.page';
+import { UsersPage } from '../../page/userManagement/users/users.page';
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -93,6 +97,13 @@ export const test = base.extend<{
     companiesPreBookSetup: CompaniesPrebookPage;
     cleanupSetupAddPostTruck: PostTrucksPage;
     addPostTruckSetup: PostTrucksPage;
+    recruitmentOverviewSetup: RecrutimentPage;
+    addNewEmployee: AddNewEmployeePage;
+    inviteAddEditModal: InviteAddEditModalPage;
+    user: UsersPage;
+    addEmployeeSetup: AddNewEmployeePage;
+    recruitmentOverview: RecrutimentPage;
+
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -628,4 +639,38 @@ export const test = base.extend<{
         await expect(addPostTruckSetup.availColumn.first()).toContainText(formattedDate);
         await use(addPostTruckSetup)
     },
+
+    recruitmentOverviewSetup: async ({ loggedPage }, use) => {
+        const recruitmentOverview = new RecrutimentPage(loggedPage);
+        await loggedPage.goto(Constants.recruitmentUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await use(recruitmentOverview);
+    },
+
+    addNewEmployee: async ({ loggedPage }, use) => {
+        const addNewEmployee = new AddNewEmployeePage(loggedPage);
+        await use(addNewEmployee);
+    },
+
+    inviteAddEditModal: async ({ loggedPage }, use) => {
+        const inviteAddEditModal = new InviteAddEditModalPage(loggedPage);
+        await use(inviteAddEditModal);
+    },
+
+    user: async ({ loggedPage }, use) => {
+        const user = new UsersPage(loggedPage);
+        await use(user);
+    },
+
+    addEmployeeSetup: async ({ loggedPage }, use) => {
+        const addEmployeeSetup = new AddNewEmployeePage(loggedPage);
+        await loggedPage.goto(Constants.recruitmentUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await addEmployeeSetup.addNewEmployeeButton.click();
+        await use(addEmployeeSetup);
+    },
+
+    recruitmentOverview: async ({ loggedPage }, use) => {
+        const recruitmentOverview = new RecrutimentPage(loggedPage);
+        await use(recruitmentOverview);
+    },
+
 });
