@@ -1,23 +1,12 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
-import { ThirdPartyPage } from '../../page/thirdParty/thirdPartyOverview.page';
-import { AddThirdParty } from '../../page/thirdParty/addThirdParty.page';
 import { get6RandomNumber, getRandom10Number } from '../../helpers/dateUtilis';
+import { test } from '../fixtures/fixtures';
 
-test.use({ storageState: 'auth.json' });
-
-test.beforeEach(async ({ page }) => {
-    const thirdParty = new ThirdPartyPage(page);
-    await page.goto(Constants.thirdPartyUrl, { waitUntil: 'networkidle' });
-    await thirdParty.addThirdPartyButton.click();
-});
-
-test('Korisnik moze da edituje third party', async ({ page }) => {
-    page.on('dialog', async (dialog) => {
+test('Korisnik moze da edituje third party', async ({ thirdPartySetup, addThirdParty }) => {
+    thirdPartySetup.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
-    const thirdParty = new ThirdPartyPage(page);
-    const addThirdParty = new AddThirdParty(page);
     const randomDot = get6RandomNumber().join('');
     const randomPhone = getRandom10Number().join('');
     const randomName = `Third Party ${Math.floor(Math.random() * 1000)}`;
@@ -28,9 +17,9 @@ test('Korisnik moze da edituje third party', async ({ page }) => {
     await addThirdParty.isChecked(addThirdParty.isActiveCheckbox);
     await addThirdParty.isChecked(addThirdParty.temporaryCheckbox);
     await addThirdParty.addButton.click();
-    await thirdParty.dialogBox.waitFor({ state: 'detached' });
-    await thirdParty.searchThirdParty(thirdParty.searchField, randomName);
-    await thirdParty.pencilIcon.click();
+    await thirdPartySetup.dialogBox.waitFor({ state: 'detached' });
+    await thirdPartySetup.searchThirdParty(thirdPartySetup.searchField, randomName);
+    await thirdPartySetup.pencilIcon.click();
     const editRandomName = `Edited ${randomName}`;
     await addThirdParty.nameField.clear();
     await addThirdParty.enterName(addThirdParty.nameField, editRandomName);
@@ -45,12 +34,12 @@ test('Korisnik moze da edituje third party', async ({ page }) => {
     await addThirdParty.uncheck(addThirdParty.temporaryCheckbox);
     await addThirdParty.uncheck(addThirdParty.isActiveCheckbox);
     await addThirdParty.saveButton.click();
-    await thirdParty.dialogBox.waitFor({ state: 'detached' });
-    await expect(thirdParty.nameColumn).toContainText(editRandomName);
-    await expect(thirdParty.temporaryColumn).toContainText('NO');
-    await expect(thirdParty.dotColumn).toContainText(editDotNumber);
-    await expect(thirdParty.phoneColumn).toContainText(editPhoneNumber);
-    await expect(thirdParty.isActiveColumn).toContainText('NO');
-    await thirdParty.deleteIcon.click();
-    await expect(thirdParty.snackMessage).toContainText(' ' + editRandomName + ' successfully deleted');
+    await thirdPartySetup.dialogBox.waitFor({ state: 'detached' });
+    await expect(thirdPartySetup.nameColumn).toContainText(editRandomName);
+    await expect(thirdPartySetup.temporaryColumn).toContainText('NO');
+    await expect(thirdPartySetup.dotColumn).toContainText(editDotNumber);
+    await expect(thirdPartySetup.phoneColumn).toContainText(editPhoneNumber);
+    await expect(thirdPartySetup.isActiveColumn).toContainText('NO');
+    await thirdPartySetup.deleteIcon.click();
+    await expect(thirdPartySetup.snackMessage).toContainText(' ' + editRandomName + ' successfully deleted');
 });

@@ -40,6 +40,8 @@ import { RecrutimentPage } from '../../page/recruitment/recruitmentOverview.page
 import { AddNewEmployeePage } from '../../page/recruitment/addNewEmployee.page';
 import { InviteAddEditModalPage } from '../../page/userManagement/users/inviteAddEditUser.page';
 import { UsersPage } from '../../page/userManagement/users/users.page';
+import { ThirdPartyPage } from '../../page/thirdParty/thirdPartyOverview.page';
+import { AddThirdParty } from '../../page/thirdParty/addThirdParty.page';
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -103,6 +105,8 @@ export const test = base.extend<{
     user: UsersPage;
     addEmployeeSetup: AddNewEmployeePage;
     recruitmentOverview: RecrutimentPage;
+    thirdPartySetup: ThirdPartyPage;
+    addThirdParty: AddThirdParty;
 
 }>({
     loggedPage: async ({ browser }, use) => {
@@ -673,4 +677,15 @@ export const test = base.extend<{
         await use(recruitmentOverview);
     },
 
+    thirdPartySetup: async ({ loggedPage }, use) => {
+        const thirdParty = new ThirdPartyPage(loggedPage);
+        await loggedPage.goto(Constants.thirdPartyUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await thirdParty.addThirdPartyButton.click();
+        await use(thirdParty);
+    },
+
+    addThirdParty: async ({ loggedPage }, use) => {
+        const addThirdParty = new AddThirdParty(loggedPage);
+        await use(addThirdParty);
+    },
 });
