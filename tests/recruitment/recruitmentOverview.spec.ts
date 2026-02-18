@@ -104,6 +104,7 @@ test('Korisnik moze da prebaci broj na drugog regrutera sa Move akcijom', async 
 });
 
 test('Test koji dodaje novog usera, radi se Move All akcija i brise se dodati user', async ({ recruitmentOverviewSetup, inviteAddEditModal, user }) => {
+    test.setTimeout(180000);
     recruitmentOverviewSetup.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });

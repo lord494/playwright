@@ -1,72 +1,66 @@
-import { test, expect } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { AvailableTrailersPage } from '../../page/trailer/availableTrailer.page';
+import { test } from '../fixtures/fixtures';
 
-test.use({ storageState: 'auth.json' });
+// test.use({ storageState: 'auth.json' });
 
-test.beforeEach(async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await page.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle' })
-    await availableTrailer.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-});
+// test.beforeEach(async ({ page }) => {
+//     const availableTrailer = new AvailableTrailersPage(page);
+//     await page.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle' })
+//     await availableTrailer.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+// });
 
-test('Korisnik moze da pretrazuje trailer po kompaniji', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await page.waitForLoadState('networkidle');
-    await availableTrailer.selectCompanyFromMenu(availableTrailer.companyFilter, availableTrailer.testCompanyOption);
-    const targetRow = page.locator('tr', {
-        has: page.locator('td:nth-child(7)', { hasText: Constants.testCompany })
+test('Korisnik moze da pretrazuje trailer po kompaniji', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.selectCompanyFromMenu(availableTrailerSetup.companyFilter, availableTrailerSetup.testCompanyOption);
+    const targetRow = availableTrailerSetup.page.locator('tr', {
+        has: availableTrailerSetup.page.locator('td:nth-child(7)', { hasText: Constants.testCompany })
     });
     await targetRow.first().waitFor({ state: 'visible', timeout: 10000 });
-    const count = await availableTrailer.companyNameColumn.count();
+    const count = await availableTrailerSetup.companyNameColumn.count();
     for (let i = 0; i < count; i++) {
-        const cellText = await availableTrailer.companyNameColumn.nth(i).textContent();
+        const cellText = await availableTrailerSetup.companyNameColumn.nth(i).textContent();
         expect(cellText?.trim()).toBe(Constants.testCompany);
     }
 });
 
-test('Korisnik moze da pretrazuje trailer po statusu', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await page.waitForLoadState('networkidle');
-    await availableTrailer.selectStatusFromStatusMenu(availableTrailer.statusFilter.last(), availableTrailer.stolenStatusOption);
-    await page.waitForLoadState('networkidle');
-    await expect(availableTrailer.statusColumn.first()).toContainText(Constants.stolenStatus, { timeout: 5000 });
-    const count = await availableTrailer.statusColumn.count();
+test('Korisnik moze da pretrazuje trailer po statusu', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.selectStatusFromStatusMenu(availableTrailerSetup.statusFilter.last(), availableTrailerSetup.stolenStatusOption);
+    await availableTrailerSetup.page.waitForLoadState('networkidle');
+    await expect(availableTrailerSetup.statusColumn.first()).toContainText(Constants.stolenStatus, { timeout: 5000 });
+    const count = await availableTrailerSetup.statusColumn.count();
     for (let i = 0; i < count; i++) {
-        const cellText = await availableTrailer.statusColumn.nth(i).textContent();
+        const cellText = await availableTrailerSetup.statusColumn.nth(i).textContent();
         expect(cellText?.trim()).toBe(Constants.stolenStatus);
     }
 });
 
-test('Korisnik moze da pretrazuje trailer po yardi', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await page.waitForLoadState('networkidle');
-    await availableTrailer.selectYardFromStatusMenu(availableTrailer.yardFilter, availableTrailer.novaYardaOption);
-    await page.waitForLoadState('networkidle');
-    await expect(availableTrailer.yardColumn.first()).toContainText(Constants.novaYarda, { timeout: 5000 });
-    const count = await availableTrailer.yardColumn.count();
+test('Korisnik moze da pretrazuje trailer po yardi', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.selectYardFromStatusMenu(availableTrailerSetup.yardFilter, availableTrailerSetup.novaYardaOption);
+    await availableTrailerSetup.page.waitForLoadState('networkidle');
+    await expect(availableTrailerSetup.yardColumn.first()).toContainText(Constants.novaYarda, { timeout: 5000 });
+    const count = await availableTrailerSetup.yardColumn.count();
     for (let i = 0; i < count; i++) {
-        const cellText = await availableTrailer.yardColumn.nth(i).textContent();
+        const cellText = await availableTrailerSetup.yardColumn.nth(i).textContent();
         expect(cellText?.trim()).toBe(Constants.novaYarda);
     }
 });
 
-test('Korisnik moze da pretrazuje trailer po broju trailera', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await page.waitForLoadState('networkidle');
-    await availableTrailer.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-    await availableTrailer.enterTrailerName(availableTrailer.trailerNumberFilter, Constants.availableTrailer);
-    await page.waitForLoadState('networkidle');
-    await availableTrailer.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-    const targetRow = page.locator('tr', {
-        has: page.locator('td:nth-child(1)', { hasText: Constants.availableTrailer })
+test('Korisnik moze da pretrazuje trailer po broju trailera', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.page.waitForLoadState('networkidle');
+    await availableTrailerSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+    await availableTrailerSetup.enterTrailerName(availableTrailerSetup.trailerNumberFilter, Constants.availableTrailer);
+    await availableTrailerSetup.page.waitForLoadState('networkidle');
+    await availableTrailerSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+    const targetRow = availableTrailerSetup.page.locator('tr', {
+        has: availableTrailerSetup.page.locator('td:nth-child(1)', { hasText: Constants.availableTrailer })
     });
-    await page.waitForLoadState('networkidle');
+    await availableTrailerSetup.page.waitForLoadState('networkidle');
     await targetRow.first().waitFor({ state: 'visible', timeout: 10000 });
-    const count = await availableTrailer.trailerNameColumn.count();
+    const count = await availableTrailerSetup.trailerNameColumn.count();
     let found = false;
     for (let i = 0; i < count; i++) {
-        const cellText = await availableTrailer.trailerNameColumn.nth(i).textContent();
+        const cellText = await availableTrailerSetup.trailerNameColumn.nth(i).textContent();
         if (cellText?.trim() === Constants.availableTrailer) {
             found = true;
             break;
@@ -75,96 +69,84 @@ test('Korisnik moze da pretrazuje trailer po broju trailera', async ({ page }) =
     expect(found).toBe(true);
 });
 
-test('Korisnik moze da pretrazuje trailer po driver name', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await page.waitForLoadState('networkidle');
-    await availableTrailer.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-    await availableTrailer.enterDriverName(availableTrailer.driverNameFilter, Constants.driverName);
-    await page.waitForLoadState('networkidle');
-    await availableTrailer.driverNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-    await page.waitForLoadState('networkidle');
-    const count = await availableTrailer.driverNameColumn.count();
+test('Korisnik moze da pretrazuje trailer po driver name', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.page.waitForLoadState('networkidle');
+    await availableTrailerSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+    await availableTrailerSetup.enterDriverName(availableTrailerSetup.driverNameFilter, Constants.driverName);
+    await availableTrailerSetup.page.waitForLoadState('networkidle');
+    await availableTrailerSetup.driverNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+    await availableTrailerSetup.page.waitForLoadState('networkidle');
+    const count = await availableTrailerSetup.driverNameColumn.count();
     for (let i = 0; i < count; i++) {
-        const cellText = await availableTrailer.driverNameColumn.nth(i).textContent();
+        const cellText = await availableTrailerSetup.driverNameColumn.nth(i).textContent();
         expect(cellText?.trim()).toContain(Constants.driverName);
     }
 });
 
-test('Korisnik moze da otvori trailer history modal', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.clickElement(availableTrailer.trailerNameColumn.first());
-    await expect(availableTrailer.trailerAndTruckHistoryModal).toBeVisible({ timeout: 3000 });
+test('Korisnik moze da otvori trailer history modal', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.clickElement(availableTrailerSetup.trailerNameColumn.first());
+    await expect(availableTrailerSetup.trailerAndTruckHistoryModal).toBeVisible({ timeout: 3000 });
 });
 
-test('Korisnik moze da otvori truck history modal', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await page.waitForLoadState('networkidle');
-    await availableTrailer.clickElement(availableTrailer.reloadIconInTruckColumn.first());
-    await expect(availableTrailer.historyModal).toBeVisible({ timeout: 3000 });
+test('Korisnik moze da otvori truck history modal', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.page.waitForLoadState('networkidle');
+    await availableTrailerSetup.clickElement(availableTrailerSetup.reloadIconInTruckColumn.first());
+    await expect(availableTrailerSetup.historyModal).toBeVisible({ timeout: 3000 });
 });
 
-test('Korisnik moze da otvori company history modal', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.clickElement(availableTrailer.reloadIconInCompanyColumn.first());
-    await expect(availableTrailer.historyModal).toBeVisible({ timeout: 3000 });
+test('Korisnik moze da otvori company history modal', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.clickElement(availableTrailerSetup.reloadIconInCompanyColumn.first());
+    await expect(availableTrailerSetup.historyModal).toBeVisible({ timeout: 3000 });
 });
 
-test('Korisnik moze da otvori plate history modal', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.clickElement(availableTrailer.reloadIconInPlateColumn.first());
-    await expect(availableTrailer.historyModal).toBeVisible({ timeout: 3000 });
+test('Korisnik moze da otvori plate history modal', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.clickElement(availableTrailerSetup.reloadIconInPlateColumn.first());
+    await expect(availableTrailerSetup.historyModal).toBeVisible({ timeout: 3000 });
 });
 
-test('Korisnik moze da otvori temp plate exp history modal', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.clickElement(availableTrailer.reloadIconInTempPlateExp.first());
-    await expect(availableTrailer.historyModal).toBeVisible({ timeout: 3000 });
+test('Korisnik moze da otvori temp plate exp history modal', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.clickElement(availableTrailerSetup.reloadIconInTempPlateExp.first());
+    await expect(availableTrailerSetup.historyModal).toBeVisible({ timeout: 3000 });
 });
 
-test('Korisnik moze da otvori info modal', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.clickElement(availableTrailer.infoColumn.first());
-    await expect(availableTrailer.infoAndNoteModal).toBeVisible({ timeout: 3000 });
+test('Korisnik moze da otvori info modal', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.clickElement(availableTrailerSetup.infoColumn.first());
+    await expect(availableTrailerSetup.infoAndNoteModal).toBeVisible({ timeout: 3000 });
 });
 
-test('Korisnik moze da otvori note modal', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.clickElement(availableTrailer.notesColumn.first());
-    await expect(availableTrailer.infoAndNoteModal).toBeVisible({ timeout: 3000 });
+test('Korisnik moze da otvori note modal', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.clickElement(availableTrailerSetup.notesColumn.first());
+    await expect(availableTrailerSetup.infoAndNoteModal).toBeVisible({ timeout: 3000 });
 });
 
-test('Korisnik moze da otvori RENT/BUY history modal', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.clickElement(availableTrailer.reloadIconOnRentBuyColumn.first());
-    await expect(availableTrailer.historyModal).toBeVisible({ timeout: 3000 });
+test('Korisnik moze da otvori RENT/BUY history modal', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.clickElement(availableTrailerSetup.reloadIconOnRentBuyColumn.first());
+    await expect(availableTrailerSetup.historyModal).toBeVisible({ timeout: 3000 });
 });
 
-test('Korisnik moze da otvori phone history modal', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.clickElement(availableTrailer.reloadIconInPhoneColumn.first());
-    await expect(availableTrailer.historyModal).toBeVisible({ timeout: 3000 });
+test('Korisnik moze da otvori phone history modal', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.clickElement(availableTrailerSetup.reloadIconInPhoneColumn.first());
+    await expect(availableTrailerSetup.historyModal).toBeVisible({ timeout: 3000 });
 });
 
-test('Korisnik moze da otvori Location/Yard history modal', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.clickElement(availableTrailer.reloadIconInLocationColumn.first());
-    await expect(availableTrailer.historyModal).toBeVisible({ timeout: 3000 });
+test('Korisnik moze da otvori Location/Yard history modal', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.clickElement(availableTrailerSetup.reloadIconInLocationColumn.first());
+    await expect(availableTrailerSetup.historyModal).toBeVisible({ timeout: 3000 });
 });
 
-test('Korisnik moze da doda trailer history', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.truckColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-    await availableTrailer.clickElement(availableTrailer.trailerNameColumn.first());
-    page.on('dialog', async (dialog) => {
+test('Korisnik moze da doda trailer history', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.truckColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+    await availableTrailerSetup.clickElement(availableTrailerSetup.trailerNameColumn.first());
+    availableTrailerSetup.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
     const deleteSelector = '.history-wraper.small .mdi.mdi-delete';
     try {
-        await page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
-        while (await page.locator(deleteSelector).count() > 0) {
-            const previousCount = await page.locator(deleteSelector).count();
-            await page.locator(deleteSelector).first().click();
-            await page.waitForFunction(
+        await availableTrailerSetup.page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
+        while (await availableTrailerSetup.page.locator(deleteSelector).count() > 0) {
+            const previousCount = await availableTrailerSetup.page.locator(deleteSelector).count();
+            await availableTrailerSetup.page.locator(deleteSelector).first().click();
+            await availableTrailerSetup.page.waitForFunction(
                 ({ selector, prevCount }) => {
                     return document.querySelectorAll(selector).length < prevCount;
                 },
@@ -173,38 +155,36 @@ test('Korisnik moze da doda trailer history', async ({ page }) => {
         }
     } catch (e) {
     }
-    await availableTrailer.clickElement(availableTrailer.addHistoryButton);
-    await availableTrailer.selectTruckInTrailerModal(availableTrailer.truckFieldInTrailerModal, Constants.truckName, availableTrailer.truckOptionFromMenu);
-    await availableTrailer.fromFieldModal.click();
-    await availableTrailer.currentDate.first().click();
-    await page.waitForTimeout(1000);
-    await availableTrailer.toFieldModal.click();
-    await availableTrailer.currentDate.last().click();
-    await availableTrailer.addButtonInModal.last().click();
-    await page.locator('.v-dialog.v-dialog--active.v-dialog--persistent').waitFor({ state: 'detached', timeout: 5000 });
-    await expect(availableTrailer.snackbar).toContainText('Trailer history successfully added');
+    await availableTrailerSetup.clickElement(availableTrailerSetup.addHistoryButton);
+    await availableTrailerSetup.selectTruckInTrailerModal(availableTrailerSetup.truckFieldInTrailerModal, Constants.truckName, availableTrailerSetup.truckOptionFromMenu);
+    await availableTrailerSetup.fromFieldModal.click();
+    await availableTrailerSetup.currentDate.first().click();
+    await availableTrailerSetup.page.waitForTimeout(1000);
+    await availableTrailerSetup.toFieldModal.click();
+    await availableTrailerSetup.currentDate.last().click();
+    await availableTrailerSetup.addButtonInModal.last().click();
+    await availableTrailerSetup.page.locator('.v-dialog.v-dialog--active.v-dialog--persistent').waitFor({ state: 'detached', timeout: 5000 });
+    await expect(availableTrailerSetup.snackbar).toContainText('Trailer history successfully added');
 });
 
-test('Korisnik moze da otvori edit modal iz trailer history', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.clickElement(availableTrailer.trailerNameColumn.first());
-    await availableTrailer.clickElement(availableTrailer.editTrailerButtonInTrailerHistory);
-    await expect(availableTrailer.activeDialogbox).toBeVisible();
+test('Korisnik moze da otvori edit modal iz trailer history', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.clickElement(availableTrailerSetup.trailerNameColumn.first());
+    await availableTrailerSetup.clickElement(availableTrailerSetup.editTrailerButtonInTrailerHistory);
+    await expect(availableTrailerSetup.activeDialogbox).toBeVisible();
 });
 
-test('Korisnik moze da doda, edituje i brise company history', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.clickElement(availableTrailer.reloadIconInCompanyColumn.nth(3));
-    page.on('dialog', async (dialog) => {
+test('Korisnik moze da doda, edituje i brise company history', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.clickElement(availableTrailerSetup.reloadIconInCompanyColumn.nth(3));
+    availableTrailerSetup.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
     const deleteSelector = '.v-list.trailer-history .mdi.mdi-delete';
     try {
-        await page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
-        while (await page.locator(deleteSelector).count() > 0) {
-            const previousCount = await page.locator(deleteSelector).count();
-            await page.locator(deleteSelector).first().click();
-            await page.waitForFunction(
+        await availableTrailerSetup.page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
+        while (await availableTrailerSetup.page.locator(deleteSelector).count() > 0) {
+            const previousCount = await availableTrailerSetup.page.locator(deleteSelector).count();
+            await availableTrailerSetup.page.locator(deleteSelector).first().click();
+            await availableTrailerSetup.page.waitForFunction(
                 ({ selector, prevCount }) => {
                     return document.querySelectorAll(selector).length < prevCount;
                 },
@@ -213,38 +193,37 @@ test('Korisnik moze da doda, edituje i brise company history', async ({ page }) 
         }
     } catch (e) {
     }
-    await availableTrailer.clickElement(availableTrailer.addHistoryButtonModal);
-    await availableTrailer.enterOldState(availableTrailer.oldState, Constants.oldStateValue);
-    await availableTrailer.enterNewState(availableTrailer.newState, Constants.newStateValue);
-    await availableTrailer.dateOfChanged.click();
-    await availableTrailer.currentDate.click();
-    await availableTrailer.clickSaveButton();
-    await availableTrailer.activeDialogbox.waitFor({ state: 'detached' });
-    await expect(availableTrailer.changedCompanyTitle).toContainText('from ' + Constants.oldStateValue + ' to ' + Constants.newStateValue);
-    await availableTrailer.pencilIconInModal.click();
-    await availableTrailer.newState.click();
-    await page.keyboard.press('Control+A');
-    await page.keyboard.press('Backspace');
-    await availableTrailer.enterNewState(availableTrailer.newState, 'edit new state');
-    await availableTrailer.clickSaveButton();
-    await expect(availableTrailer.changedCompanyTitle).toContainText('from ' + Constants.oldStateValue + ' to ' + 'edit new state');
-    await page.click(deleteSelector);
-    await expect(page.locator('text=No field history ...')).toBeVisible();
+    await availableTrailerSetup.clickElement(availableTrailerSetup.addHistoryButtonModal);
+    await availableTrailerSetup.enterOldState(availableTrailerSetup.oldState, Constants.oldStateValue);
+    await availableTrailerSetup.enterNewState(availableTrailerSetup.newState, Constants.newStateValue);
+    await availableTrailerSetup.dateOfChanged.click();
+    await availableTrailerSetup.currentDate.click();
+    await availableTrailerSetup.clickSaveButton();
+    await availableTrailerSetup.activeDialogbox.waitFor({ state: 'detached' });
+    await expect(availableTrailerSetup.changedCompanyTitle).toContainText('from ' + Constants.oldStateValue + ' to ' + Constants.newStateValue);
+    await availableTrailerSetup.pencilIconInModal.click();
+    await availableTrailerSetup.newState.click();
+    await availableTrailerSetup.page.keyboard.press('Control+A');
+    await availableTrailerSetup.page.keyboard.press('Backspace');
+    await availableTrailerSetup.enterNewState(availableTrailerSetup.newState, 'edit new state');
+    await availableTrailerSetup.clickSaveButton();
+    await expect(availableTrailerSetup.changedCompanyTitle).toContainText('from ' + Constants.oldStateValue + ' to ' + 'edit new state');
+    await availableTrailerSetup.page.click(deleteSelector);
+    await expect(availableTrailerSetup.page.locator('text=No field history ...')).toBeVisible();
 });
 
-test('Korisnik moze da doda, edituje i brise info', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.clickElement(availableTrailer.infoColumn.nth(3));
-    page.on('dialog', async (dialog) => {
+test('Korisnik moze da doda, edituje i brise info', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.clickElement(availableTrailerSetup.infoColumn.nth(3));
+    availableTrailerSetup.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
     const deleteSelector = '.comments-wrapper .mdi.mdi-delete';
     try {
-        await page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
-        while (await page.locator(deleteSelector).count() > 0) {
-            const previousCount = await page.locator(deleteSelector).count();
-            await page.locator(deleteSelector).first().click();
-            await page.waitForFunction(
+        await availableTrailerSetup.page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
+        while (await availableTrailerSetup.page.locator(deleteSelector).count() > 0) {
+            const previousCount = await availableTrailerSetup.page.locator(deleteSelector).count();
+            await availableTrailerSetup.page.locator(deleteSelector).first().click();
+            await availableTrailerSetup.page.waitForFunction(
                 ({ selector, prevCount }) => {
                     return document.querySelectorAll(selector).length < prevCount;
                 },
@@ -253,34 +232,33 @@ test('Korisnik moze da doda, edituje i brise info', async ({ page }) => {
         }
     } catch (e) {
     }
-    await availableTrailer.clickElement(availableTrailer.cancelButton);
-    await availableTrailer.clickElement(availableTrailer.infoColumn.nth(3));
-    await availableTrailer.enterNoteInInfoAndNoteModal(Constants.newStateValue);
-    await availableTrailer.clickSaveButton();
-    await page.waitForLoadState('networkidle');
-    await availableTrailer.clickElement(availableTrailer.commentPencilIcon);
-    await availableTrailer.commentInput.click();
-    await page.keyboard.press('Control+A');
-    await page.keyboard.press('Backspace');
-    await availableTrailer.enterNoteInInfoAndNoteModal(Constants.oldStateValue);
-    await availableTrailer.clickElement(availableTrailer.editButton);
-    await expect(availableTrailer.commentList).toContainText(Constants.oldStateValue);
-    await page.click(deleteSelector);
+    await availableTrailerSetup.clickElement(availableTrailerSetup.cancelButton);
+    await availableTrailerSetup.clickElement(availableTrailerSetup.infoColumn.nth(3));
+    await availableTrailerSetup.enterNoteInInfoAndNoteModal(Constants.newStateValue);
+    await availableTrailerSetup.clickSaveButton();
+    await availableTrailerSetup.page.waitForLoadState('networkidle');
+    await availableTrailerSetup.clickElement(availableTrailerSetup.commentPencilIcon);
+    await availableTrailerSetup.commentInput.click();
+    await availableTrailerSetup.page.keyboard.press('Control+A');
+    await availableTrailerSetup.page.keyboard.press('Backspace');
+    await availableTrailerSetup.enterNoteInInfoAndNoteModal(Constants.oldStateValue);
+    await availableTrailerSetup.clickElement(availableTrailerSetup.editButton);
+    await expect(availableTrailerSetup.commentList).toContainText(Constants.oldStateValue);
+    await availableTrailerSetup.page.click(deleteSelector);
 });
 
-test('Korisnik moze da doda, edituje i brise note', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.clickElement(availableTrailer.notesColumn.nth(4));
-    page.on('dialog', async (dialog) => {
+test('Korisnik moze da doda, edituje i brise note', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.clickElement(availableTrailerSetup.notesColumn.nth(4));
+    availableTrailerSetup.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
     const deleteSelector = '.comments-wrapper .mdi.mdi-delete';
     try {
-        await page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
-        while (await page.locator(deleteSelector).count() > 0) {
-            const previousCount = await page.locator(deleteSelector).count();
-            await page.locator(deleteSelector).first().click();
-            await page.waitForFunction(
+        await availableTrailerSetup.page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
+        while (await availableTrailerSetup.page.locator(deleteSelector).count() > 0) {
+            const previousCount = await availableTrailerSetup.page.locator(deleteSelector).count();
+            await availableTrailerSetup.page.locator(deleteSelector).first().click();
+            await availableTrailerSetup.page.waitForFunction(
                 ({ selector, prevCount }) => {
                     return document.querySelectorAll(selector).length < prevCount;
                 },
@@ -289,29 +267,27 @@ test('Korisnik moze da doda, edituje i brise note', async ({ page }) => {
         }
     } catch (e) {
     }
-    await availableTrailer.clickElement(availableTrailer.cancelButton);
-    await availableTrailer.clickElement(availableTrailer.notesColumn.nth(4));
-    await availableTrailer.enterNoteInInfoAndNoteModal(Constants.newStateValue);
-    await availableTrailer.clickSaveButton();
-    await page.waitForLoadState('networkidle');
-    await availableTrailer.clickElement(availableTrailer.commentPencilIcon);
-    await availableTrailer.commentInput.click();
-    await page.keyboard.press('Control+A');
-    await page.keyboard.press('Backspace');
-    await availableTrailer.enterNoteInInfoAndNoteModal(Constants.oldStateValue);
-    await availableTrailer.clickElement(availableTrailer.editButton);
-    await expect(availableTrailer.commentList).toContainText(Constants.oldStateValue);
-    await page.click(deleteSelector);
+    await availableTrailerSetup.clickElement(availableTrailerSetup.cancelButton);
+    await availableTrailerSetup.clickElement(availableTrailerSetup.notesColumn.nth(4));
+    await availableTrailerSetup.enterNoteInInfoAndNoteModal(Constants.newStateValue);
+    await availableTrailerSetup.clickSaveButton();
+    await availableTrailerSetup.page.waitForLoadState('networkidle');
+    await availableTrailerSetup.clickElement(availableTrailerSetup.commentPencilIcon);
+    await availableTrailerSetup.commentInput.click();
+    await availableTrailerSetup.page.keyboard.press('Control+A');
+    await availableTrailerSetup.page.keyboard.press('Backspace');
+    await availableTrailerSetup.enterNoteInInfoAndNoteModal(Constants.oldStateValue);
+    await availableTrailerSetup.clickElement(availableTrailerSetup.editButton);
+    await expect(availableTrailerSetup.commentList).toContainText(Constants.oldStateValue);
+    await availableTrailerSetup.page.click(deleteSelector);
 });
 
-test('Korisnik moze da otvori stats', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.clickElement(availableTrailer.statsButton);
-    await expect(page).toHaveURL(/stats/);
+test('Korisnik moze da otvori stats', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.clickElement(availableTrailerSetup.statsButton);
+    await expect(availableTrailerSetup.page).toHaveURL(/stats/);
 });
 
-test('Korisnik moze da otvori trailer', async ({ page }) => {
-    const availableTrailer = new AvailableTrailersPage(page);
-    await availableTrailer.clickElement(availableTrailer.allTrailersButton);
-    await expect(page).toHaveURL(/trailers/);
+test('Korisnik moze da otvori trailer', async ({ availableTrailerSetup }) => {
+    await availableTrailerSetup.clickElement(availableTrailerSetup.allTrailersButton);
+    await expect(availableTrailerSetup.page).toHaveURL(/trailers/);
 });

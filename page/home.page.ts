@@ -61,6 +61,9 @@ export class HomePage extends BasePage {
     readonly unitsPaidWithCash: Locator;
     readonly lease: Locator;
     readonly unitsHistory: Locator;
+    readonly messagesCenterCard: Locator;
+    readonly messageOption: Locator;
+    readonly notificarionOption: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -123,6 +126,9 @@ export class HomePage extends BasePage {
         this.unitsPaidWithCash = page.getByRole('menuitem', { name: 'Units (paid with cash)', exact: true });
         this.lease = page.getByRole('menuitem', { name: 'Lease', exact: true });
         this.unitsHistory = page.getByRole('menuitem', { name: 'Units History', exact: true });
+        this.messagesCenterCard = page.getByRole('main').getByText("Messages Center");
+        this.messageOption = page.getByRole('menuitem', { name: 'Messages', exact: true });
+        this.notificarionOption = page.getByRole('menuitem', { name: 'Notifications', exact: true });
     }
 
     async hoverAndClick(mainLocator: Locator, subLocator?: Locator) {

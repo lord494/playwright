@@ -19,18 +19,18 @@ export class TruckMakePage extends BasePage {
     constructor(page: Page) {
         super(page);
         this.page = page;
-        this.pencilIcon = page.locator('.mdi-pencil');
-        this.grayDeleteIcon = page.locator('.mdi-delete');
-        this.makeNameColumn = page.locator('tr td:nth-child(1)');
-        this.snackMessage = page.locator('.v-snack__wrapper.v-sheet .v-snack__content').first();
-        this.isActiveColumn = page.locator('tr td:nth-child(3)');
-        this.addMakeIcon = page.locator('.mdi.mdi-plus');
-        this.nameMakeField = page.locator('#name');
-        this.noteField = page.locator('#note');
-        this.isActiveCheckbox = page.locator('.v-label.theme--light', { hasText: 'Is active' });
-        this.addEditModal = page.locator('.v-dialog.v-dialog--active.v-dialog--persistent .v-card.v-sheet.theme--light');
-        this.errorMessage = page.locator('.v-messages__message');
-        this.noteColumn = page.locator('tr td:nth-child(2)');
+        this.pencilIcon = this.page.locator('.mdi-pencil');
+        this.grayDeleteIcon = this.page.locator('.mdi-delete');
+        this.makeNameColumn = this.page.locator('tr td:nth-child(1)');
+        this.snackMessage = this.page.locator('.v-snack__wrapper.v-sheet .v-snack__content').first();
+        this.isActiveColumn = this.page.locator('tr td:nth-child(3)');
+        this.addMakeIcon = this.page.locator('.mdi.mdi-plus');
+        this.nameMakeField = this.page.locator('#name');
+        this.noteField = this.page.locator('#note');
+        this.isActiveCheckbox = this.page.locator('.v-label.theme--light', { hasText: 'Is active' });
+        this.addEditModal = this.page.locator('.v-dialog.v-dialog--active.v-dialog--persistent .v-card.v-sheet.theme--light');
+        this.errorMessage = this.page.locator('.v-messages__message');
+        this.noteColumn = this.page.locator('tr td:nth-child(2)');
     }
 
     async fillMakeName(make: Locator, name: string): Promise<void> {

@@ -31,29 +31,29 @@ export class TruckInsertPermitBook extends BasePage {
     constructor(page: Page) {
         super(page);
         this.page = page;
-        this.insertDocumentField = page.locator('.v-text-field--is-booted.v-file-input .v-text-field__slot');
-        this.documentNameField = page.locator('.v-input.v-input--has-state .v-input__control .v-input__slot');
-        this.expiringDateField = page.locator('.v-input--is-readonly.theme--light.v-text-field .v-text-field__slot').first();
-        this.documentSubtypeField = page.locator('.v-select__slot', { hasText: 'Select document subtype' });
-        this.documentTypeField = page.locator('.v-select__slot', { hasText: 'Select document type' });
-        this.truckType = page.getByRole('option', { name: 'Truck', exact: true });
-        this.trailerType = page.getByRole('option', { name: 'Trailer', exact: true });
-        this.driverType = page.getByRole('option', { name: 'Driver', exact: true });
-        this.savePermitButton = page.locator('.v-btn__content', { hasText: 'Save permit book' });
-        this.okButtonInDatePicekr = page.getByRole('button', { name: 'OK', exact: true });
-        this.eldDocumentsSubtype = page.getByRole('option', { name: 'ELD documents', exact: true });
-        this.registrationSubtype = page.getByRole('option', { name: 'Registration', exact: true });
-        this.othersSubtype = page.getByRole('option', { name: 'Others', exact: true });
-        this.iftaSubtype = page.getByRole('option', { name: 'IFTA license', exact: true });
-        this.currentDate = page.locator('.v-btn.v-date-picker-table__current');
-        this.loader = page.locator('div[role="dialog"] .v-progress-linear__background.primary');
-        this.xIconInFIelds = page.locator('.mdi.mdi-close');
-        this.errorMessage = page.locator('.v-messages__message');
-        this.documentReferrerMenu = page.locator('.v-input__slot');
-        this.doc = page.locator('.v-select__slot .v-label.theme--light');
-        this.truckNumberFromMenu = page.getByRole('option', { name: '11996', exact: true });
-        this.trailerNumberFromMenu = page.getByRole('option', { name: '118185', exact: true });
-        this.driverOption = page.getByRole('option', { name: 'AppTest (bosko@superegoholding.net)', exact: true });
+        this.insertDocumentField = this.page.locator('.v-text-field--is-booted.v-file-input .v-text-field__slot');
+        this.documentNameField = this.page.locator('.v-input.v-input--has-state .v-input__control .v-input__slot');
+        this.expiringDateField = this.page.locator('.v-input--is-readonly.theme--light.v-text-field .v-text-field__slot').first();
+        this.documentSubtypeField = this.page.locator('.v-select__slot', { hasText: 'Select document subtype' });
+        this.documentTypeField = this.page.locator('.v-select__slot', { hasText: 'Select document type' });
+        this.truckType = this.page.getByRole('option', { name: 'Truck', exact: true });
+        this.trailerType = this.page.getByRole('option', { name: 'Trailer', exact: true });
+        this.driverType = this.page.getByRole('option', { name: 'Driver', exact: true });
+        this.savePermitButton = this.page.locator('.v-btn__content', { hasText: 'Save permit book' });
+        this.okButtonInDatePicekr = this.page.getByRole('button', { name: 'OK', exact: true });
+        this.eldDocumentsSubtype = this.page.getByRole('option', { name: 'ELD documents', exact: true });
+        this.registrationSubtype = this.page.getByRole('option', { name: 'Registration', exact: true });
+        this.othersSubtype = this.page.getByRole('option', { name: 'Others', exact: true });
+        this.iftaSubtype = this.page.getByRole('option', { name: 'IFTA license', exact: true });
+        this.currentDate = this.page.locator('.v-btn.v-date-picker-table__current');
+        this.loader = this.page.locator('div[role="dialog"] .v-progress-linear__background.primary');
+        this.xIconInFIelds = this.page.locator('.mdi.mdi-close');
+        this.errorMessage = this.page.locator('.v-messages__message');
+        this.documentReferrerMenu = this.page.locator('.v-input__slot');
+        this.doc = this.page.locator('.v-select__slot .v-label.theme--light');
+        this.truckNumberFromMenu = this.page.getByRole('option', { name: '11996', exact: true });
+        this.trailerNumberFromMenu = this.page.getByRole('option', { name: '118185', exact: true });
+        this.driverOption = this.page.getByRole('option', { name: 'AppTest (bosko@superegoholding.net)', exact: true });
     }
 
     async uploadDocument(): Promise<void> {

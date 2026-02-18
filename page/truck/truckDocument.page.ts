@@ -22,20 +22,20 @@ export class TruckDocumentPage extends BasePage {
     constructor(page: Page) {
         super(page);
         this.page = page;
-        this.deleteIconsInDocumentModal = page.locator('.v-dialog--active .v-icon--link.mdi.mdi-delete');
-        this.confirmButton = page.locator('.v-btn__content', { hasText: 'Confirm' });
-        this.changeFileButton = page.locator('.v-btn__content', { hasText: 'Change file' });
-        this.emptyLabelInModal = page.locator('.v-data-table__empty-wrapper');
-        this.nameColumn = page.locator('.v-dialog__content tr td:nth-child(1)');
-        this.dateExpiringColumn = page.locator('.v-dialog__content tr td:nth-child(2)');
-        this.statusColumn = page.locator('.v-dialog__content tr td:nth-child(3)');
-        this.typeColumn = page.locator('.v-dialog__content tr td:nth-child(4)');
-        this.subTypeColumn = page.locator('.v-dialog__content tr td:nth-child(5)');
-        this.companyColumn = page.locator('.v-dialog__content tr td:nth-child(6)');
-        this.eyeIcon = page.locator('.mdi-eye');
-        this.qrCode = page.locator('.mdi-qrcode');
-        this.pencilIcon = page.locator('.text-start .mdi-pencil');
-        this.titleInModal = page.locator('.v-card__title.headline')
+        this.deleteIconsInDocumentModal = this.page.locator('.v-dialog--active .v-icon--link.mdi.mdi-delete');
+        this.confirmButton = this.page.locator('.v-btn__content', { hasText: 'Confirm' });
+        this.changeFileButton = this.page.locator('.v-btn__content', { hasText: 'Change file' });
+        this.emptyLabelInModal = this.page.locator('.v-data-table__empty-wrapper');
+        this.nameColumn = this.page.locator('.v-dialog__content tr td:nth-child(1)');
+        this.dateExpiringColumn = this.page.locator('.v-dialog__content tr td:nth-child(2)');
+        this.statusColumn = this.page.locator('.v-dialog__content tr td:nth-child(3)');
+        this.typeColumn = this.page.locator('.v-dialog__content tr td:nth-child(4)');
+        this.subTypeColumn = this.page.locator('.v-dialog__content tr td:nth-child(5)');
+        this.companyColumn = this.page.locator('.v-dialog__content tr td:nth-child(6)');
+        this.eyeIcon = this.page.locator('.mdi-eye');
+        this.qrCode = this.page.locator('.mdi-qrcode');
+        this.pencilIcon = this.page.locator('.text-start .mdi-pencil');
+        this.titleInModal = this.page.locator('.v-card__title.headline');
     }
 
     async deleteAllItemsWithDeleteIcon(): Promise<void> {

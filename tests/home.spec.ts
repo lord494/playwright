@@ -208,8 +208,14 @@ test('Korisnik moze da otvori Contacts stranicu klikom na Contacts karticu ', as
 
 test('Korisnik moze da otvori Messages stranicu klikom na Messages karticu ', async ({ page }) => {
   const home = new HomePage(page);
-  await home.click(home.messagesCard);
+  await home.hoverAndClick(home.messagesCenterCard, home.messageOption);
   await expect(page).toHaveURL(/messages/);
+});
+
+test('Korisnik moze da otvori Notifications stranicu klikom na Messages karticu ', async ({ page }) => {
+  const home = new HomePage(page);
+  await home.hoverAndClick(home.messagesCenterCard, home.notificarionOption);
+  await expect(page).toHaveURL(/notifications/);
 });
 
 test('Korisnik moze da otvori Third party stranicu klikom na Third party karticu ', async ({ page }) => {

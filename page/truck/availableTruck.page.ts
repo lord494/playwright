@@ -30,29 +30,29 @@ export class AvailableTruckPage extends BasePage {
     constructor(page: Page) {
         super(page);
         this.page = page;
-        this.addTruckIcon = page.locator('.mdi-plus');
-        this.selectATruckMenu = page.getByRole('textbox', { name: 'Select a truck' });
-        this.aditionalInfoField = page.getByRole('textbox', { name: 'Aditional info' });
-        this.divisonMenu = page.getByRole('textbox', { name: 'Select division' });
-        this.mileageField = page.getByRole('textbox', { name: 'Mileage' });
-        this.infoField = page.getByRole('textbox', { name: 'Info', exact: true });
-        this.statusMenu = page.getByRole('textbox', { name: 'Status' });
-        this.submitButton = page.getByRole('button', { name: 'Submit' });
-        this.truckOption = page.getByRole('option', { name: '11996 - FREIGHTLINER / CASCADIA / 2025', exact: true });
-        this.testCompanyOption = page.getByRole('option', { name: 'testcompany', exact: true });
-        this.statusColumn = page.locator('.status-column');
-        this.deleteIconInStatusMenu = page.getByText('Delete', { exact: true });
-        this.addTruckModal = page.locator('.v-dialog--active');
-        this.divisionColumn = page.locator('.division-column');
-        this.mileageColumn = page.locator('tr td:nth-child(4)');
-        this.availableInfoColumn = page.locator('tr td:nth-child(6)');
-        this.editTruckIconInStatusMenu = page.getByText('Edit truck', { exact: true });
-        this.outOfCompanyStatus = page.getByRole('option', { name: 'Out of company', exact: true });
-        this.transferIconInStatusMenu = page.getByText('Transfer', { exact: true });
-        this.transferMenu = page.locator('.v-input.v-input--hide-details');
-        this.transferOption = page.locator('.transfer-item');
-        this.transferButton = page.locator('.v-btn__content').filter({ hasText: 'Transfer' });
-        this.yardCard = page.locator('.v-data-table.v-data-table--dense');
+        this.addTruckIcon = this.page.locator('.mdi-plus');
+        this.selectATruckMenu = this.page.getByRole('textbox', { name: 'Select a truck' });
+        this.aditionalInfoField = this.page.getByRole('textbox', { name: 'Aditional info' });
+        this.divisonMenu = this.page.getByRole('textbox', { name: 'Select division' });
+        this.mileageField = this.page.getByRole('textbox', { name: 'Mileage' });
+        this.infoField = this.page.getByRole('textbox', { name: 'Info', exact: true });
+        this.statusMenu = this.page.getByRole('textbox', { name: 'Status' });
+        this.submitButton = this.page.getByRole('button', { name: 'Submit' });
+        this.truckOption = this.page.getByRole('option', { name: '11996 - FREIGHTLINER / CASCADIA / 2025', exact: true });
+        this.testCompanyOption = this.page.getByRole('option', { name: 'testcompany', exact: true });
+        this.statusColumn = this.page.locator('.status-column');
+        this.deleteIconInStatusMenu = this.page.getByText('Delete', { exact: true });
+        this.addTruckModal = this.page.locator('.v-dialog--active');
+        this.divisionColumn = this.page.locator('.division-column');
+        this.mileageColumn = this.page.locator('tr td:nth-child(4)');
+        this.availableInfoColumn = this.page.locator('tr td:nth-child(6)');
+        this.editTruckIconInStatusMenu = this.page.getByText('Edit truck', { exact: true });
+        this.outOfCompanyStatus = this.page.getByRole('option', { name: 'Out of company', exact: true });
+        this.transferIconInStatusMenu = this.page.getByText('Transfer', { exact: true });
+        this.transferMenu = this.page.locator('.v-input.v-input--hide-details');
+        this.transferOption = this.page.locator('.transfer-item');
+        this.transferButton = this.page.locator('.v-btn__content').filter({ hasText: 'Transfer' });
+        this.yardCard = this.page.locator('.v-data-table.v-data-table--dense');
     }
 
     async selectCompanyFromMenu(companyMenu: Locator, optionFromMenu: Locator) {

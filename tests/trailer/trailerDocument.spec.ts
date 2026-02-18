@@ -1,310 +1,206 @@
-import { test, expect, Page } from '@playwright/test';
+import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
-import { TrailersPage } from '../../page/trailer/trailer.page';
-import { TrailerDocumentPage } from '../../page/trailer/trailerDocument.page';
-import { TrailerInsertPermitBookPage } from '../../page/trailer/trailerInsertPermitBook.page';
-import { InsertPermitBookPage } from '../../page/Content/uploadDocuments.page';
-import { CompaniesPage } from '../../page/Content/companies.page';
+import { test } from '../fixtures/fixtures';
 
-test.use({ storageState: 'auth.json' });
+test.setTimeout(180000);
 
-let page: Page;
-
-test.beforeAll(async ({ browser }) => {
-    page = await browser.newPage();
-    const trailer = new TrailersPage(page);
-    const document = new TrailerDocumentPage(page);
-    await page.goto(Constants.truckUrl, { waitUntil: 'networkidle' });
-    await trailer.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await page.locator('.v-text-field input').fill(Constants.truckName);
-    await trailer.documentIcon.nth(9).waitFor({ state: 'hidden', timeout: 10000 });
-    await trailer.clickElement(trailer.documentIcon);
-    await page.waitForLoadState('networkidle');
-    await document.deleteAllItemsWithDeleteIconForDrivers();
-    await page.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
-    await page.waitForLoadState('networkidle');
-    await trailer.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await page.locator('.v-text-field input').nth(6).fill(Constants.trailerTest);
-    await page.waitForLoadState('networkidle');
-    const targetRow = page.locator('tr', {
-        has: page.locator('td:nth-child(2)', { hasText: Constants.trailerTest })
-    });
-    await targetRow.locator('.mdi-file-document-multiple').click();
-    await page.waitForLoadState('networkidle');
-    await document.deleteAllItemsWithDeleteIconForDrivers();
-    await page.goto(Constants.permitBookUrl, { waitUntil: 'networkidle' });
-    await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await page.locator('.v-text-field input').first().fill(Constants.testUser);
-    await document.eyeIcon.nth(9).waitFor({ state: 'hidden', timeout: 10000 });
-    await trailer.clickElement(document.eyeIcon);
-    await page.waitForLoadState('networkidle');
-    await document.deleteAllItemsWithDeleteIconForDrivers();
-    await page.goto(Constants.companiesUrl, { waitUntil: 'networkidle' });
-    await trailer.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await trailer.clickElement(trailer.documentIcon.first());
-    await document.deleteAllItemsWithDeleteIcon();
+test('Dokument moze da edituje status dokumenta u LessThan30', async ({ cleanUpSetupTrailerDocument, trailerDocumentSetup, trailerInsertPermitOverview, trailerOverview }) => {
+    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
+    await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
+    await trailerInsertPermitOverview.selectExpiringDateLessThan30Days();
+    await trailerInsertPermitOverview.page.waitForLoadState('networkidle');
+    await trailerInsertPermitOverview.clickElement(trailerInsertPermitOverview.savePermitButton);
+    await trailerInsertPermitOverview.loader.waitFor({ state: 'hidden', timeout: 10000 });
+    await trailerDocumentSetup.page.waitForLoadState('networkidle');
+    await expect(trailerDocumentSetup.statusColumn).toContainText(Constants.lessThan30Status);
+    await expect(trailerDocumentSetup.statusColumn).toHaveCSS('background-color', Constants.LessThan30StatusColor);
 });
 
-test.beforeEach(async ({ page }) => {
-    const upload = new TrailerInsertPermitBookPage(page);
-    const trailer = new TrailersPage(page);
-    const document2 = new TrailerDocumentPage(page);
-    await page.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
-    await trailer.clickElement(trailer.documentIcon.first());
-    await document2.deleteAllItemsWithDeleteIconForDrivers();
-    await trailer.clickElement(trailer.uploadIcon.first());
-    await page.waitForFunction(() => {
-        const el = document.querySelector('.v-dialog.v-dialog--active');
-        if (!el) return false;
-        const rect = el.getBoundingClientRect();
-        return rect.width === 500
-    }, { timeout: 10000 });
-    await upload.uploadDocument();
-    await page.getByRole('textbox', { name: 'Document name' }).isEnabled({ timeout: 10000 });
-    await upload.selectPastExpiringDate();
-    await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.registrationSubtype);
-    await page.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
-    await upload.clickElement(upload.savePermitButton);
-    await page.reload();
-    await page.waitForLoadState('networkidle');
+test('Dokument moze da edituje status dokumenta u valid', async ({ trailerDocumentSetup, trailerInsertPermitOverview, trailerOverview }) => {
+    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
+    await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
+    await trailerInsertPermitOverview.selectExpiringDateMoreThan30Days();
+    await trailerInsertPermitOverview.clickElement(trailerInsertPermitOverview.savePermitButton);
+    await trailerInsertPermitOverview.loader.waitFor({ state: 'hidden', timeout: 10000 });
+    await expect(trailerDocumentSetup.statusColumn).toContainText(Constants.validStatus);
+    await expect(trailerDocumentSetup.statusColumn).toHaveCSS('background-color', Constants.validStatusColor);
 });
 
-
-test('Dokument moze da edituje status dokumenta u LessThan30', async ({ page }) => {
-    const upload = new InsertPermitBookPage(page);
-    const document = new TrailerDocumentPage(page);
-    const trailer = new TrailersPage(page);
-    await trailer.clickElement(trailer.documentIcon.first());
-    await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await document.clickElement(document.pencilIcon);
-    await document.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
-    await upload.selectExpiringDateLessThan30Days();
-    await page.waitForLoadState('networkidle');
-    await upload.clickElement(upload.savePermitButton);
-    await upload.loader.waitFor({ state: 'hidden', timeout: 10000 });
-    await page.waitForLoadState('networkidle');
-    await expect(document.statusColumn).toContainText(Constants.lessThan30Status);
-    await expect(document.statusColumn).toHaveCSS('background-color', Constants.LessThan30StatusColor);
-});
-
-test('Dokument moze da edituje status dokumenta u valid', async ({ page }) => {
-    const upload = new InsertPermitBookPage(page);
-    const document = new TrailerDocumentPage(page);
-    const trailer = new TrailersPage(page);
-    await trailer.clickElement(trailer.documentIcon.first());
-    await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await document.clickElement(document.pencilIcon);
-    await document.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
-    await upload.selectExpiringDateMoreThan30Days();
-    await upload.clickElement(upload.savePermitButton);
-    await upload.loader.waitFor({ state: 'hidden', timeout: 10000 });
-    await expect(document.statusColumn).toContainText(Constants.validStatus);
-    await expect(document.statusColumn).toHaveCSS('background-color', Constants.validStatusColor);
-});
-
-test('Korisnik moze da doda novi dokument', async ({ page }) => {
-    const upload = new InsertPermitBookPage(page);
-    const document = new TrailerDocumentPage(page);
-    const trailer = new TrailersPage(page);
-    await trailer.clickElement(trailer.documentIcon.first());
-    await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await document.clickElement(document.pencilIcon);
-    await document.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
-    await document.uploadNewDocument();
-    const nameColumnInUpload = (await page.locator('.v-file-input__text').allInnerTexts())[0];
+test('Korisnik moze da doda novi dokument', async ({ trailerDocumentSetup, trailerInsertPermitOverview, trailerOverview }) => {
+    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
+    await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
+    await trailerDocumentSetup.uploadNewDocument();
+    const nameColumnInUpload = (await trailerInsertPermitOverview.page.locator('.v-file-input__text').allInnerTexts())[0];
     const textCompanyName = nameColumnInUpload.split(' ')[0];
-    await upload.clickElement(upload.savePermitButton);
-    await upload.loader.waitFor({ state: 'hidden', timeout: 10000 });
-    await expect(document.nameColumn).toContainText(textCompanyName);
+    await trailerInsertPermitOverview.clickElement(trailerInsertPermitOverview.savePermitButton);
+    await trailerInsertPermitOverview.loader.waitFor({ state: 'hidden', timeout: 10000 });
+    await expect(trailerDocumentSetup.nameColumn).toContainText(textCompanyName);
 });
 
-test('Korisnik ne moze da doda dokument veci od 10mb', async ({ page }) => {
-    const upload = new InsertPermitBookPage(page);
-    const document = new TrailerDocumentPage(page);
-    const trailer = new TrailersPage(page);
-    await trailer.clickElement(trailer.documentIcon.first());
-    await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await document.clickElement(document.pencilIcon);
-    await document.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
-    await document.uploadDocumentOver10MB();
-    await expect(upload.errorMessage.first()).toContainText('File is required and size should be less than 10 MB!');
+test('Korisnik ne moze da doda dokument veci od 10mb', async ({ trailerDocumentSetup, trailerInsertPermitOverview, trailerOverview }) => {
+    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
+    await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
+    await trailerDocumentSetup.uploadDocumentOver10MB();
+    await expect(trailerInsertPermitOverview.errorMessage.first()).toContainText('File is required and size should be less than 10 MB!');
 });
 
-test('Korisnik moze da promjeni subtype', async ({ page }) => {
-    const upload = new InsertPermitBookPage(page);
-    const document = new TrailerDocumentPage(page);
-    const trailer = new TrailersPage(page);
-    await trailer.clickElement(trailer.documentIcon.first());
-    await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await document.clickElement(document.pencilIcon);
-    await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.othersSubtype);
-    await upload.clickElement(upload.savePermitButton);
-    await upload.loader.waitFor({ state: 'hidden', timeout: 10000 });
-    await expect(document.subTypeColumn).toContainText(Constants.otherSubtype);
+test('Korisnik moze da promjeni subtype', async ({ trailerDocumentSetup, trailerInsertPermitOverview, trailerOverview }) => {
+    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
+    await trailerInsertPermitOverview.selectSubtypeFromMenu(trailerInsertPermitOverview.documentSubtypeField, trailerInsertPermitOverview.othersSubtype);
+    await trailerInsertPermitOverview.clickElement(trailerInsertPermitOverview.savePermitButton);
+    await trailerInsertPermitOverview.loader.waitFor({ state: 'hidden', timeout: 10000 });
+    await expect(trailerDocumentSetup.subTypeColumn).toContainText(Constants.otherSubtype);
 });
 
-test('Korisnik moze da otovori dokument na eye ikonicu', async ({ page }) => {
-    const document = new TrailerDocumentPage(page);
-    const trailer = new TrailersPage(page);
-    await trailer.clickElement(trailer.documentIcon.first());
-    await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await document.clickElement(document.eyeIcon);
-    await expect(document.titleInModal).toBeVisible();
-    await expect(document.titleInModal).toContainText('Preview');
+test('Korisnik moze da otovori dokument na eye ikonicu', async ({ trailerDocumentSetup, trailerOverview }) => {
+    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerDocumentSetup.clickElement(trailerDocumentSetup.eyeIcon);
+    await expect(trailerDocumentSetup.titleInModal).toBeVisible();
+    await expect(trailerDocumentSetup.titleInModal).toContainText('Preview');
 });
 
-test('Korisnik moze da otovori QR code modal', async ({ page }) => {
-    const document = new TrailerDocumentPage(page);
-    const trailer = new TrailersPage(page);
-    await trailer.clickElement(trailer.documentIcon.first());
-    await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await document.clickElement(document.qrCode);
-    await expect(document.titleInModal).toBeVisible();
-    await expect(document.titleInModal).toContainText('QR Code');
+test('Korisnik moze da otovori QR code modal', async ({ trailerDocumentSetup, trailerOverview }) => {
+    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerDocumentSetup.clickElement(trailerDocumentSetup.qrCode);
+    await expect(trailerDocumentSetup.titleInModal).toBeVisible();
+    await expect(trailerDocumentSetup.titleInModal).toContainText('QR Code');
 });
 
-test('Korisnik moze da prebaci dokument vozaca', async ({ page }) => {
-    const upload = new InsertPermitBookPage(page);
-    const document = new TrailerDocumentPage(page);
-    const trailer = new TrailersPage(page);
-    await trailer.clickElement(trailer.documentIcon.first());
-    await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await document.clickElement(document.pencilIcon);
-    await document.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
-    await upload.selectDocumentType(upload.documentTypeField, upload.driverType);
-    await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.othersSubtype);
-    await page.waitForLoadState('networkidle');
-    await upload.doc.last().waitFor({ state: 'visible', timeout: 10000 });
-    await upload.enterTruckNumber(upload.documentReferrerMenu.last(), Constants.testEmail, upload.driverOption);
-    await page.waitForLoadState('networkidle');
-    await upload.savePermitButton.click();
-    await upload.loader.waitFor({ state: 'detached' });
-    await page.goto(Constants.permitBookUrl, { waitUntil: 'networkidle' });
-    await page.waitForLoadState('networkidle');
-    await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await page.locator('.v-text-field__slot').first().click();
-    await page.locator('.v-text-field__slot').first().type(Constants.testUser);
-    await page.waitForLoadState('networkidle');
-    await upload.loader.waitFor({ state: 'hidden', timeout: 5000 });
-    const targetRow = page.locator('tr', {
-        has: page.locator('td:nth-child(3)', { hasText: Constants.testUser })
+test('Korisnik moze da prebaci dokument vozaca', async ({ trailerDocumentSetup, trailerInsertPermitOverview, trailerOverview }) => {
+    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
+    await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
+    await trailerInsertPermitOverview.selectDocumentType(trailerInsertPermitOverview.documentTypeField, trailerInsertPermitOverview.driverType);
+    await trailerInsertPermitOverview.selectSubtypeFromMenu(trailerInsertPermitOverview.documentSubtypeField, trailerInsertPermitOverview.othersSubtype);
+    await trailerInsertPermitOverview.page.waitForLoadState('networkidle', { timeout: 10000 });
+    await trailerInsertPermitOverview.doc.last().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerInsertPermitOverview.enterTruckNumber(trailerInsertPermitOverview.documentReferrerMenu.last(), Constants.testEmail, trailerInsertPermitOverview.driverOption);
+    await trailerInsertPermitOverview.page.waitForLoadState('networkidle', { timeout: 10000 });
+    await trailerInsertPermitOverview.savePermitButton.click();
+    await trailerInsertPermitOverview.loader.waitFor({ state: 'detached', timeout: 10000 });
+    await trailerInsertPermitOverview.page.goto(Constants.permitBookUrl, { waitUntil: 'networkidle' });
+    await trailerInsertPermitOverview.page.waitForLoadState('networkidle', { timeout: 10000 });
+    await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerInsertPermitOverview.page.locator('.v-text-field__slot').first().click();
+    await trailerInsertPermitOverview.page.locator('.v-text-field__slot').first().type(Constants.testUser);
+    await trailerInsertPermitOverview.page.waitForLoadState('networkidle');
+    await trailerInsertPermitOverview.loader.waitFor({ state: 'hidden', timeout: 5000 });
+    const targetRow = trailerInsertPermitOverview.page.locator('tr', {
+        has: trailerInsertPermitOverview.page.locator('td:nth-child(3)', { hasText: Constants.testUser })
     });
     await targetRow.locator('.mdi-eye').click();
-    await expect(document.statusColumn).toContainText(Constants.expiredStatus);
-    await expect(document.statusColumn).toHaveCSS('background-color', Constants.expiredStatusColor);
-    await expect(document.typeColumn).toContainText(Constants.driverType);
-    await expect(document.companyColumn).toContainText(Constants.testEmail);
-    await expect(document.subTypeColumn).toContainText(Constants.otherSubtype);
+    await expect(trailerDocumentSetup.statusColumn).toContainText(Constants.expiredStatus);
+    await expect(trailerDocumentSetup.statusColumn).toHaveCSS('background-color', Constants.expiredStatusColor);
+    await expect(trailerDocumentSetup.typeColumn).toContainText(Constants.driverType);
+    await expect(trailerDocumentSetup.companyColumn).toContainText(Constants.testEmail);
+    await expect(trailerDocumentSetup.subTypeColumn).toContainText(Constants.otherSubtype);
 });
 
-test('Dokument moze da se prebaci na Truck', async ({ page }) => {
-    const upload = new InsertPermitBookPage(page);
-    const document = new TrailerDocumentPage(page);
-    const trailer = new TrailersPage(page);
-    await trailer.clickElement(trailer.documentIcon.first());
-    await document.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await document.clickElement(document.pencilIcon);
-    await document.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
-    await upload.selectDocumentType(upload.documentTypeField, upload.truckType);
-    await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.registrationSubtype);
-    await upload.doc.last().waitFor({ state: 'visible', timeout: 10000 });
-    await upload.enterTruckNumber(upload.documentReferrerMenu.last(), Constants.truckName, upload.truckNumberFromMenu);
-    await page.waitForLoadState('networkidle');
-    await upload.savePermitButton.click();
-    await page.waitForLoadState('networkidle');
-    await page.goto(Constants.truckUrl, { waitUntil: 'networkidle' });
-    await trailer.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await page.locator('.v-text-field input').fill(Constants.truckName);
-    await trailer.documentIcon.nth(9).waitFor({ state: 'hidden', timeout: 10000 });
-    await trailer.clickElement(trailer.documentIcon);
-    await expect(document.statusColumn).toContainText(Constants.expiredStatus);
-    await expect(document.statusColumn).toHaveCSS('background-color', Constants.expiredStatusColor);
-    await expect(document.typeColumn).toContainText(Constants.truckType);
-    await expect(document.companyColumn).toContainText(Constants.truckName);
-    await expect(document.subTypeColumn).toContainText(Constants.registrationSubtype);
+test('Dokument moze da se prebaci na Truck', async ({ trailerDocumentSetup, insertPermitBookOverview, trailerOverview }) => {
+    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
+    await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
+    await insertPermitBookOverview.selectDocumentType(insertPermitBookOverview.documentTypeField, insertPermitBookOverview.truckType);
+    await insertPermitBookOverview.selectSubtypeFromMenu(insertPermitBookOverview.documentSubtypeField, insertPermitBookOverview.registrationSubtype);
+    await insertPermitBookOverview.doc.last().waitFor({ state: 'visible', timeout: 10000 });
+    await insertPermitBookOverview.enterTruckNumber(insertPermitBookOverview.documentReferrerMenu.last(), Constants.truckName, insertPermitBookOverview.truckNumberFromMenu);
+    await insertPermitBookOverview.page.waitForLoadState('networkidle');
+    await insertPermitBookOverview.savePermitButton.click();
+    await insertPermitBookOverview.page.waitForLoadState('networkidle');
+    await insertPermitBookOverview.page.goto(Constants.truckUrl, { waitUntil: 'networkidle' });
+    await trailerOverview.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerOverview.page.locator('.v-text-field input').fill(Constants.truckName);
+    await trailerOverview.documentIcon.nth(9).waitFor({ state: 'hidden', timeout: 10000 });
+    await trailerOverview.clickElement(trailerOverview.documentIcon);
+    await expect(trailerDocumentSetup.statusColumn).toContainText(Constants.expiredStatus);
+    await expect(trailerDocumentSetup.statusColumn).toHaveCSS('background-color', Constants.expiredStatusColor);
+    await expect(trailerDocumentSetup.typeColumn).toContainText(Constants.truckType);
+    await expect(trailerDocumentSetup.companyColumn).toContainText(Constants.truckName);
+    await expect(trailerDocumentSetup.subTypeColumn).toContainText(Constants.registrationSubtype);
 });
 
-test('Dokument moze da se prebaci na Company', async ({ page }) => {
-    const upload = new InsertPermitBookPage(page);
-    const document = new TrailerDocumentPage(page);
-    const trailer = new TrailersPage(page);
-    const compnay = new CompaniesPage(page);
-    await page.goto(Constants.companiesUrl, { waitUntil: 'networkidle' });
-    await compnay.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    const firtsCompanyName = (await compnay.companyNameColumn.first().allInnerTexts()).toString();
-    const firstComapnyOption = page.getByRole('option', { name: firtsCompanyName, exact: true });
-    await page.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
-    await trailer.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await trailer.documentIcon.first().click();
-    await document.clickElement(document.pencilIcon);
-    await document.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
-    await upload.selectDocumentType(upload.documentTypeField, upload.companyType);
-    await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.iftaSubtype);
-    await upload.doc.last().waitFor({ state: 'visible', timeout: 10000 });
-    await upload.enterTruckNumber(upload.documentReferrerMenu.last(), firtsCompanyName, firstComapnyOption);
-    await upload.savePermitButton.click();
-    await upload.loader.waitFor({ state: 'detached' });
-    await page.goto(Constants.companiesUrl, { waitUntil: 'networkidle' });
-    await page.waitForLoadState('networkidle');
-    await compnay.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await compnay.clickElement(compnay.documentIcon.first());
-    await expect(document.statusColumn).toContainText(Constants.expiredStatus);
-    await expect(document.statusColumn).toHaveCSS('background-color', Constants.expiredStatusColor);
-    await expect(document.typeColumn).toContainText(Constants.companyType);
-    await expect(document.companyColumn).toContainText(Constants.testCompany);
-    await expect(document.subTypeColumn).toContainText(Constants.iftaSubtype);
+test('Dokument moze da se prebaci na Company', async ({ trailerDocumentSetup, insertPermitBookOverview, trailerOverview, companiesPage }) => {
+    await companiesPage.page.goto(Constants.companiesUrl, { waitUntil: 'networkidle', timeout: 15000 });
+    await companiesPage.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    const firtsCompanyName = (await companiesPage.companyNameColumn.first().allInnerTexts()).toString();
+    const firstComapnyOption = companiesPage.page.getByRole('option', { name: firtsCompanyName, exact: true });
+    await trailerOverview.page.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
+    await trailerOverview.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerOverview.documentIcon.first().click();
+    await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
+    await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
+    await insertPermitBookOverview.selectDocumentType(insertPermitBookOverview.documentTypeField, insertPermitBookOverview.companyType);
+    await insertPermitBookOverview.selectSubtypeFromMenu(insertPermitBookOverview.documentSubtypeField, insertPermitBookOverview.iftaSubtype);
+    await insertPermitBookOverview.doc.last().waitFor({ state: 'visible', timeout: 10000 });
+    await insertPermitBookOverview.enterTruckNumber(insertPermitBookOverview.documentReferrerMenu.last(), firtsCompanyName, firstComapnyOption);
+    await insertPermitBookOverview.savePermitButton.click();
+    await insertPermitBookOverview.loader.waitFor({ state: 'detached', timeout: 10000 });
+    await companiesPage.page.goto(Constants.companiesUrl, { waitUntil: 'networkidle', timeout: 15000 });
+    await companiesPage.page.waitForLoadState('networkidle');
+    await companiesPage.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await companiesPage.clickElement(companiesPage.documentIcon.first());
+    await expect(trailerDocumentSetup.statusColumn).toContainText(Constants.expiredStatus);
+    await expect(trailerDocumentSetup.statusColumn).toHaveCSS('background-color', Constants.expiredStatusColor);
+    await expect(trailerDocumentSetup.typeColumn).toContainText(Constants.companyType);
+    await expect(trailerDocumentSetup.companyColumn).toContainText(Constants.testCompany);
+    await expect(trailerDocumentSetup.subTypeColumn).toContainText(Constants.iftaSubtype);
 });
 
-test('Korisnik moze da prebaci dokument na drugi trailer', async ({ page }) => {
-    const upload = new InsertPermitBookPage(page);
-    const trailer = new TrailersPage(page);
-    const document = new TrailerDocumentPage(page);
-    await trailer.clickElement(trailer.documentIcon.first());
-    await document.clickElement(document.pencilIcon);
-    await document.changeFileButton.waitFor({ state: 'visible', timeout: 10000 });
-    await upload.enterSecondTruckNumber(upload.documentReferrerMenu.last(), Constants.secondTrailerName, upload.secondTrailerNumberFromMenu);
-    await page.waitForLoadState('networkidle');
-    await page.waitForTimeout(1000);
-    await upload.savePermitButton.click();
-    await upload.loader.waitFor({ state: 'detached' });
-    await page.mouse.click(10, 10);
-    await trailer.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await page.waitForLoadState('networkidle');
-    await page.locator('.v-text-field input').nth(6).fill(Constants.secondTrailerName);
-    const targetRow = page.locator('tr', {
-        has: page.locator('td:nth-child(2)', { hasText: Constants.secondTrailerName })
+test('Korisnik moze da prebaci dokument na drugi trailer', async ({ trailerDocumentSetup, insertPermitBookOverview, trailerOverview }) => {
+    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
+    await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 10000 });
+    await insertPermitBookOverview.enterSecondTruckNumber(insertPermitBookOverview.documentReferrerMenu.last(), Constants.secondTrailerName, insertPermitBookOverview.secondTrailerNumberFromMenu);
+    await insertPermitBookOverview.page.waitForLoadState('networkidle', { timeout: 10000 });
+    await insertPermitBookOverview.page.waitForTimeout(1000);
+    await insertPermitBookOverview.savePermitButton.click();
+    await insertPermitBookOverview.loader.waitFor({ state: 'detached', timeout: 10000 });
+    await trailerOverview.page.mouse.click(10, 10);
+    await trailerOverview.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerOverview.page.waitForLoadState('networkidle', { timeout: 10000 });
+    await trailerOverview.page.locator('.v-text-field input').nth(6).fill(Constants.secondTrailerName);
+    const targetRow = trailerOverview.page.locator('tr', {
+        has: trailerOverview.page.locator('td:nth-child(2)', { hasText: Constants.secondTrailerName })
     });
-    await page.waitForLoadState('networkidle');
+    await trailerOverview.page.waitForLoadState('networkidle');
     await targetRow.locator('.mdi-file-document-multiple').click();
-    await expect(document.statusColumn.first()).toContainText(Constants.expiredStatus);
-    await expect(document.statusColumn.first()).toHaveCSS('background-color', Constants.expiredStatusColor);
-    await expect(document.typeColumn.first()).toContainText(Constants.trailerType);
-    await expect(document.companyColumn.first()).toContainText(Constants.secondTrailerName);
+    await expect(trailerDocumentSetup.statusColumn.first()).toContainText(Constants.expiredStatus);
+    await expect(trailerDocumentSetup.statusColumn.first()).toHaveCSS('background-color', Constants.expiredStatusColor);
+    await expect(trailerDocumentSetup.typeColumn.first()).toContainText(Constants.trailerType);
+    await expect(trailerDocumentSetup.companyColumn.first()).toContainText(Constants.secondTrailerName);
 });
 
-test('Document subtype polje je obavezno kada korisnik mijenja type', async ({ page }) => {
-    const upload = new InsertPermitBookPage(page);
-    const document = new TrailerDocumentPage(page);
-    const trailer = new TrailersPage(page);
-    await trailer.clickElement(trailer.documentIcon.first());
-    await document.eyeIcon.first().waitFor({ state: 'visible' });
-    await document.clickElement(document.pencilIcon);
-    await document.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
-    await upload.selectDocumentType(upload.documentTypeField, upload.truckType);
-    await upload.savePermitButton.click();
-    await expect(page.locator('.v-input.v-input--has-state.theme--light')).toContainText('Value is required');
+test('Document subtype polje je obavezno kada korisnik mijenja type', async ({ trailerDocumentSetup, insertPermitBookOverview, trailerOverview }) => {
+    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible' });
+    await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
+    await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
+    await insertPermitBookOverview.selectDocumentType(insertPermitBookOverview.documentTypeField, insertPermitBookOverview.truckType);
+    await insertPermitBookOverview.savePermitButton.click();
+    await expect(trailerDocumentSetup.page.locator('.v-input.v-input--has-state.theme--light')).toContainText('Value is required');
 });
 
-test('Document referrer polje je obavezno kada korisnik mijenja type', async ({ page }) => {
-    const upload = new InsertPermitBookPage(page);
-    const document = new TrailerDocumentPage(page);
-    const trailer = new TrailersPage(page);
-    await trailer.clickElement(trailer.documentIcon.first());
-    await document.eyeIcon.first().waitFor({ state: 'visible' });
-    await document.clickElement(document.pencilIcon);
-    await document.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
-    await upload.selectDocumentType(upload.documentTypeField, upload.truckType);
-    await upload.selectSubtypeFromMenu(upload.documentSubtypeField, upload.registrationSubtype);
-    await upload.savePermitButton.click();
-    await expect(page.locator('text=Value is required').first()).toBeVisible();
+test('Document referrer polje je obavezno kada korisnik mijenja type', async ({ trailerDocumentSetup, insertPermitBookOverview, trailerOverview }) => {
+    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible' });
+    await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
+    await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
+    await insertPermitBookOverview.selectDocumentType(insertPermitBookOverview.documentTypeField, insertPermitBookOverview.truckType);
+    await insertPermitBookOverview.selectSubtypeFromMenu(insertPermitBookOverview.documentSubtypeField, insertPermitBookOverview.registrationSubtype);
+    await insertPermitBookOverview.savePermitButton.click();
+    await expect(trailerDocumentSetup.page.locator('text=Value is required').first()).toBeVisible();
 });

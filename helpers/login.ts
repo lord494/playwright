@@ -112,8 +112,8 @@ export class Login {
     await this.page.goto('https://staging.superegoholding.app/login', { timeout: 60000 });
     await this.page.getByRole('textbox', { name: 'Login' }).fill(email);
     await this.page.getByRole('textbox', { name: 'Password' }).fill(password);
+    await this.page.waitForTimeout(1000);
     await this.page.getByRole('button', { name: 'Login' }).click();
-    await this.page.waitForLoadState('networkidle');
     await this.page.waitForTimeout(5000);
 
     if (this.page.url().includes('/otp-validate')) {

@@ -5,7 +5,7 @@ import { EditAndWriteReview } from '../../page/shop/editAndWriteReview.page';
 import { AddShopPage } from '../../page/shop/addShop.page';
 import { ContactsPage } from '../../page/contacts/contactsOverview.page';
 import { AddContactsPage } from '../../page/contacts/addContact.page';
-import { generateRandomString, get6RandomNumber, waitForPrebookLoads } from '../../helpers/dateUtilis';
+import { generateRandomString, get17RandomNumbers, get6RandomNumber, waitForPrebookLoads } from '../../helpers/dateUtilis';
 import { BoardsPage } from '../../page/Content/boards.page';
 import { CompaniesPage } from '../../page/Content/companies.page';
 import { DocumentPage } from '../../page/Content/documentModal.page';
@@ -42,6 +42,11 @@ import { InviteAddEditModalPage } from '../../page/userManagement/users/inviteAd
 import { UsersPage } from '../../page/userManagement/users/users.page';
 import { ThirdPartyPage } from '../../page/thirdParty/thirdPartyOverview.page';
 import { AddThirdParty } from '../../page/thirdParty/addThirdParty.page';
+import { AddTrailersPage } from '../../page/trailer/addTrailer.page';
+import { EditTrailersPage } from '../../page/trailer/editTrailer.page';
+import { TrailerInsertPermitBookPage } from '../../page/trailer/trailerInsertPermitBook.page';
+import { AvailableTrailersPage } from '../../page/trailer/availableTrailer.page';
+import { AddAvailableTrailersPage } from '../../page/trailer/addAvailableTrailer.page';
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -107,7 +112,20 @@ export const test = base.extend<{
     recruitmentOverview: RecrutimentPage;
     thirdPartySetup: ThirdPartyPage;
     addThirdParty: AddThirdParty;
-
+    trailerOverviewSetup: TrailersPage;
+    trailerOverview: TrailersPage;
+    addTrailer: AddTrailersPage;
+    editTrailerSetup: AddTrailersPage;
+    editTrailer: EditTrailersPage;
+    insertPermitTrailerSetup: TrailerInsertPermitBookPage;
+    cleanUpSetupTrailerDocument: Page;
+    trailerDocumentSetup: TrailerDocumentPage;
+    trailerInsertPermitOverview: TrailerInsertPermitBookPage;
+    insertPermitBookOverview: InsertPermitBookPage;
+    availableTrailerSetup: AvailableTrailersPage;
+    addAvailableTrailer: AddAvailableTrailersPage;
+    editAvailableTrailerSetup: EditTrailersPage;
+    availableTrailer: AvailableTrailersPage;
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -687,5 +705,170 @@ export const test = base.extend<{
     addThirdParty: async ({ loggedPage }, use) => {
         const addThirdParty = new AddThirdParty(loggedPage);
         await use(addThirdParty);
+    },
+
+    trailerOverviewSetup: async ({ loggedPage }, use) => {
+        const trailerOverviewSetup = new TrailersPage(loggedPage);
+        await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 1000 });
+        await use(trailerOverviewSetup);
+    },
+
+    trailerOverview: async ({ loggedPage }, use) => {
+        const trailerOverview = new TrailersPage(loggedPage);
+        await use(trailerOverview);
+    },
+
+    addTrailer: async ({ loggedPage }, use) => {
+        const addTrailerSetup = new AddTrailersPage(loggedPage);
+        await use(addTrailerSetup);
+    },
+
+    editTrailerSetup: async ({ loggedPage }, use) => {
+        const trailerOverviewSetup = new TrailersPage(loggedPage);
+        const editTrailerSetup = new AddTrailersPage(loggedPage);
+        await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 1000 });
+        await trailerOverviewSetup.clickElement(trailerOverviewSetup.addButton);
+        await loggedPage.waitForLoadState('networkidle');
+        const trailerNumber = get6RandomNumber().join('');
+        await editTrailerSetup.fillTrailerNumber(editTrailerSetup.trailerNumber, trailerNumber);
+        await editTrailerSetup.selectTrailerType(editTrailerSetup.trailertype, editTrailerSetup.dryVanType);
+        await editTrailerSetup.selectTrailerYear(editTrailerSetup.trailerYear, editTrailerSetup.year2002);
+        await editTrailerSetup.selectPickUpDate(editTrailerSetup.pickUpDate, editTrailerSetup.currentDate);
+        await editTrailerSetup.selectDealerhip(editTrailerSetup.dealership, editTrailerSetup.kemonipexDealreship);
+        await editTrailerSetup.selectTrailerMake(editTrailerSetup.trailerMake, editTrailerSetup.trailerMakeOption);
+        const randomNumberString = get17RandomNumbers().join('');
+        await editTrailerSetup.fillVinNumber(editTrailerSetup.vinNumber, randomNumberString);
+        await editTrailerSetup.clickSaveButton();
+        await editTrailerSetup.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
+        await loggedPage.waitForLoadState('networkidle');
+        await use(editTrailerSetup);
+    },
+
+    editTrailer: async ({ loggedPage }, use) => {
+        const editTrailer = new EditTrailersPage(loggedPage);
+        await use(editTrailer);
+    },
+
+    insertPermitTrailerSetup: async ({ loggedPage }, use) => {
+        const trailer = new TrailersPage(loggedPage);
+        const document = new TrailerDocumentPage(loggedPage);
+        const insertPermit = new TrailerInsertPermitBookPage(loggedPage)
+        await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await trailer.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        await trailer.clickElement(trailer.documentIcon.first());
+        await document.deleteAllItemsWithDeleteIcon();
+        await use(insertPermit);
+    },
+
+    cleanUpSetupTrailerDocument: async ({ loggedPage, trailerOverview, trailerDocument }, use) => {
+        await loggedPage.goto(Constants.truckUrl, { waitUntil: 'networkidle' });
+        await trailerOverview.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        await loggedPage.locator('.v-text-field input').fill(Constants.truckName);
+        await trailerOverview.documentIcon.nth(9).waitFor({ state: 'hidden', timeout: 10000 });
+        await trailerOverview.clickElement(trailerOverview.documentIcon);
+        await loggedPage.waitForLoadState('networkidle');
+        await trailerDocument.deleteAllItemsWithDeleteIconForDrivers();
+        await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
+        await loggedPage.waitForLoadState('networkidle');
+        await trailerOverview.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        await loggedPage.locator('.v-text-field input').nth(6).fill(Constants.trailerTest);
+        await loggedPage.waitForLoadState('networkidle');
+        const targetRow = loggedPage.locator('tr', {
+            has: loggedPage.locator('td:nth-child(2)', { hasText: Constants.trailerTest })
+        });
+        await targetRow.locator('.mdi-file-document-multiple').click();
+        await loggedPage.waitForLoadState('networkidle');
+        await trailerDocument.deleteAllItemsWithDeleteIconForDrivers();
+        await loggedPage.goto(Constants.permitBookUrl, { waitUntil: 'networkidle' });
+        await trailerDocument.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        await loggedPage.locator('.v-text-field input').first().fill(Constants.testUser);
+        await trailerDocument.eyeIcon.nth(9).waitFor({ state: 'hidden', timeout: 10000 });
+        await trailerOverview.clickElement(trailerDocument.eyeIcon);
+        await loggedPage.waitForLoadState('networkidle');
+        await trailerDocument.deleteAllItemsWithDeleteIconForDrivers();
+        await loggedPage.goto(Constants.companiesUrl, { waitUntil: 'networkidle' });
+        await trailerOverview.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+        await trailerDocument.deleteAllItemsWithDeleteIcon();
+        await use(loggedPage);
+    },
+
+    trailerInsertPermitOverview: async ({ loggedPage }, use) => {
+        const trailerInsertPermitOverview = new TrailerInsertPermitBookPage(loggedPage);
+        await use(trailerInsertPermitOverview);
+    },
+
+    insertPermitBookOverview: async ({ loggedPage }, use) => {
+        const insertPermitBookOverview = new InsertPermitBookPage(loggedPage);
+        await use(insertPermitBookOverview);
+    },
+
+    trailerDocumentSetup: async ({ loggedPage, trailerOverview, trailerInsertPermitOverview, trailerDocument }, use) => {
+        await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
+        await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+        await trailerDocument.deleteAllItemsWithDeleteIconForDrivers();
+        await trailerOverview.clickElement(trailerOverview.uploadIcon.first());
+        await loggedPage.waitForFunction(() => {
+            const el = document.querySelector('.v-dialog.v-dialog--active');
+            if (!el) return false;
+            const rect = el.getBoundingClientRect();
+            return rect.width === 500
+        }, { timeout: 10000 });
+        await trailerInsertPermitOverview.uploadDocument();
+        await loggedPage.getByRole('textbox', { name: 'Document name' }).isEnabled({ timeout: 10000 });
+        await trailerInsertPermitOverview.selectPastExpiringDate();
+        await trailerInsertPermitOverview.selectSubtypeFromMenu(trailerInsertPermitOverview.documentSubtypeField, trailerInsertPermitOverview.registrationSubtype);
+        await loggedPage.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
+        await trailerInsertPermitOverview.clickElement(trailerInsertPermitOverview.savePermitButton);
+        await loggedPage.reload();
+        await loggedPage.waitForLoadState('networkidle');
+        await use(trailerDocument);
+    },
+
+    availableTrailerSetup: async ({ loggedPage }, use) => {
+        const availableTrailer = new AvailableTrailersPage(loggedPage);
+        await loggedPage.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await use(availableTrailer);
+    },
+
+    addAvailableTrailer: async ({ loggedPage }, use) => {
+        const addAvailableTrailer = new AddAvailableTrailersPage(loggedPage);
+        await use(addAvailableTrailer);
+    },
+
+    editAvailableTrailerSetup: async ({ loggedPage, availableTrailer, addTrailer }, use) => {
+        const editAvailableTrailerSetup = new EditTrailersPage(loggedPage);
+        await loggedPage.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await availableTrailer.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+        await availableTrailer.clickElement(availableTrailer.addButton);
+        const trailerNumber = get6RandomNumber().join('');
+        await addTrailer.fillTrailerNumber(addTrailer.trailerNumber, trailerNumber);
+        await addTrailer.selectTrailerType(addTrailer.trailertype.last(), addTrailer.dryVanType);
+        await addTrailer.selectTrailerYear(addTrailer.trailerYear, addTrailer.year2002);
+        await addTrailer.selectPickUpDate(addTrailer.pickUpDate, addTrailer.currentDate);
+        await addTrailer.selectDealerhip(addTrailer.dealership, addTrailer.kemonipexDealreship);
+        await addTrailer.selectTrailerMake(addTrailer.trailerMake.last(), addTrailer.trailerMakeOption);
+        const randomNumberString = get17RandomNumbers().join('');
+        await addTrailer.fillVinNumber(addTrailer.vinNumber, randomNumberString);
+        await addTrailer.clickSaveButton();
+        await addTrailer.page.locator('.v-progress-linear__background.primary').waitFor({ state: 'hidden', timeout: 10000 });
+        await addTrailer.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
+        await addTrailer.page.waitForLoadState('networkidle', { timeout: 5000 });
+        await availableTrailer.enterTrailerName(availableTrailer.trailerNumberFilter, trailerNumber);
+        await addTrailer.page.waitForLoadState('networkidle', { timeout: 5000 });
+        const trailerCell = addTrailer.page.locator(`td:nth-child(1):has-text("${trailerNumber}")`);
+        await expect(trailerCell).toBeVisible({ timeout: 10000 });
+        const row = trailerCell.locator('xpath=ancestor::tr');
+        const pencil = row.locator('.mdi.mdi-pencil');
+        await expect(pencil).toBeVisible({ timeout: 10000 });
+        await pencil.click();
+        await use(editAvailableTrailerSetup);
+    },
+
+    availableTrailer: async ({ loggedPage }, use) => {
+        const availableTrailer = new AvailableTrailersPage(loggedPage);
+        await use(availableTrailer);
     },
 });

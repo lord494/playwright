@@ -102,43 +102,53 @@ export class EditTrailersPage extends BasePage {
 
     async selectRentOrBuy(rentBuyMenu: Locator, rentBuyOption: Locator) {
         await this.selectFromMenu(rentBuyMenu, rentBuyOption);
+        await this.page.waitForLoadState('networkidle', { timeout: 5000 });
     }
 
     async selectCompany(companyField: Locator, company: Locator) {
         await this.selectFromMenu(companyField, company);
+        await this.page.waitForLoadState('networkidle', { timeout: 5000 });
     }
 
     async fillPhoneNumber(phoneField: Locator, phone: string) {
         await phoneField.clear();
         await this.fillInputField(phoneField, phone);
+        await this.page.waitForLoadState('networkidle', { timeout: 5000 });
     }
 
     async selectPickUpDate(pickUpDateField: Locator, date: Locator) {
         await this.clickElement(pickUpDateField);
         await this.selectFromMenu(pickUpDateField, date);
+        await this.page.waitForLoadState('networkidle', { timeout: 5000 });
     }
 
     async selectDot(dotField: Locator, date: Locator) {
         await this.selectFromMenu(dotField, date);
+        await this.page.waitForLoadState('networkidle', { timeout: 5000 });
     }
 
     async selectDriverState(driverStateField: Locator, state: Locator) {
         await this.selectFromMenu(driverStateField, state);
+        await this.page.waitForLoadState('networkidle', { timeout: 5000 });
     }
 
     async selectOwner(ownerField: Locator, owner: Locator) {
         await this.selectFromMenu(ownerField, owner);
+        await this.page.waitForLoadState('networkidle', { timeout: 5000 });
     }
 
     async selectStatus(statusField: Locator, status: Locator) {
         await this.selectFromMenu(statusField, status);
+        await this.page.waitForLoadState('networkidle', { timeout: 5000 });
     }
 
     async selectAvailability(availabilityField: Locator, availability: Locator) {
         await this.selectFromMenu(availabilityField, availability);
+        await this.page.waitForLoadState('networkidle', { timeout: 5000 });
     }
 
     async selectThirdParty(thirdPartyField: Locator, thirdParty: Locator) {
         await this.selectFromMenu(thirdPartyField, thirdParty);
+        await this.page.waitForLoadState('networkidle', { timeout: 5000 });
     }
 }

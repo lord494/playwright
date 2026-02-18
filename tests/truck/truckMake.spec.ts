@@ -6,7 +6,7 @@ test.use({ storageState: 'auth.json' });
 
 test.beforeEach(async ({ page }) => {
     const make = new TruckMakePage(page);
-    await page.goto(Constants.truckMakeUrl, { waitUntil: 'networkidle' });
+    await page.goto(Constants.truckMakeUrl);
     await make.makeNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
 });
 
@@ -18,7 +18,7 @@ test('Korisnik moze da doda Truck Make i da ga obrise', async ({ page }) => {
     await make.check(make.isActiveCheckbox);
     await make.clickAddButton();
     await make.addEditModal.waitFor({ state: "detached", timeout: 5000 });
-    await page.waitForLoadState('networkidle');
+    //await page.waitForLoadState('networkidle');
     await expect(make.makeNameColumn.last()).toContainText(Constants.makeName);
     await expect(make.noteColumn.last()).toContainText(Constants.noteFirst);
     await expect(make.isActiveColumn.last()).toContainText('YES');

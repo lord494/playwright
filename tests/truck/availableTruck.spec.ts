@@ -3,7 +3,9 @@ import { Constants } from '../../helpers/constants';
 import { AvailableTruckPage } from '../../page/truck/availableTruck.page';
 
 test.use({ storageState: 'auth.json' });
+
 const targetText = "11996 - FREIGHTLINER / CASCADIA / 2025 *Default note*";
+
 test.beforeEach(async ({ page }) => {
     const availableTruck = new AvailableTruckPage(page);
     await page.goto(Constants.availableTrukcUrl, { waitUntil: 'networkidle' });
