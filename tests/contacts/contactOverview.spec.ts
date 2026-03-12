@@ -4,6 +4,7 @@ import { test } from '../fixtures/fixtures';
 
 test('Korisnik moze da pretrazuje Contacte po emailu', async ({ contactPage }) => {
     await contactPage.searchContact(contactPage.searchField, Constants.testEmail);
+    await contactPage.page.waitForLoadState('networkidle');
     const concatEmail = await contactPage.emailColumn.all();
     for (let i = 0; i < concatEmail.length; i++) {
         const text = await contactPage.emailColumn.nth(i).innerText();
@@ -12,6 +13,7 @@ test('Korisnik moze da pretrazuje Contacte po emailu', async ({ contactPage }) =
 });
 test('Korisnik moze da pretrazuje Contacte po imenu', async ({ contactPage }) => {
     await contactPage.searchContact(contactPage.searchField, Constants.driverName);
+    await contactPage.page.waitForLoadState('networkidle');
     const concatName = await contactPage.nameColumn.all();
     for (let i = 0; i < concatName.length; i++) {
         const text = await contactPage.nameColumn.nth(i).innerText();
