@@ -13,4 +13,4 @@ RUN npm install
 COPY . .
 
 # pokretanje testova
-CMD ["npx", "playwright", "test", "tests/contacts/addContact.spec.ts"]
+CMD ["npx", "playwright", "test"]
