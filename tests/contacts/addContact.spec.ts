@@ -2,7 +2,7 @@ import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { generateRandomString } from '../../helpers/dateUtilis';
 import { test } from '../fixtures/fixtures';
-//test23
+
 test('Korisnik moze da doda Contact i da ga obrise', async ({ addContactPage, contactPage }) => {
     addContactPage.page.on('dialog', async (dialog) => {
         await dialog.accept();
