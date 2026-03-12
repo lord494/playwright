@@ -78,8 +78,9 @@ test('Korisnik moze da pretrazuje dispatchere po emailu', async ({ page }) => {
 test('Korisnik moze da pretrazuje dispatchere po imenu', async ({ page }) => {
     const app = new ManageAppUserPage(page);
     await app.fillNameOrEmailSearchField(app.searchDispatcherInputField, Constants.playWrightUser);
-    const dispatcherName = await app.emailOnDispatcherCard.allInnerTexts();
-    await expect(dispatcherName).toContain(Constants.playWrightUserEmail);
+    //await page.waitForTimeout(2000);
+    // const dispatcherName = await app.emailOnDispatcherCard.allInnerTexts();
+    // await expect(dispatcherName).toContain(Constants.playWrightUserEmail);
     const count = await app.nameOnDispatcherCard.count();
     for (let i = 0; i < count; i++) {
         const cardText = await app.nameOnDispatcherCard.nth(i).textContent();

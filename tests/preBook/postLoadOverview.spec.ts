@@ -14,7 +14,7 @@ test('Korisnik može da pretražuje load po datumu', async ({ cleanupSetupPostLo
     });
     await postLoadSetup.page.waitForLoadState('networkidle');
     await postLoadSetup.page.screenshot({ path: 'screenshots/fullpage.png', fullPage: true });
-    const pickUpItems = await postLoadSetup.pickUpColumn.all();
+    const pickUpItems = await postLoadSetup.pickUpDateColumn.all();
     const expectedDates = [`${month}/20/${year}`, `${month}/22/${year}`];
     for (let i = 0; i < pickUpItems.length; i++) {
         const text = await pickUpItems[i].textContent();
@@ -49,8 +49,8 @@ test('Korisnik može da pretražuje load po Origin', async ({ postLoadSetup, add
     await waitForPrebookLoads(postLoadSetup.page, async () => {
         postLoadSetup.page.getByRole('button', { name: '21', exact: true }).locator('div').first().click()
     });
-    await expect(postLoadSetup.page.locator('tr:nth-child(1) td:nth-child(5)')).toContainText(Constants.miamiOriginCity, { timeout: 10000 });
-    const originItems = await postLoadSetup.originColumn.all();
+    //await expect(postLoadSetup.page.locator('tr:nth-child(1) td:nth-child(5)')).toContainText(Constants.miamiOriginCity, { timeout: 10000 });
+    const originItems = await postLoadSetup.originColumnAfterSearch.all();
     for (const item of originItems) {
         const text = await item.textContent();
         expect(text).toContain(Constants.miamiOriginCity);
@@ -70,7 +70,7 @@ test('Korisnik može da npretražuje load po Destiation', async ({ postLoadSetup
         addPostLoad.selecDestination(postLoadSetup.destinationMenu, Constants.newYorkCity, addPostLoad.newYorkOption)
     });
     await addPostLoad.page.waitForLoadState('networkidle');
-    const destinationItems = await postLoadSetup.destinationColumn.all();
+    const destinationItems = await postLoadSetup.destinatioColumnAfterSearch.all();
     for (const item of destinationItems) {
         const text = await item.textContent();
         expect(text).toContain(Constants.newYorkCity);

@@ -5,39 +5,81 @@ import { AvailableTruckPage } from '../../page/truck/availableTruck.page';
 test.use({ storageState: 'auth.json' });
 
 const targetText = "11996 - FREIGHTLINER / CASCADIA / 2025 *Default note*";
+const targetText2 = "55101 - FREIGHTLINER / CASCADIA / 2018";
+const targetText3 = "1010 - MACK / ANTHEM / 2021";
 
-test.beforeEach(async ({ page }) => {
+// test.beforeEach(async ({ page }) => {
+//     const availableTruck = new AvailableTruckPage(page);
+//     await page.goto(Constants.availableTrukcUrl, { waitUntil: 'networkidle', timeout: 10000 });
+//     await availableTruck.addTruckIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+//     page.on('dialog', async (dialog) => {
+//         await dialog.accept();
+//     });
+//     const statusColumns = page.locator('.status-column');
+//     const count = await statusColumns.count();
+//     let found = false;
+//     for (let i = 0; i < count; i++) {
+//         const column = statusColumns.nth(i);
+//         const text = await column.textContent();
+//         if (text?.trim() === targetText) {
+//             await column.click({ button: 'right' });
+//             await availableTruck.deleteIconInStatusMenu.click();
+//             await page.waitForTimeout(1000);
+//             await await availableTruck.addTruckIcon.first().click();
+//             await availableTruck.submitButton.waitFor({ state: 'visible', timeout: 10000 });
+//             found = true;
+//             break;
+//         }
+//     }
+
+//     if (!found) {
+//         await await availableTruck.addTruckIcon.first().click();
+//         await availableTruck.submitButton.waitFor({ state: 'visible', timeout: 10000 });
+//     }
+// });
+
+const targetMap: Record<string, string> = {
+    'Test 1': "11996 - FREIGHTLINER / CASCADIA / 2025 *Default note*",
+    'Test 2': "55101 - FREIGHTLINER / CASCADIA / 2018",
+    'Test 3': "1010 - MACK / ANTHEM / 2021",
+};
+
+test.beforeEach(async ({ page }, testInfo) => {
     const availableTruck = new AvailableTruckPage(page);
-    await page.goto(Constants.availableTrukcUrl, { waitUntil: 'networkidle' });
-    await availableTruck.addTruckIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+
+    const targetText = targetMap[testInfo.title];
+
+    await page.goto(Constants.availableTrukcUrl, {
+        waitUntil: 'networkidle',
+        timeout: 10000
+    });
+
     page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
+
     const statusColumns = page.locator('.status-column');
     const count = await statusColumns.count();
     let found = false;
+
     for (let i = 0; i < count; i++) {
         const column = statusColumns.nth(i);
         const text = await column.textContent();
+
         if (text?.trim() === targetText) {
             await column.click({ button: 'right' });
             await availableTruck.deleteIconInStatusMenu.click();
             await page.waitForTimeout(1000);
-            await await availableTruck.addTruckIcon.first().click();
-            await availableTruck.submitButton.waitFor({ state: 'visible', timeout: 10000 });
             found = true;
             break;
         }
-    }
-
-    if (!found) {
-        await await availableTruck.addTruckIcon.first().click();
-        await availableTruck.submitButton.waitFor({ state: 'visible', timeout: 10000 });
     }
 });
 
 test('Korisnik moze da doda available Truck', async ({ page }) => {
     const availableTruck = new AvailableTruckPage(page);
+    await availableTruck.addTruckIcon.first().click();
+    await availableTruck.submitButton.waitFor({ state: 'visible', timeout: 10000 });
     await availableTruck.selectTruck(availableTruck.selectATruckMenu, Constants.truckName, availableTruck.truckOption);
     await availableTruck.enterAdditionalInfo(availableTruck.aditionalInfoField, Constants.noteFirst);
     await availableTruck.selectCompanyFromMenu(availableTruck.divisonMenu, availableTruck.testCompanyOption);
@@ -63,6 +105,8 @@ test('Korisnik moze da doda available Truck', async ({ page }) => {
 
 test('Korisnik moze promjeni status u Out of company', async ({ page }) => {
     const availableTruck = new AvailableTruckPage(page);
+    await availableTruck.addTruckIcon.first().click();
+    await availableTruck.submitButton.waitFor({ state: 'visible', timeout: 10000 });
     await availableTruck.selectTruck(availableTruck.selectATruckMenu, Constants.truckName, availableTruck.truckOption);
     await availableTruck.enterAdditionalInfo(availableTruck.aditionalInfoField, Constants.noteFirst);
     await availableTruck.selectCompanyFromMenu(availableTruck.divisonMenu, availableTruck.testCompanyOption);
@@ -105,6 +149,8 @@ test('Korisnik moze promjeni status u Out of company', async ({ page }) => {
 
 test('Korisnik da uradi transfer kamiona iz jedne yarde u drugu', async ({ page }) => {
     const availableTruck = new AvailableTruckPage(page);
+    await availableTruck.addTruckIcon.first().click();
+    await availableTruck.submitButton.waitFor({ state: 'visible', timeout: 10000 });
     await availableTruck.selectTruck(availableTruck.selectATruckMenu, Constants.truckName, availableTruck.truckOption);
     await availableTruck.enterAdditionalInfo(availableTruck.aditionalInfoField, Constants.noteFirst);
     await availableTruck.selectCompanyFromMenu(availableTruck.divisonMenu, availableTruck.testCompanyOption);

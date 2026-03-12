@@ -58,6 +58,87 @@
 #           name: playwright-report
 #           path: playwright-report
 
+
+
+
+
+# name: Run Changed Playwright Tests
+
+# on:
+#   push:
+#     branches: [ main ]
+
+# jobs:
+#   run-playwright-tests:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v3
+#         with:
+#           fetch-depth: 0
+
+#       - name: Set up Node.js
+#         uses: actions/setup-node@v3
+#         with:
+#           node-version: 18
+
+#       - name: Install dependencies
+#         run: npm ci
+
+#       - name: Install Playwright browsers
+#         run: npx playwright install chromium
+
+#       - name: Detect changed folders and map to test dirs
+#         id: detect
+#         run: |
+#           echo "Detecting changes..."
+
+#           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+#           echo "Changed files:"
+#           echo "$CHANGED_FILES"
+
+#           TEST_DIRS_SET=()
+
+#           for file in $CHANGED_FILES; do
+#             # Ako je fajl u page/<feature>/...
+#             if [[ "$file" == page/*/* ]]; then
+#               feature=$(echo "$file" | cut -d/ -f2)
+#               test_path="tests/$feature"
+#               if [ -d "$test_path" ]; then
+#                 TEST_DIRS_SET+=("$test_path")
+#               fi
+#             fi
+
+#             # Ako je fajl direktno u tests/<feature>/...
+#             if [[ "$file" == tests/*/* ]]; then
+#               feature=$(echo "$file" | cut -d/ -f2)
+#               test_path="tests/$feature"
+#               if [ -d "$test_path" ]; then
+#                 TEST_DIRS_SET+=("$test_path")
+#               fi
+#             fi
+#           done
+
+#           # Ukloni duplikate i formatiraj kao string
+#           UNIQUE_TEST_DIRS=$(printf "%s\n" "${TEST_DIRS_SET[@]}" | sort -u | tr '\n' ' ')
+#           echo "TEST_DIRS=$UNIQUE_TEST_DIRS" >> $GITHUB_ENV
+#           echo "Will run tests in: $UNIQUE_TEST_DIRS"
+
+#       - name: Run matched Playwright tests
+#         if: env.TEST_DIRS != ''
+#         run: |
+#           echo "Running Playwright tests for changed areas: $TEST_DIRS"
+#           npx playwright test $TEST_DIRS
+
+#       - name: Upload Playwright HTML Report
+#         if: always()
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: playwright-report
+#           path: playwright-report
+
+
 name: Run Changed Playwright Tests
 
 on:
@@ -74,16 +155,8 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Install Playwright browsers
-        run: npx playwright install chromium
+      - name: Build Docker image
+        run: docker build -t playwright-tests .
 
       - name: Detect changed folders and map to test dirs
         id: detect
@@ -91,13 +164,12 @@ jobs:
           echo "Detecting changes..."
 
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-          echo "Changed files:"
+          echo "Changed files:" 
           echo "$CHANGED_FILES"
 
           TEST_DIRS_SET=()
 
           for file in $CHANGED_FILES; do
-            # Ako je fajl u page/<feature>/...
             if [[ "$file" == page/*/* ]]; then
               feature=$(echo "$file" | cut -d/ -f2)
               test_path="tests/$feature"
@@ -105,8 +177,6 @@ jobs:
                 TEST_DIRS_SET+=("$test_path")
               fi
             fi
-
-            # Ako je fajl direktno u tests/<feature>/...
             if [[ "$file" == tests/*/* ]]; then
               feature=$(echo "$file" | cut -d/ -f2)
               test_path="tests/$feature"
@@ -116,16 +186,15 @@ jobs:
             fi
           done
 
-          # Ukloni duplikate i formatiraj kao string
           UNIQUE_TEST_DIRS=$(printf "%s\n" "${TEST_DIRS_SET[@]}" | sort -u | tr '\n' ' ')
           echo "TEST_DIRS=$UNIQUE_TEST_DIRS" >> $GITHUB_ENV
           echo "Will run tests in: $UNIQUE_TEST_DIRS"
 
-      - name: Run matched Playwright tests
+      - name: Run matched Playwright tests in Docker
         if: env.TEST_DIRS != ''
         run: |
           echo "Running Playwright tests for changed areas: $TEST_DIRS"
-          npx playwright test $TEST_DIRS
+          docker run --rm -v ${{ github.workspace }}:/app playwright-tests npx playwright test $TEST_DIRS
 
       - name: Upload Playwright HTML Report
         if: always()
@@ -133,6 +202,3 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report
-
-
-

@@ -16,7 +16,9 @@ export class PostLoadsPage extends BasePage {
     readonly searchTrucksButton: Locator;
     readonly loadIdColumn: Locator;
     readonly originColumn: Locator;
+    readonly originColumnAfterSearch: Locator;
     readonly destinationColumn: Locator;
+    readonly destinatioColumnAfterSearch: Locator;
     readonly weightColumn: Locator;
     readonly rateColumn: Locator;
     readonly companyColumn: Locator;
@@ -26,6 +28,7 @@ export class PostLoadsPage extends BasePage {
     readonly suggestedRateColumn: Locator;
     readonly noteIcon: Locator;
     readonly pickUpColumn: Locator;
+    readonly pickUpDateColumn: Locator;
     readonly deliveryColumn: Locator;
     readonly dedicatedColumn: Locator;
     readonly trailerTypeColumn: Locator;
@@ -58,7 +61,9 @@ export class PostLoadsPage extends BasePage {
         this.searchTrucksButton = page.getByRole('link', { name: 'Search Trucks' });
         this.loadIdColumn = page.locator('tr td:nth-child(1)');
         this.originColumn = page.locator('tr td:nth-child(5)');
+        this.originColumnAfterSearch = page.locator('tr td:nth-child(5) .v-badge.v-badge--bordered.theme--light');
         this.destinationColumn = page.locator('tr td:nth-child(7)');
+        this.destinatioColumnAfterSearch = page.locator('tr td:nth-child(7) .v-badge.v-badge--bordered.theme--light');
         this.weightColumn = page.locator('tr td:nth-child(12)');
         this.rateColumn = page.locator('tr td:nth-child(13)');
         this.companyColumn = page.locator('tr td:nth-child(14)');
@@ -68,6 +73,7 @@ export class PostLoadsPage extends BasePage {
         this.suggestedRateColumn = page.locator('tr td:nth-child(21)');
         this.noteIcon = page.locator('.mdi.mdi-comment-text-outline');
         this.pickUpColumn = page.locator('tr td:nth-child(3)');
+        this.pickUpDateColumn = page.locator('tr td.text-start:nth-child(3)');
         this.deliveryColumn = page.locator('tr td:nth-child(8)');
         this.dedicatedColumn = page.locator('tr td:nth-child(9) i');
         this.trailerTypeColumn = page.locator('tr td:nth-child(11)');

@@ -13,6 +13,13 @@ test.beforeEach(async ({ page }) => {
     await truck.truckColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await truck.clickElement(truck.documentIcon.first());
     await document.deleteAllItemsWithDeleteIcon();
+    await page.mouse.click(10, 10);
+    await truck.clickElement(truck.documentIcon.nth(3));
+    await document.deleteAllItemsWithDeleteIcon();
+    await page.mouse.click(10, 10);
+    await truck.clickElement(truck.documentIcon.nth(5));
+    await document.deleteAllItemsWithDeleteIcon();
+    await page.mouse.click(10, 10);
 });
 
 test('Dodavanje dokumenta kojem je istekao datum vazenja', async ({ page }) => {
@@ -46,8 +53,8 @@ test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ page }
     const upload = new TruckInsertPermitBook(page);
     const truck = new TruckPage(page);
     const document = new TruckDocumentPage(page);
-    const firstTruckName = await truck.truckColumn.first().allInnerTexts();
-    await truck.clickElement(truck.uploadDocumentIcon.first());
+    const firstTruckName = await truck.truckColumn.nth(3).allInnerTexts();
+    await truck.clickElement(truck.uploadDocumentIcon.nth(3));
     await upload.uploadDocument();
     await page.waitForLoadState('networkidle');
     const formattedFutureDate = await upload.selectExpiringDateMoreThan30Days();
@@ -57,7 +64,7 @@ test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ page }
     await page.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
     await upload.clickElement(upload.savePermitButton);
     await page.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached' });
-    await truck.clickElement(truck.documentIcon.first());
+    await truck.clickElement(truck.documentIcon.nth(3));
     await upload.loader.waitFor({ state: 'hidden', timeout: 10000 });
     const actualDates = await document.dateExpiringColumn.allInnerTexts();
     await expect(actualDates).toContain(formattedFutureDate);
@@ -73,8 +80,8 @@ test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ page }) => 
     const upload = new TruckInsertPermitBook(page);
     const truck = new TruckPage(page);
     const document = new TruckDocumentPage(page);
-    const firstTruckName = await truck.truckColumn.first().allInnerTexts();
-    await truck.clickElement(truck.uploadDocumentIcon.first());
+    const firstTruckName = await truck.truckColumn.nth(5).allInnerTexts();
+    await truck.clickElement(truck.uploadDocumentIcon.nth(5));
     await upload.uploadDocument();
     await page.waitForLoadState('networkidle');
     const formattedFutureDate = await upload.selectExpiringDateLessThan30Days();
@@ -84,7 +91,7 @@ test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ page }) => 
     await page.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
     await upload.clickElement(upload.savePermitButton);
     await page.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached' });
-    await truck.clickElement(truck.documentIcon.first());
+    await truck.clickElement(truck.documentIcon.nth(5));
     await upload.loader.waitFor({ state: 'hidden', timeout: 10000 });
     const actualDates = await document.dateExpiringColumn.allInnerTexts();
     await expect(actualDates).toContain(formattedFutureDate.toString());

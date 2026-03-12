@@ -16,7 +16,7 @@ test('Korisnik moze da edituje usera popunjavanjem svih polja', async ({ page })
     const user = new UsersPage(page);
     const email = invite.generateUniqueEmail();
     await invite.editData(invite.emailField, email);
-    await invite.editData(invite.nameField, Constants.playWrightUser);
+    await invite.editData(invite.nameField, Constants.userName);
     await invite.selectOptionFromMenu(invite.roleField, invite.dispatcherRole);
     await invite.selectOptionFromMenu(invite.boardField, invite.b1Board);
     await invite.editData(invite.extField, Constants.extField);
@@ -32,7 +32,7 @@ test('Korisnik moze da edituje usera popunjavanjem svih polja', async ({ page })
     await user.searchUser(user.searchInputField, email);
     await user.emailColumn.nth(3).waitFor({ state: 'hidden', timeout: 5000 });
     await expect(user.emailColumn).toContainText(email);
-    await expect(user.userNameColumn).toContainText(Constants.playWrightUser);
+    await expect(user.userNameColumn).toContainText(Constants.userName);
     await expect(user.boardColumn).toContainText(Constants.firtsBoard);
     await expect(user.roleColumn).toContainText(Constants.dispatcher);
     await expect(user.orderColumn).toContainText(Constants.order);
