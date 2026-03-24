@@ -18,6 +18,15 @@ export class AddAvailableTrailersPage extends BasePage {
     readonly trailerMakeOption: Locator;
     readonly dialogBox: Locator;
     readonly errorMessage: Locator;
+    readonly signCheckbox: Locator;
+    readonly salesReadyCheckbox: Locator;
+    readonly assignDateField: Locator;
+    readonly paymentStartDateField: Locator;
+    readonly paymentStatusField: Locator;
+    readonly userMenu: Locator;
+    readonly paidOptionFromPaymentStatusMenu: Locator;
+    readonly unpaidOptionFromPaymentStatusMenu: Locator;
+    readonly testSalesOptionFromUserMenu: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -36,7 +45,16 @@ export class AddAvailableTrailersPage extends BasePage {
         this.kemonipexDealreship = page.getByRole('option', { name: 'KEMOINPEX', exact: true });
         this.trailerMakeOption = page.getByRole('option', { name: 'HYUNDAI', exact: true });
         this.dialogBox = page.locator('.v-dialog.v-dialog--active');
-        this.errorMessage = page.locator('.v-messages__message')
+        this.errorMessage = page.locator('.v-messages__message');
+        this.signCheckbox = page.locator('.v-label.theme--light').getByText('Sign', { exact: true });
+        this.salesReadyCheckbox = page.locator('.v-label.theme--light').getByText('Sales Ready', { exact: true });
+        this.assignDateField = page.getByRole('button', { name: 'Assign Date' });
+        this.paymentStartDateField = page.getByRole('button', { name: 'Payment Start Date' });
+        this.paymentStatusField = page.locator('.v-input__control').getByLabel('Payment Status', { exact: true });
+        this.userMenu = page.getByRole('textbox', { name: 'Sales User' });
+        this.paidOptionFromPaymentStatusMenu = page.getByRole('option', { name: 'Paid', exact: true });
+        this.unpaidOptionFromPaymentStatusMenu = page.getByRole('option', { name: 'Unpaid', exact: true });
+        this.testSalesOptionFromUserMenu = page.getByRole('option', { name: 'Test Sales', exact: true });
     }
 
     async fillTrailerNumber(field: Locator, trailerNumber: string) {
@@ -65,5 +83,18 @@ export class AddAvailableTrailersPage extends BasePage {
 
     async fillVinNumber(vinNumberField: Locator, vinNumber: string) {
         await this.fillInputField(vinNumberField, vinNumber);
+    }
+
+    async selectTodayDate(dateField: Locator, date: Locator) {
+        await dateField.click();
+        await date.click();
+    }
+
+    async selectPaymentStatus(paymentStatusField: Locator, status: Locator) {
+        await this.selectFromMenu(paymentStatusField, status);
+    }
+
+    async selectSalesUser(userMenu: Locator, user: string, userOption: Locator) {
+        await this.fillAndSelectFromMenu(userMenu, user, userOption);
     }
 }

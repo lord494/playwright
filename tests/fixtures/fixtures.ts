@@ -5,7 +5,7 @@ import { EditAndWriteReview } from '../../page/shop/editAndWriteReview.page';
 import { AddShopPage } from '../../page/shop/addShop.page';
 import { ContactsPage } from '../../page/contacts/contactsOverview.page';
 import { AddContactsPage } from '../../page/contacts/addContact.page';
-import { generateRandomString, get17RandomNumbers, get6RandomNumber, waitForPrebookLoads } from '../../helpers/dateUtilis';
+import { generateRandomString, get17RandomNumbers, get6RandomNumber, waitForPrebookLoads, getIconFromCell } from '../../helpers/dateUtilis';
 import { BoardsPage } from '../../page/Content/boards.page';
 import { CompaniesPage } from '../../page/Content/companies.page';
 import { DocumentPage } from '../../page/Content/documentModal.page';
@@ -47,6 +47,25 @@ import { EditTrailersPage } from '../../page/trailer/editTrailer.page';
 import { TrailerInsertPermitBookPage } from '../../page/trailer/trailerInsertPermitBook.page';
 import { AvailableTrailersPage } from '../../page/trailer/availableTrailer.page';
 import { AddAvailableTrailersPage } from '../../page/trailer/addAvailableTrailer.page';
+
+type TrailerData = {
+    number?: string | null
+    yard?: string | null
+    driver?: string | null
+    thirdParty?: string | null
+    year?: string | null
+    truckNumber?: string | null
+    type?: string | null
+    rentOrBuy?: string | null
+    available?: string | null
+    status?: string | null
+    brokerage?: string | null
+    // towingIcon?: string | null
+    // loadedIcon?: string | null
+    towingIcon?: 'mdi-check' | 'mdi-close-octagon-outline';
+    loadedIcon?: 'mdi-check' | 'mdi-close-octagon-outline';
+};
+
 
 export const test = base.extend<{
     loggedPage: Page;
@@ -126,6 +145,8 @@ export const test = base.extend<{
     addAvailableTrailer: AddAvailableTrailersPage;
     editAvailableTrailerSetup: EditTrailersPage;
     availableTrailer: AvailableTrailersPage;
+    trailerData: TrailerData
+    trailerDataForEdit: TrailerData
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -841,7 +862,7 @@ export const test = base.extend<{
     editAvailableTrailerSetup: async ({ loggedPage, availableTrailer, addTrailer }, use) => {
         const editAvailableTrailerSetup = new EditTrailersPage(loggedPage);
         await loggedPage.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
-        await availableTrailer.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+        await availableTrailer.driverThirdPartyColumn.first().waitFor({ state: 'visible', timeout: 10000 });
         await availableTrailer.clickElement(availableTrailer.addButton);
         const trailerNumber = get6RandomNumber().join('');
         await addTrailer.fillTrailerNumber(addTrailer.trailerNumber, trailerNumber);
@@ -871,4 +892,42 @@ export const test = base.extend<{
         const availableTrailer = new AvailableTrailersPage(loggedPage);
         await use(availableTrailer);
     },
+
+    trailerData: async ({ loggedPage }, use) => {
+        await loggedPage.goto('/trailers', { waitUntil: 'networkidle' });
+        await loggedPage.getByRole('button', { name: 'All clear icon' }).click();
+        await loggedPage.getByRole('option', { name: 'Active', exact: true }).locator('div').first().click();
+        await loggedPage.waitForResponse(response => response.url().includes('/api/trailers') && (response.status() === 200 || response.status() === 304));
+
+        // const availabilityIconClass = await loggedPage.locator('tr td:nth-child(37)').nth(10).locator('i').getAttribute('class');
+        // let availabilityIcon: string | undefined;
+
+        // if (availabilityIconClass?.includes('mdi-check')) {
+        //     availabilityIcon = 'mdi-check';
+        // } else if (availabilityIconClass?.includes('mdi-close-octagon-outline')) {
+        //     availabilityIcon = 'mdi-close-octagon-outline';
+        // }
+
+        const towingIcon = await getIconFromCell(loggedPage, 'tr td:nth-child(37)', 10);
+        const loadedIcon = await getIconFromCell(loggedPage, 'tr td:nth-child(28)', 10);
+
+        const trailerData = {
+            number: (await loggedPage.locator('.trailer-number').nth(10).textContent())?.trim(),
+            yard: (await loggedPage.locator('tr td:nth-child(10)').nth(10).textContent())?.trim(),
+            driver: (await loggedPage.locator('tr td:nth-child(5)').nth(10).textContent())?.trim(),
+            thirdParty: (await loggedPage.locator('tr td:nth-child(6)').nth(10).textContent())?.trim(),
+            year: (await loggedPage.locator('tr td:nth-child(16)').nth(10).textContent())?.trim(),
+            truckNumber: (await loggedPage.locator('tr td:nth-child(4)').nth(10).textContent())?.trim(),
+            type: (await loggedPage.locator('tr td:nth-child(3)').nth(10).textContent())?.trim(),
+            rentOrBuy: (await loggedPage.locator('tr td:nth-child(27)').nth(10).textContent())?.trim(),
+            available: (await loggedPage.locator('tr td:nth-child(29)').nth(10).textContent())?.trim(),
+            status: (await loggedPage.locator('tr td:nth-child(30)').nth(10).textContent())?.trim(),
+            brokerage: (await loggedPage.locator('tr td:nth-child(31)').nth(10).textContent())?.trim(),
+            towingIcon,
+            loadedIcon
+        };
+        await use(trailerData);
+    },
 });
+
+export { expect };

@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { expect, Page } from '@playwright/test';
+import { expect, Locator, Page } from '@playwright/test';
 import { RecrutimentPage } from '../page/recruitment/recruitmentOverview.page';
 import { time } from 'console';
 
@@ -258,6 +258,24 @@ export async function getNumbersFromTable(page: Page, recruitment: RecrutimentPa
     return await page.$$eval('tr td:nth-child(7)', cells =>
         cells.map(cell => cell.textContent?.trim() || '')
     );
+
 }
 
+export async function getIconFromCell(page: Page, cellSelector: string, rowIndex: number): Promise<'mdi-check' | 'mdi-close-octagon-outline' | undefined> {
+    const className = await page.locator(cellSelector).nth(rowIndex).locator('i').getAttribute('class');
+    if (className?.includes('mdi-check')) {
+        return 'mdi-check';
+    }
+    if (className?.includes('mdi-close-octagon-outline')) {
+        return 'mdi-close-octagon-outline';
+    }
+    return undefined;
+};
+
+export async function expectIcon(locator: Locator, expectedIcon?: 'mdi-check' | 'mdi-close-octagon-outline') {
+    const className = await locator.locator('i').getAttribute('class') ?? '';
+    if (expectedIcon) {
+        await expect(className).toContain(expectedIcon);
+    }
+};
 

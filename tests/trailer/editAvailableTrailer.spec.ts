@@ -60,7 +60,7 @@ test('Korisnik moze da edituje trailer - In company', async ({ editAvailableTrai
     await expect(availableTrailer.driverNameColumn.first()).toContainText(Constants.driverName);
     await expect(availableTrailer.truckColumn.first()).toContainText(Constants.truckName);
     await expect(availableTrailer.rentOrBuyColumn.first()).toContainText(Constants.rent);
-    await expect(availableTrailer.companyNameColumn.first()).toContainText(Constants.rocketCompany);
+    await expect(availableTrailer.driverThirdPartyColumn.first()).toContainText(Constants.rocketCompany);
     await expect(availableTrailer.driverPhoneColumn.first()).toContainText(Constants.phoneNumberOfUserApp);
     await expect(availableTrailer.yardColumn.first()).toContainText(Constants.novaYarda);
     await expect(availableTrailer.plateColumn.first()).toContainText(Constants.plateNumber);

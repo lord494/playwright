@@ -2,6 +2,7 @@ export class Constants {
 
     // ===== TEST USERS =====
     static driverName = 'btest';
+    static driverNameAvTrailer = 'DriverMarkoo';
     static driverTest = 'driverTest';
     static secondDriverName = 'playwrightTest';
     static driver = 'nameDriverTest';
@@ -172,6 +173,7 @@ export class Constants {
     static problemCallType = 'PROBLEM';
     static eldPlaywright = 'playwright eld';
     static centralTimezone = 'Central';
+    static salesPerson = 'Test Sales';
 
     // ===== COLORS =====
     static emptyNeedLoad = 'EMPTY, NEED LOAD';
