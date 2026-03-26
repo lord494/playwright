@@ -3,8 +3,13 @@ import { Constants } from '../../helpers/constants';
 import { test } from '../fixtures/fixtures';
 
 test('Korisnik moze da pretrazuje Contacte po emailu', async ({ contactPage }) => {
-    await contactPage.searchContact(contactPage.searchField, Constants.testEmail);
-    await contactPage.page.waitForLoadState('networkidle');
+    await Promise.all([
+        contactPage.page.waitForResponse(response =>
+            response.url().includes('/api/contacts') &&
+            (response.status() === 200 || response.status() === 304)
+        ),
+        contactPage.searchContact(contactPage.searchField, Constants.testEmail)
+    ]);
     const concatEmail = await contactPage.emailColumn.all();
     for (let i = 0; i < concatEmail.length; i++) {
         const text = await contactPage.emailColumn.nth(i).innerText();
