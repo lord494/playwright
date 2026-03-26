@@ -3,6 +3,8 @@ import { Constants } from '../../helpers/constants';
 import { test } from '../fixtures/fixtures';
 
 test('Dodavanje dokumenta kojem je istekao datum vazenja', async ({ insertPermitTrailerSetup, trailerOverview, trailerDocument }) => {
+    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocument.deleteAllItemsWithDeleteIcon();
     const firstTrailerName = await trailerOverview.trailerNameColumn.first().allInnerTexts();
     await trailerOverview.clickElement(trailerOverview.uploadIcon.first());
     await insertPermitTrailerSetup.uploadDocument();
@@ -14,7 +16,23 @@ test('Dodavanje dokumenta kojem je istekao datum vazenja', async ({ insertPermit
     await insertPermitTrailerSetup.page.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
     await insertPermitTrailerSetup.clickElement(insertPermitTrailerSetup.savePermitButton);
     await trailerOverview.page.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached', timeout: 10000 });
-    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerOverview.enterTrailerName(trailerOverview.trailerNumberFilter, firstTrailerName.toString());
+    await trailerOverview.page.waitForResponse(response => response.url().includes('/api/trailers') && response.status() == 200 || response.status() == 304, { timeout: 10000 });
+
+    const rows = trailerOverview.page.locator('table tbody tr');
+    const count = await rows.count();
+    for (let i = 0; i < count; i++) {
+        const row = rows.nth(i);
+
+        const trailerNumber = await row.locator('td:nth-child(2)').textContent();
+
+        if (trailerNumber?.trim() === firstTrailerName.toString().trim()) {
+            await row.locator('.mdi-file-document-multiple').click();
+            break;
+        }
+    }
+
+    //await trailerOverview.clickElement(trailerOverview.documentIcon.first());
     await insertPermitTrailerSetup.loader.waitFor({ state: 'hidden', timeout: 10000 });
     const actualDates = await trailerDocument.dateExpiringColumn.allInnerTexts();
     await expect(actualDates).toContain(formattedDate);
@@ -27,8 +45,10 @@ test('Dodavanje dokumenta kojem je istekao datum vazenja', async ({ insertPermit
 });
 
 test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ insertPermitTrailerSetup, trailerOverview, trailerDocument }) => {
-    const firtsCompanyName = await trailerOverview.companyNameColumn.first().allInnerTexts();
-    await trailerOverview.clickElement(trailerOverview.uploadIcon.first());
+    await trailerOverview.clickElement(trailerOverview.documentIcon.nth(3));
+    await trailerDocument.deleteAllItemsWithDeleteIcon();
+    const firstTrailerName = await trailerOverview.trailerNameColumn.nth(3).allInnerTexts();
+    await trailerOverview.clickElement(trailerOverview.uploadIcon.nth(3));
     await insertPermitTrailerSetup.uploadDocument();
     await insertPermitTrailerSetup.page.waitForLoadState('networkidle', { timeout: 20000 });
     const formattedFutureDate = await insertPermitTrailerSetup.selectExpiringDateMoreThan30Days();
@@ -38,7 +58,23 @@ test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ insert
     await insertPermitTrailerSetup.page.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
     await insertPermitTrailerSetup.clickElement(insertPermitTrailerSetup.savePermitButton);
     await trailerOverview.page.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached', timeout: 10000 });
-    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerOverview.enterTrailerName(trailerOverview.trailerNumberFilter, firstTrailerName.toString());
+    await trailerOverview.page.waitForResponse(response => response.url().includes('/api/trailers') && response.status() == 200 || response.status() == 304, { timeout: 10000 });
+
+    const rows = trailerOverview.page.locator('table tbody tr');
+    const count = await rows.count();
+    for (let i = 0; i < count; i++) {
+        const row = rows.nth(i);
+
+        const trailerNumber = await row.locator('td:nth-child(2)').textContent();
+
+        if (trailerNumber?.trim() === firstTrailerName.toString().trim()) {
+            await row.locator('.mdi-file-document-multiple').click();
+            break;
+        }
+    }
+
+    //await trailerOverview.clickElement(trailerOverview.documentIcon.first());
     await insertPermitTrailerSetup.loader.waitFor({ state: 'hidden', timeout: 10000 });
     const actualDates = await trailerDocument.dateExpiringColumn.allInnerTexts();
     await expect(actualDates).toContain(formattedFutureDate);
@@ -46,13 +82,15 @@ test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ insert
     await expect(trailerDocument.statusColumn).toContainText(Constants.validStatus);
     await expect(trailerDocument.statusColumn).toHaveCSS('background-color', 'rgb(76, 175, 80)');
     await expect(trailerDocument.typeColumn).toContainText(Constants.trailerType);
-    await expect(trailerDocument.companyColumn).toContainText(firtsCompanyName);
+    await expect(trailerDocument.companyColumn).toContainText(firstTrailerName);
     await expect(trailerDocument.subTypeColumn).toContainText(Constants.registrationSubtype);
 });
 
 test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ insertPermitTrailerSetup, trailerOverview, trailerDocument }) => {
-    const firtsCompanyName = await trailerOverview.companyNameColumn.first().allInnerTexts();
-    await trailerOverview.clickElement(trailerOverview.uploadIcon.first());
+    await trailerOverview.clickElement(trailerOverview.documentIcon.nth(5));
+    await trailerDocument.deleteAllItemsWithDeleteIcon();
+    const firstTrailerName = await trailerOverview.trailerNameColumn.nth(5).allInnerTexts();
+    await trailerOverview.clickElement(trailerOverview.uploadIcon.nth(5));
     await insertPermitTrailerSetup.uploadDocument();
     await insertPermitTrailerSetup.page.waitForLoadState('networkidle');
     const formattedFutureDate = await insertPermitTrailerSetup.selectExpiringDateLessThan30Days();
@@ -62,7 +100,22 @@ test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ insertPermi
     await insertPermitTrailerSetup.page.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
     await insertPermitTrailerSetup.clickElement(insertPermitTrailerSetup.savePermitButton);
     await trailerOverview.page.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached' });
-    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerOverview.enterTrailerName(trailerOverview.trailerNumberFilter, firstTrailerName.toString());
+    await trailerOverview.page.waitForResponse(response => response.url().includes('/api/trailers') && response.status() == 200 || response.status() == 304, { timeout: 10000 });
+    const rows = trailerOverview.page.locator('table tbody tr');
+    const count = await rows.count();
+    for (let i = 0; i < count; i++) {
+        const row = rows.nth(i);
+
+        const trailerNumber = await row.locator('td:nth-child(2)').textContent();
+
+        if (trailerNumber?.trim() === firstTrailerName.toString().trim()) {
+            await row.locator('.mdi-file-document-multiple').click();
+            break;
+        }
+    }
+
+    //await trailerOverview.clickElement(trailerOverview.documentIcon.first());
     await insertPermitTrailerSetup.loader.waitFor({ state: 'hidden', timeout: 10000 });
     const actualDates = await trailerDocument.dateExpiringColumn.allInnerTexts();
     await expect(actualDates).toContain(formattedFutureDate.toString());
@@ -70,7 +123,7 @@ test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ insertPermi
     await expect(trailerDocument.statusColumn).toContainText(Constants.lessThan30Status);
     await expect(trailerDocument.statusColumn).toHaveCSS('background-color', 'rgb(255, 235, 59)');
     await expect(trailerDocument.typeColumn).toContainText(Constants.trailerType);
-    await expect(trailerDocument.companyColumn).toContainText(firtsCompanyName);
+    await expect(trailerDocument.companyColumn).toContainText(firstTrailerName);
     await expect(trailerDocument.subTypeColumn).toContainText(Constants.registrationSubtype);
 });
 

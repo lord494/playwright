@@ -48,7 +48,7 @@ test('Korisnik moze da pretrazuje trailer po broju trailera', async ({ available
     await availableTrailerSetup.page.waitForLoadState('networkidle');
     await availableTrailerSetup.driverThirdPartyColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await availableTrailerSetup.enterTrailerName(availableTrailerSetup.trailerNumberFilter, Constants.availableTrailer);
-    await availableTrailerSetup.page.waitForResponse(response => response.url().includes('/api/trailers') && response.status() == 200 || response.status() == 304);
+    await availableTrailerSetup.page.waitForResponse(response => response.url().includes('/api/trailers') && response.status() == 200 || response.status() == 304, { timeout: 10000 });
     const targetRow = availableTrailerSetup.page.locator('tr', {
         has: availableTrailerSetup.page.locator('td:nth-child(1)', { hasText: Constants.availableTrailer })
     });
@@ -69,7 +69,7 @@ test('Korisnik moze da pretrazuje trailer po driver name', async ({ availableTra
     await availableTrailerSetup.page.waitForLoadState('networkidle');
     await availableTrailerSetup.driverThirdPartyColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await availableTrailerSetup.enterDriverName(availableTrailerSetup.driverNameFilter, Constants.driverNameAvTrailer);
-    await availableTrailerSetup.page.waitForResponse(response => response.url().includes('/api/trailers') && response.status() == 200 || response.status() == 304);
+    await availableTrailerSetup.page.waitForResponse(response => response.url().includes('/api/trailers') && response.status() == 200 || response.status() == 304, { timeout: 10000 });
     const count = await availableTrailerSetup.driverThirdPartyColumn.count();
     for (let i = 0; i < count; i++) {
         const cellText = await availableTrailerSetup.driverThirdPartyColumn.nth(i).textContent();

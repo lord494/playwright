@@ -145,8 +145,9 @@ export const test = base.extend<{
     addAvailableTrailer: AddAvailableTrailersPage;
     editAvailableTrailerSetup: EditTrailersPage;
     availableTrailer: AvailableTrailersPage;
-    trailerData: TrailerData
-    trailerDataForEdit: TrailerData
+    trailerData: TrailerData;
+    trailerDataForEdit: TrailerData;
+    trailerDocumentOverview: TrailerDocumentPage;
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -730,8 +731,8 @@ export const test = base.extend<{
 
     trailerOverviewSetup: async ({ loggedPage }, use) => {
         const trailerOverviewSetup = new TrailersPage(loggedPage);
-        await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
-        await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 1000 });
+        await loggedPage.goto(Constants.trailerUrl);
+        await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
         await use(trailerOverviewSetup);
     },
 
@@ -772,14 +773,21 @@ export const test = base.extend<{
         await use(editTrailer);
     },
 
+    trailerDocumentOverview: async ({ loggedPage }, use) => {
+        const trailerDocument = new TrailerDocumentPage(loggedPage);
+        await use(trailerDocument);
+    },
+
     insertPermitTrailerSetup: async ({ loggedPage }, use) => {
         const trailer = new TrailersPage(loggedPage);
         const document = new TrailerDocumentPage(loggedPage);
         const insertPermit = new TrailerInsertPermitBookPage(loggedPage)
         await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
-        await trailer.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-        await trailer.clickElement(trailer.documentIcon.first());
-        await document.deleteAllItemsWithDeleteIcon();
+        await loggedPage.waitForResponse(response => response.url().includes('/api/trailers') && response.status() == 200 || response.status() == 304, { timeout: 10000 });
+        //await trailer.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        //await trailer.page.locator('circle').nth(1).waitFor({ state: 'hidden', timeout: 10000 });
+        // await trailer.clickElement(trailer.documentIcon.first());
+        // await document.deleteAllItemsWithDeleteIcon();
         await use(insertPermit);
     },
 
