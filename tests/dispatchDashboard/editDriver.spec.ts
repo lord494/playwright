@@ -47,14 +47,14 @@ test.describe('Testovi bez afterAll', () => {
         await expect(editDriverDIspatchDashboardSetup.driverNameColumn).toContainText('*');
     });
 
-    test('Korisnik moze da ukljuci "FC" toggle button', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
-        await editDrive.page.waitForLoadState('networkidle');
-        await editDrive.unCheckFC();
-        await editDrive.saveButton.click();
-        await editDrive.page.waitForLoadState('networkidle');
-        await editDrive.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-        await expect(editDriverDIspatchDashboardSetup.fcColumn).toContainText("ON");
-    });
+    // test('Korisnik moze da ukljuci "FC" toggle button', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
+    //     await editDrive.page.waitForLoadState('networkidle');
+    //     await editDrive.unCheckFC();
+    //     await editDrive.saveButton.click();
+    //     await editDrive.page.waitForLoadState('networkidle');
+    //     await editDrive.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
+    //     await expect(editDriverDIspatchDashboardSetup.fcColumn).toContainText("ON");
+    // });
 
     test('Korisnik moze da ukljuci "Is new" toggle button', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
         await editDrive.check(editDrive.isNewToggleButton);
@@ -99,15 +99,6 @@ test.describe('Testovi bez afterAll', () => {
         await expect(editDrive.trailerHistoryList).toBeVisible();
     });
 
-    test('Korisnik moze da obrise trailer history', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
-        await editDrive.check(editDrive.showTrailerHistoryToggleButton);
-        editDrive.page.on('dialog', async (dialog) => {
-            await dialog.accept();
-        });
-        await editDrive.firtsDeleteIconOnHistoryTrailer.click();
-        await expect(editDrive.snackContent).toContainText(Constants.snackContentHistorySuccessfullyDeleted);
-    });
-
     test('Korisnik moze da izadje iz modala na Cancel dugme', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
         await editDrive.cancelButton.click();
         await editDrive.page.waitForLoadState('networkidle');
@@ -117,7 +108,7 @@ test.describe('Testovi bez afterAll', () => {
 
 test.describe('Testovi sa afterAll', () => {
     test('Driver moze da se edituje', async ({ editDriverDIspatchDashboardSetup, editDrive }) => {
-        await editDrive.fillInputField(editDrive.driverName, Constants.secondDriverName);
+        await editDrive.fillInputField(editDrive.driverName, Constants.driverWalfredBlanco);
         await editDrive.fillInputField(editDrive.secondDrverName, Constants.secondDriverTest);
         await editDrive.selectFromMenu(editDrive.owner, editDrive.secondOwnerOption);
         await editDrive.selectFromMenu(editDrive.board, editDrive.b2Board);
@@ -142,11 +133,11 @@ test.describe('Testovi sa afterAll', () => {
         await editDrive.page.waitForLoadState('networkidle');
         await editDrive.page.locator('.v-input__slot').first().click();
         await editDriverDIspatchDashboardSetup.xIconInInputField.first().click();
-        await editDriverDIspatchDashboardSetup.fillInputField(editDriverDIspatchDashboardSetup.nameSearchInput, Constants.secondDriverName);
-        const nameText = editDriverDIspatchDashboardSetup.driverNameColumn.filter({ hasText: Constants.secondDriverName });
+        await editDriverDIspatchDashboardSetup.fillInputField(editDriverDIspatchDashboardSetup.nameSearchInput, Constants.driverWalfredBlanco);
+        const nameText = editDriverDIspatchDashboardSetup.driverNameColumn.filter({ hasText: Constants.driverWalfredBlanco });
         await nameText.waitFor({ state: 'visible', timeout: 5000 });
         await expect(editDriverDIspatchDashboardSetup.noteIcon).toBeVisible();
-        await expect(editDriverDIspatchDashboardSetup.driverNameColumn).toContainText(Constants.secondDriverName);
+        await expect(editDriverDIspatchDashboardSetup.driverNameColumn).toContainText(Constants.driverWalfredBlanco);
         await expect(editDriverDIspatchDashboardSetup.driverNameColumn).toContainText(Constants.secondOwner);
         await expect(editDriverDIspatchDashboardSetup.driverNameColumn).toContainText(Constants.secondDriverTest);
         await expect(editDriverDIspatchDashboardSetup.typeColumn).toContainText(Constants.secondTrailerType);

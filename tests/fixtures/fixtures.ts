@@ -332,13 +332,8 @@ export const test = base.extend<{
     editLoadSetup: async ({ loggedPage, dispatcDashboard }, use) => {
         const editLoad = new AddAndEditLoadModal(loggedPage);
         await loggedPage.goto(Constants.dashboardUrl, { waitUntil: 'networkidle', timeout: 15000 });
-        const [response] = await Promise.all([
-            dispatcDashboard.page.waitForResponse(resp =>
-                resp.url().includes('/api/drivers/dashboard') &&
-                (resp.status() === 200 || resp.status() === 304)
-            ),
-            await dispatcDashboard.fillInputField(dispatcDashboard.nameSearchInput, Constants.driverName)
-        ]);
+        await dispatcDashboard.fillInputField(dispatcDashboard.nameSearchInput, Constants.driverPlayWrightTest);
+        await dispatcDashboard.page.waitForResponse(response => response.url().includes('/api/drivers/dashboard') && (response.status() === 200 || response.status() === 304), { timeout: 10000 });
         const text = await dispatcDashboard.loadColumn.first().textContent();
         dispatcDashboard.page.on('dialog', async (dialog) => {
             await dialog.accept();
@@ -359,12 +354,11 @@ export const test = base.extend<{
         const editDriver = new DispatchDashboardOverview(loggedPage);
         await loggedPage.goto(Constants.dashboardUrl, { waitUntil: 'networkidle', timeout: 15000 });
         await editDriver.driveNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-        const [response] = await Promise.all([
-            editDriver.page.waitForResponse(resp =>
-                resp.url().includes('/api/drivers/dashboard') &&
-                (resp.status() === 200 || resp.status() === 304)
-            ),
-            editDriver.fillInputField(editDriver.nameSearchInput, Constants.driverName)
+        const [response] = await Promise.all([editDriver.page.waitForResponse(resp =>
+            resp.url().includes('/api/drivers/dashboard') &&
+            (resp.status() === 200 || resp.status() === 304)
+        ),
+        editDriver.fillInputField(editDriver.nameSearchInput, Constants.driverWayneJones)
         ]);
         await editDriver.driveNameColumn.first().click({ button: "right" });
         await use(editDriver);

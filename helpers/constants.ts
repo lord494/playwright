@@ -2,6 +2,8 @@ export class Constants {
 
     // ===== TEST USERS =====
     static driverName = 'btest';
+    static driverWayneJones = 'Wayne Jones';
+    static driverWalfredBlanco = 'Walfred Blanco';
     static driverNameAvTrailer = 'DriverMarkoo';
     static driverTest = 'driverTest';
     static secondDriverName = 'playwrightTest';
@@ -174,6 +176,7 @@ export class Constants {
     static eldPlaywright = 'playwright eld';
     static centralTimezone = 'Central';
     static salesPerson = 'Test Sales';
+    static driverPlayWrightTest = 'Playwright Driver';
 
     // ===== COLORS =====
     static emptyNeedLoad = 'EMPTY, NEED LOAD';

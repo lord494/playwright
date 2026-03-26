@@ -7,31 +7,19 @@ import { test } from '../fixtures/fixtures';
 
 test('Korisnik moze da pretrazuje User-a po imenu', async ({ dispatchDashboardSetup }) => {
     await dispatchDashboardSetup.fillInputField(dispatchDashboardSetup.nameSearchInput, Constants.driverNameFraser);
-    const imeZaPretragu = Constants.driverNameFraser;
-    await dispatchDashboardSetup.driverNameColumn.locator(`text=${imeZaPretragu}`).waitFor({ state: 'visible' });
-    const firstDriverName = await dispatchDashboardSetup.driverNameColumn.first().textContent();
-    expect(firstDriverName?.trim()).toContain(imeZaPretragu);
+    await dispatchDashboardSetup.page.waitForResponse(response => response.url().includes('/api/drivers/dashboard') && (response.status() === 200 || response.status() === 304), { timeout: 10000 });
+    await expect(dispatchDashboardSetup.driverNameColumn.first()).toContainText(Constants.driverNameFraser);
 });
 
 test('Korisnik moze da pretrazuje User-a po kamionu', async ({ dispatchDashboardSetup }) => {
-    const [response] = await Promise.all([
-        dispatchDashboardSetup.page.waitForResponse(resp =>
-            resp.url().includes('/api/drivers/dashboard') &&
-            (resp.status() === 200 || resp.status() === 304)
-        ),
-        dispatchDashboardSetup.fillInputField(dispatchDashboardSetup.truckSeachInput, Constants.truckName)
-    ]);
+    dispatchDashboardSetup.fillInputField(dispatchDashboardSetup.truckSeachInput, Constants.truckName);
+    await dispatchDashboardSetup.page.waitForResponse(response => response.url().includes('/api/drivers/dashboard') && (response.status() === 200 || response.status() === 304), { timeout: 10000 });
     await expect(dispatchDashboardSetup.truckColumn.first()).toContainText(Constants.truckName, { timeout: 5000 });
 });
 
 test('Korisnik moze da pretrazuje User-a po prikolici', async ({ dispatchDashboardSetup }) => {
-    const [response] = await Promise.all([
-        dispatchDashboardSetup.page.waitForResponse(resp =>
-            resp.url().includes('/api/drivers/dashboard') &&
-            (resp.status() === 200 || resp.status() === 304)
-        ),
-        dispatchDashboardSetup.fillInputField(dispatchDashboardSetup.trailerSearchInput, Constants.trailerTestNumber)
-    ]);
+    dispatchDashboardSetup.fillInputField(dispatchDashboardSetup.trailerSearchInput, Constants.trailerTestNumber);
+    await dispatchDashboardSetup.page.waitForResponse(response => response.url().includes('/api/drivers/dashboard') && (response.status() === 200 || response.status() === 304), { timeout: 10000 });
     await expect(dispatchDashboardSetup.trailerColumn.first()).toContainText(Constants.trailerTestNumber);
 });
 
