@@ -3,27 +3,29 @@ import { Constants } from '../../helpers/constants';
 import { test } from '../fixtures/fixtures';
 
 test('Korisnik moze da pretrazuje Contacte po emailu', async ({ contactPage }) => {
-    await Promise.all([
-        contactPage.page.waitForResponse(response =>
-            response.url().includes('/api/contacts') &&
-            (response.status() === 200 || response.status() === 304)
-        ),
-        contactPage.searchContact(contactPage.searchField, Constants.testEmail)
-    ]);
-    const concatEmail = await contactPage.emailColumn.all();
-    for (let i = 0; i < concatEmail.length; i++) {
-        const text = await contactPage.emailColumn.nth(i).innerText();
-        expect(text.trim()).toContain(Constants.testEmail);
-    }
+    const beforeSearch = await contactPage.emailColumn.allTextContents();
+    const responsePromise = contactPage.page.waitForResponse(response => {
+        const url = new URL(response.url());
+        return url.pathname === '/api/contacts' && url.searchParams.get('search') === Constants.testEmail && response.status() === 200;
+    });
+    await contactPage.searchContact(contactPage.searchField, Constants.testEmail);
+    await responsePromise;
+    const afterSearch = await contactPage.emailColumn.allTextContents();
+    expect(afterSearch).not.toEqual(beforeSearch);
+    expect(afterSearch.every(email => email.toLowerCase().includes(Constants.testEmail.toLowerCase()))).toBeTruthy();
 });
+
 test('Korisnik moze da pretrazuje Contacte po imenu', async ({ contactPage }) => {
+    const beforeSearch = await contactPage.nameColumn.allTextContents();
+    const responsePromise = contactPage.page.waitForResponse(response => {
+        const url = new URL(response.url());
+        return url.pathname === '/api/contacts' && url.searchParams.get('search') === Constants.driverName && response.status() === 200;
+    });
     await contactPage.searchContact(contactPage.searchField, Constants.driverName);
-    await contactPage.page.waitForLoadState('networkidle');
-    const concatName = await contactPage.nameColumn.all();
-    for (let i = 0; i < concatName.length; i++) {
-        const text = await contactPage.nameColumn.nth(i).innerText();
-        expect(text.trim()).toContain(Constants.driverName);
-    }
+    await responsePromise;
+    const afterSearch = await contactPage.nameColumn.allTextContents();
+    expect(afterSearch).not.toEqual(beforeSearch);
+    expect(afterSearch.every(name => name.toLowerCase().includes(Constants.driverName.toLowerCase()))).toBeTruthy();
 });
 
 test('Korisnik moze da otvori modal za dodavanje Contacata', async ({ contactPage }) => {
