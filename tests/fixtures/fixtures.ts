@@ -333,7 +333,7 @@ export const test = base.extend<{
         const editLoad = new AddAndEditLoadModal(loggedPage);
         await loggedPage.goto(Constants.dashboardUrl, { waitUntil: 'networkidle', timeout: 15000 });
         await dispatcDashboard.fillInputField(dispatcDashboard.nameSearchInput, Constants.driverPlayWrightTest);
-        await dispatcDashboard.page.waitForResponse(response => response.url().includes('/api/drivers/dashboard') && (response.status() === 200 || response.status() === 304), { timeout: 10000 });
+        await expect(dispatcDashboard.driverNameColumn.first()).toContainText(Constants.driverPlayWrightTest, { timeout: 10000 });
         const text = await dispatcDashboard.loadColumn.first().textContent();
         dispatcDashboard.page.on('dialog', async (dialog) => {
             await dialog.accept();
