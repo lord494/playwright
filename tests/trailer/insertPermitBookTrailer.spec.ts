@@ -23,7 +23,11 @@ test('Dodavanje dokumenta kojem je istekao datum vazenja', async ({ insertPermit
     await insertPermitTrailerSetup.clickElement(insertPermitTrailerSetup.savePermitButton);
     await trailerOverview.page.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached', timeout: 10000 });
     await documentIconForFirstRow.click();
-    await trailerDocument.nameColumn.waitFor({ state: 'visible', timeout: 20000 });
+    await trailerOverview.page.waitForResponse(resp =>
+        resp.url().includes('/api/permit-books') &&
+        resp.status() === 200
+    );
+    //await trailerDocument.nameColumn.waitFor({ state: 'visible', timeout: 20000 });
     const actualDates = await trailerDocument.dateExpiringColumn.allInnerTexts();
     await expect(actualDates).toContain(formattedDate);
     await expect(trailerDocument.nameColumn).toContainText(textCompanyName);
@@ -55,7 +59,11 @@ test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ insert
     await insertPermitTrailerSetup.clickElement(insertPermitTrailerSetup.savePermitButton);
     await trailerOverview.page.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached', timeout: 10000 });
     await documentIconForSelectedTrailer.click();
-    await trailerDocument.nameColumn.waitFor({ state: 'visible', timeout: 25000 });
+    await trailerOverview.page.waitForResponse(resp =>
+        resp.url().includes('/api/permit-books') &&
+        resp.status() === 200
+    );
+    //await trailerDocument.nameColumn.waitFor({ state: 'visible', timeout: 25000 });
     const actualDates = await trailerDocument.dateExpiringColumn.allInnerTexts();
     await expect(actualDates).toContain(formattedFutureDate);
     await expect(trailerDocument.nameColumn).toContainText(textCompanyName);
@@ -87,7 +95,11 @@ test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ insertPermi
     await insertPermitTrailerSetup.clickElement(insertPermitTrailerSetup.savePermitButton);
     await trailerOverview.page.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached' });
     await documentIconForSelectedTrailer.click();
-    await trailerDocument.nameColumn.waitFor({ state: 'visible', timeout: 20000 });
+    await trailerOverview.page.waitForResponse(resp =>
+        resp.url().includes('/api/permit-books') &&
+        resp.status() === 200
+    );
+    //await trailerDocument.nameColumn.waitFor({ state: 'visible', timeout: 20000 });
     const actualDates = await trailerDocument.dateExpiringColumn.allInnerTexts();
     await expect(actualDates).toContain(formattedFutureDate.toString());
     await expect(trailerDocument.nameColumn).toContainText(textCompanyName);
