@@ -30,6 +30,8 @@ export class InsertPermitBookPage extends BasePage {
     readonly secondTrailerNumberFromMenu: Locator;
     readonly compnyFromMenu: Locator;
     readonly driverOption: Locator;
+    readonly deleteIconsInDocumentModal: Locator;
+    readonly confirmButton: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -60,6 +62,8 @@ export class InsertPermitBookPage extends BasePage {
         this.secondTrailerNumberFromMenu = page.getByRole('option', { name: '243648', exact: true });
         this.compnyFromMenu = page.getByRole('option', { name: 'testcompany', exact: true });
         this.driverOption = page.getByRole('option', { name: 'AppTest (bosko@superegoholding.net)', exact: true });
+        this.deleteIconsInDocumentModal = page.locator('.v-dialog--active .v-icon--link.mdi.mdi-delete');
+        this.confirmButton = page.locator('.v-btn__content', { hasText: 'Confirm' });
     }
 
     async uploadDocument(): Promise<void> {
@@ -98,18 +102,47 @@ export class InsertPermitBookPage extends BasePage {
         await this.page.waitForTimeout(1000);
     }
 
+    // async selectPastExpiringDate(): Promise<string> {
+    //     await this.expiringDateField.click();
+    //     const dateText = await this.currentDate.textContent();
+    //     const selectedDay = parseInt(dateText?.trim() || '0', 10);
+    //     const pastDay = selectedDay > 1 ? selectedDay - 1 : 1;
+    //     const pastDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${pastDay}")`);
+    //     await pastDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
+    //     await pastDateButton.first().click();
+    //     await this.okButtonInDatePicekr.click();
+    //     const expectedDate = new Date();
+    //     expectedDate.setDate(pastDay);
+    //     const formattedDate = expectedDate.toLocaleDateString('en-US', {
+    //         year: 'numeric',
+    //         month: 'short',
+    //         day: 'numeric',
+    //     });
+    //     return formattedDate;
+    // }
+
     async selectPastExpiringDate(): Promise<string> {
         await this.expiringDateField.click();
         const dateText = await this.currentDate.textContent();
         const selectedDay = parseInt(dateText?.trim() || '0', 10);
-        const pastDay = selectedDay > 1 ? selectedDay - 1 : 1;
-        const pastDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${pastDay}")`);
+        const now = new Date();
+        // 👉 napravi datum za danas (sa UI danom)
+        const currentDate = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            selectedDay
+        );
+
+        // 👉 oduzmi 1 dan (JS automatski hendluje prelaze)
+        currentDate.setDate(currentDate.getDate() - 1);
+        const pastDay = currentDate.getDate();
+        const pastDateButton = this.page.locator(
+            `.v-picker.v-card.v-picker--date .v-btn__content:has-text("${pastDay}")`
+        );
         await pastDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
         await pastDateButton.first().click();
         await this.okButtonInDatePicekr.click();
-        const expectedDate = new Date();
-        expectedDate.setDate(pastDay);
-        const formattedDate = expectedDate.toLocaleDateString('en-US', {
+        const formattedDate = currentDate.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
@@ -117,16 +150,54 @@ export class InsertPermitBookPage extends BasePage {
         return formattedDate;
     }
 
+    // async selectExpiringDateMoreThan30Days(): Promise<string> {
+    //     await this.expiringDateField.click();
+    //     const dateText = await this.currentDate.textContent();
+    //     const selectedDay = parseInt(dateText?.trim() || '0', 10);
+    //     const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
+    //     await nextMonthButton.click();
+    //     await nextMonthButton.click();
+    //     const futureDate = new Date();
+    //     futureDate.setMonth(futureDate.getMonth() + 2);
+    //     futureDate.setDate(selectedDay);
+    //     const futureDateDay = futureDate.getDate();
+    //     const futureDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${futureDateDay}")`);
+    //     await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
+    //     await futureDateButton.first().click();
+    //     await this.okButtonInDatePicekr.click();
+    //     const formattedFutureDate = futureDate.toLocaleDateString('en-US', {
+    //         year: 'numeric',
+    //         month: 'short',
+    //         day: 'numeric',
+    //     });
+    //     return formattedFutureDate;
+    // }
+
     async selectExpiringDateMoreThan30Days(): Promise<string> {
         await this.expiringDateField.click();
         const dateText = await this.currentDate.textContent();
         const selectedDay = parseInt(dateText?.trim() || '0', 10);
-        const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
+        const nextMonthButton = this.page.locator(
+            '.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right'
+        );
+        // 👉 idi 2 meseca unapred u UI
         await nextMonthButton.click();
         await nextMonthButton.click();
-        const futureDate = new Date();
-        futureDate.setMonth(futureDate.getMonth() + 2);
-        futureDate.setDate(selectedDay);
+        const now = new Date();
+        // 👉 broj dana u mesecu +2
+        const daysInTargetMonth = new Date(
+            now.getFullYear(),
+            now.getMonth() + 3,
+            0
+        ).getDate();
+        // 👉 zaštita (31 → 30, februar itd.)
+        const safeDay = Math.min(selectedDay, daysInTargetMonth);
+        const futureDate = new Date(
+            now.getFullYear(),
+            now.getMonth() + 2,
+            safeDay
+        );
+
         const futureDateDay = futureDate.getDate();
         const futureDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${futureDateDay}")`);
         await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
@@ -140,6 +211,35 @@ export class InsertPermitBookPage extends BasePage {
         return formattedFutureDate;
     }
 
+    // async selectExpiringDateLessThan30Days(): Promise<string> {
+    //     await this.page.waitForLoadState('networkidle');
+    //     await this.expiringDateField.click();
+    //     await this.page.waitForTimeout(1000);
+    //     const dateText = await this.currentDate.textContent();
+    //     const selectedDay = parseInt(dateText?.trim() || '0', 10);
+    //     const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
+    //     await nextMonthButton.click();
+    //     await this.page.waitForTimeout(1000);
+    //     const futureDate = new Date();
+    //     console.log(futureDate);
+    //     futureDate.setMonth(futureDate.getMonth() + 1);
+    //     futureDate.setDate(selectedDay);
+    //     console.log(futureDate);
+    //     const dayToSelect = futureDate.getDate();
+    //     const futureDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${dayToSelect - 1}")`);
+    //     await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
+    //     await futureDateButton.first().click();
+    //     await this.page.waitForTimeout(1000);
+    //     await this.okButtonInDatePicekr.click();
+    //     const formattedDate = futureDate.toLocaleDateString('en-US', {
+    //         year: 'numeric',
+    //         month: 'short',
+    //         day: 'numeric',
+    //     });
+
+    //     return formattedDate;
+    // }
+
     async selectExpiringDateLessThan30Days(): Promise<string> {
         await this.page.waitForLoadState('networkidle');
         await this.expiringDateField.click();
@@ -149,11 +249,22 @@ export class InsertPermitBookPage extends BasePage {
         const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
         await nextMonthButton.click();
         await this.page.waitForTimeout(1000);
-        const futureDate = new Date();
-        futureDate.setMonth(futureDate.getMonth() + 1);
-        futureDate.setDate(selectedDay);
+        const now = new Date();
+        // 👉 broj dana u sledećem mesecu
+        const daysInNextMonth = new Date(
+            now.getFullYear(),
+            now.getMonth() + 2, 0).getDate();
+        // 👉 ako npr. 31 ne postoji → uzmi max (30, 28 itd.)
+        const safeDay = Math.min(selectedDay, daysInNextMonth);
+        const futureDate = new Date(
+            now.getFullYear(),
+            now.getMonth() + 1,
+            safeDay
+        );
         const dayToSelect = futureDate.getDate();
-        const futureDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${dayToSelect}")`);
+        const futureDateButton = this.page.locator(
+            `.v-picker.v-card.v-picker--date .v-btn__content:has-text("${dayToSelect}")`
+        );
         await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
         await futureDateButton.first().click();
         await this.page.waitForTimeout(1000);
@@ -163,7 +274,36 @@ export class InsertPermitBookPage extends BasePage {
             month: 'short',
             day: 'numeric',
         });
-
         return formattedDate;
+    }
+
+    async deleteAllItemsWithDeleteIcon(): Promise<void> {
+        await this.loader.waitFor({ state: 'hidden', timeout: 5000 });
+        const deleteIcons = this.deleteIconsInDocumentModal;
+        let count = await deleteIcons.count();
+        if (count === 0) {
+            await this.page.mouse.click(10, 10);
+            return;
+        }
+        while (count > 0) {
+            const deleteIcon = deleteIcons.nth(0);
+            await deleteIcon.click();
+            await this.confirmButton.click();
+            await this.page.waitForFunction(
+                async (expectedCount) => {
+                    const elements = document.querySelectorAll('.v-dialog--active .v-icon--link.mdi.mdi-delete');
+                    return elements.length === expectedCount;
+                },
+                count - 1
+            );
+            await this.loader.waitFor({ state: 'hidden', timeout: 5000 });
+            let newCount = await deleteIcons.count();
+            while (newCount === count) {
+                await this.loader.waitFor({ state: 'hidden', timeout: 10000 });
+                newCount = await deleteIcons.count();
+            }
+            count = newCount;
+        }
+        await this.page.mouse.click(10, 10);
     }
 }

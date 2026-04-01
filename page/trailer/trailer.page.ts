@@ -199,22 +199,70 @@ export class TrailersPage extends BasePage {
         await this.fillAndSelectFromMenu(truckMenu, truckNumber, option);
     }
 
+    // async selectExpiringDateInPastMonth(): Promise<string> {
+    //     await this.fromFieldModal.click();
+    //     const dateText = await this.currentDate.textContent();
+    //     const selectedDay = parseInt(dateText?.trim() || '1', 10);
+    //     const prevMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-left');
+    //     await prevMonthButton.click();
+    //     const pastDate = new Date();
+    //     pastDate.setMonth(pastDate.getMonth() - 1);
+    //     pastDate.setDate(selectedDay);
+    //     const dayToSelect = pastDate.getDate();
+    //     const pastDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${dayToSelect}")`);
+    //     await pastDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
+    //     await pastDateButton.first().click();
+    //     const formattedDate = `${(pastDate.getMonth() + 1).toString().padStart(2, '0')}/` +
+    //         `${pastDate.getDate().toString().padStart(2, '0')}/` +
+    //         `${pastDate.getFullYear()}`;
+    //     return formattedDate;
+    // }
+
     async selectExpiringDateInPastMonth(): Promise<string> {
         await this.fromFieldModal.click();
+
         const dateText = await this.currentDate.textContent();
         const selectedDay = parseInt(dateText?.trim() || '1', 10);
-        const prevMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-left');
+
+        const prevMonthButton = this.page.locator(
+            '.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-left'
+        );
+
+        // 👉 idi u prošli mesec u UI
         await prevMonthButton.click();
-        const pastDate = new Date();
-        pastDate.setMonth(pastDate.getMonth() - 1);
-        pastDate.setDate(selectedDay);
+
+        const now = new Date();
+
+        // 👉 koliko dana ima prethodni mesec
+        const daysInPrevMonth = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            0
+        ).getDate();
+
+        // 👉 zaštita (31 → 30 / 28 itd.)
+        const safeDay = Math.min(selectedDay, daysInPrevMonth);
+
+        const pastDate = new Date(
+            now.getFullYear(),
+            now.getMonth() - 1,
+            safeDay
+        );
+
         const dayToSelect = pastDate.getDate();
-        const pastDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${dayToSelect}")`);
+
+        const pastDateButton = this.page.locator(
+            `.v-picker.v-card.v-picker--date .v-btn__content:has-text("${dayToSelect}")`
+        );
+
         await pastDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
         await pastDateButton.first().click();
-        const formattedDate = `${(pastDate.getMonth() + 1).toString().padStart(2, '0')}/` +
+
+        const formattedDate =
+            `${(pastDate.getMonth() + 1).toString().padStart(2, '0')}/` +
             `${pastDate.getDate().toString().padStart(2, '0')}/` +
             `${pastDate.getFullYear()}`;
+
         return formattedDate;
     }
 

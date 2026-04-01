@@ -3,6 +3,8 @@ import { Constants } from '../../../helpers/constants';
 import { test } from '../../fixtures/fixtures';
 
 test('Dodavanje dokumenta kojem je istekao datum vazenja', async ({ uploadDocumentPage, document, companiesPage }) => {
+    await companiesPage.clickElement(companiesPage.documentIcon.first());
+    await uploadDocumentPage.deleteAllItemsWithDeleteIcon();
     const firtsCompanyName = await companiesPage.companyNameColumn.first().allInnerTexts();
     await companiesPage.clickElement(companiesPage.uploadIcon.first());
     await uploadDocumentPage.uploadDocument();
@@ -26,17 +28,19 @@ test('Dodavanje dokumenta kojem je istekao datum vazenja', async ({ uploadDocume
 });
 
 test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ document, uploadDocumentPage, companiesPage }) => {
-    const firtsCompanyName = await companiesPage.companyNameColumn.first().allInnerTexts();
-    await companiesPage.clickElement(companiesPage.uploadIcon.first());
+    await companiesPage.clickElement(companiesPage.documentIcon.nth(2));
+    await uploadDocumentPage.deleteAllItemsWithDeleteIcon();
+    const firtsCompanyName = await companiesPage.companyNameColumn.nth(2).allInnerTexts();
+    await companiesPage.clickElement(companiesPage.uploadIcon.nth(2));
     await uploadDocumentPage.uploadDocument();
-    const formattedFutureDate = await uploadDocumentPage.selectExpiringDateMoreThan30Days(); // 👈 koristiš novu metodu
+    const formattedFutureDate = await uploadDocumentPage.selectExpiringDateMoreThan30Days();
     await uploadDocumentPage.selectSubtypeFromMenu(uploadDocumentPage.documentSubtypeField, uploadDocumentPage.eldDocumentsSubtype);
     const nameColumnInUpload = (await uploadDocumentPage.page.locator('.v-file-input__text').allInnerTexts())[0];
     const textCompanyName = nameColumnInUpload.split(' ')[0];
     await uploadDocumentPage.page.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
     await uploadDocumentPage.clickElement(uploadDocumentPage.savePermitButton);
     await uploadDocumentPage.page.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached' });
-    await companiesPage.clickElement(companiesPage.documentIcon.first());
+    await companiesPage.clickElement(companiesPage.documentIcon.nth(2));
     await uploadDocumentPage.loader.waitFor({ state: 'hidden', timeout: 10000 });
     const actualDates = await document.dateExpiringColumn.allInnerTexts();
     await expect(actualDates).toContain(formattedFutureDate);
@@ -49,17 +53,19 @@ test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ docume
 });
 
 test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ document, uploadDocumentPage, companiesPage }) => {
-    const firtsCompanyName = await companiesPage.companyNameColumn.first().allInnerTexts();
-    await companiesPage.clickElement(companiesPage.uploadIcon.first());
+    await companiesPage.clickElement(companiesPage.documentIcon.nth(3));
+    await uploadDocumentPage.deleteAllItemsWithDeleteIcon();
+    const firtsCompanyName = await companiesPage.companyNameColumn.nth(3).allInnerTexts();
+    await companiesPage.clickElement(companiesPage.uploadIcon.nth(3));
     await uploadDocumentPage.uploadDocument();
-    const formattedFutureDate = await uploadDocumentPage.selectExpiringDateLessThan30Days(); // 👈 koristiš novu metod
+    const formattedFutureDate = await uploadDocumentPage.selectExpiringDateLessThan30Days();
     await uploadDocumentPage.selectSubtypeFromMenu(uploadDocumentPage.documentSubtypeField, uploadDocumentPage.eldDocumentsSubtype);
     const nameColumnInUpload = (await uploadDocumentPage.page.locator('.v-file-input__text').allInnerTexts())[0];
     const textCompanyName = nameColumnInUpload.split(' ')[0];
     await uploadDocumentPage.page.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
     await uploadDocumentPage.clickElement(uploadDocumentPage.savePermitButton);
     await uploadDocumentPage.page.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached' });
-    await companiesPage.clickElement(companiesPage.documentIcon.first());
+    await companiesPage.clickElement(companiesPage.documentIcon.nth(3));
     await uploadDocumentPage.loader.waitFor({ state: 'hidden', timeout: 10000 });
     const actualDates = await document.dateExpiringColumn.allInnerTexts();
     await expect(actualDates).toContain(formattedFutureDate.toString());

@@ -16,16 +16,25 @@ test('Korisnik moze da doda trailer', async ({ trailerOverviewSetup, addTrailer 
     await addTrailer.fillVinNumber(addTrailer.vinNumber, randomNumberString);
     await addTrailer.clickSaveButton();
     await addTrailer.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
-    await expect(trailerOverviewSetup.trailerNameColumn.first()).toContainText(trailerNumber);
-    await expect(trailerOverviewSetup.trailerTypeColumn.first()).toContainText('Dry van');
-    await expect(trailerOverviewSetup.trailerYearColumn.first()).toContainText('2002');
-    await expect(trailerOverviewSetup.trailerMakeColumn.first()).toContainText('HYUNDAI');
-    await expect(trailerOverviewSetup.dealershipColumn.first()).toContainText('KEMOINPEX');
-    await expect(trailerOverviewSetup.vinNumberColumn.first()).toContainText(randomNumberString);
+    const trailerNameColumn = await trailerOverviewSetup.page.locator(`//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/ancestor::tr/td[2]`).textContent();
+    const trailerTypeColumn = await trailerOverviewSetup.page.locator(`//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/ancestor::tr/td[3]`).textContent();
+    const trailerYearColumn = await trailerOverviewSetup.page.locator(`//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/ancestor::tr/td[16]`).textContent();
+    const trailerMakeColumn = await trailerOverviewSetup.page.locator(`//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/ancestor::tr/td[15]`).textContent();
+    const dealershipColumn = await trailerOverviewSetup.page.locator(`//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/ancestor::tr/td[9]`).textContent();
+    const vinNumberColumn = await trailerOverviewSetup.page.locator(`//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/ancestor::tr/td[17]`).textContent();
+    expect(trailerNameColumn).toContain(trailerNumber);
+    expect(trailerTypeColumn).toContain('Dry van');
+    expect(trailerYearColumn).toContain('2002');
+    expect(trailerMakeColumn).toContain('HYUNDAI');
+    expect(dealershipColumn).toContain('KEMOINPEX');
+    expect(vinNumberColumn).toContain(randomNumberString);
     trailerOverviewSetup.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
-    await trailerOverviewSetup.clickElement(trailerOverviewSetup.deleteIcon.first());
+    const deleteButton = trailerOverviewSetup.page.locator(
+        `//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/../..//button[contains(@class, 'mdi-delete')]`
+    );
+    await trailerOverviewSetup.clickElement(deleteButton);
     await trailerOverviewSetup.page.waitForLoadState('networkidle');
 });
 

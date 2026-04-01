@@ -254,8 +254,8 @@ export const test = base.extend<{
         const upload = new InsertPermitBookPage(loggedPage);
         await loggedPage.goto(Constants.companiesUrl, { waitUntil: 'networkidle', timeout: 20000 });
         await companiesPage.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-        await companiesPage.clickElement(companiesPage.documentIcon.first());
-        await document.deleteAllItemsWithDeleteIcon();
+        // await companiesPage.clickElement(companiesPage.documentIcon.first());
+        // await document.deleteAllItemsWithDeleteIcon();
         await use(upload);
     },
 
@@ -744,7 +744,7 @@ export const test = base.extend<{
         const trailerOverviewSetup = new TrailersPage(loggedPage);
         const editTrailerSetup = new AddTrailersPage(loggedPage);
         await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
-        await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 1000 });
+        await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
         await trailerOverviewSetup.clickElement(trailerOverviewSetup.addButton);
         await loggedPage.waitForLoadState('networkidle');
         const trailerNumber = get6RandomNumber().join('');
@@ -777,7 +777,7 @@ export const test = base.extend<{
         const document = new TrailerDocumentPage(loggedPage);
         const insertPermit = new TrailerInsertPermitBookPage(loggedPage)
         await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
-        await loggedPage.waitForResponse(response => response.url().includes('/api/trailers') && response.status() == 200 || response.status() == 304, { timeout: 10000 });
+        await expect(trailer.documentIcon.first()).toBeVisible({ timeout: 15000 });
         //await trailer.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
         //await trailer.page.locator('circle').nth(1).waitFor({ state: 'hidden', timeout: 10000 });
         // await trailer.clickElement(trailer.documentIcon.first());
@@ -853,6 +853,7 @@ export const test = base.extend<{
     availableTrailerSetup: async ({ loggedPage }, use) => {
         const availableTrailer = new AvailableTrailersPage(loggedPage);
         await loggedPage.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await expect(availableTrailer.yardColumn.first()).toBeVisible({ timeout: 15000 });
         await use(availableTrailer);
     },
 

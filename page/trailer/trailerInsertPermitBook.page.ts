@@ -27,6 +27,7 @@ export class TrailerInsertPermitBookPage extends BasePage {
     readonly truckNumberFromMenu: Locator;
     readonly trailerNumberFromMenu: Locator;
     readonly driverOption: Locator;
+    readonly previousMonthButtonInDatePicker: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -54,6 +55,7 @@ export class TrailerInsertPermitBookPage extends BasePage {
         this.truckNumberFromMenu = page.getByRole('option', { name: '11996', exact: true });
         this.trailerNumberFromMenu = page.getByRole('option', { name: '118185', exact: true });
         this.driverOption = page.getByRole('option', { name: 'AppTest (bosko@superegoholding.net)', exact: true });
+        this.previousMonthButtonInDatePicker = page.locator('.mdi-chevron-left.theme--light');
     }
 
     async uploadDocument(): Promise<void> {
@@ -78,20 +80,52 @@ export class TrailerInsertPermitBookPage extends BasePage {
         await this.fillAndSelectFromMenu(menu, truckNumber, option);
     }
 
+    // async selectPastExpiringDate(): Promise<string> {
+    //     await this.expiringDateField.click();
+    //     await this.page.waitForTimeout(1000);
+    //     const dateText = await this.currentDate.textContent();
+    //     const selectedDay = parseInt(dateText?.trim() || '0', 10);
+    //     const pastDay = selectedDay > 1 ? selectedDay - 1 : 1;
+    //     const pastDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${pastDay}")`);
+    //     await pastDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
+    //     await pastDateButton.first().click();
+    //     await this.page.waitForTimeout(1000);
+    //     await this.okButtonInDatePicekr.click();
+    //     const expectedDate = new Date();
+    //     expectedDate.setDate(pastDay);
+    //     const formattedDate = expectedDate.toLocaleDateString('en-US', {
+    //         year: 'numeric',
+    //         month: 'short',
+    //         day: 'numeric',
+    //     });
+    //     return formattedDate;
+    // }
+
     async selectPastExpiringDate(): Promise<string> {
         await this.expiringDateField.click();
-        await this.page.waitForTimeout(1000);
         const dateText = await this.currentDate.textContent();
         const selectedDay = parseInt(dateText?.trim() || '0', 10);
-        const pastDay = selectedDay > 1 ? selectedDay - 1 : 1;
-        const pastDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${pastDay}")`);
+        const now = new Date();
+        // 👉 napravi datum za danas (sa UI danom)
+        const currentDate = new Date(
+            now.getFullYear(),
+            now.getMonth(),
+            selectedDay
+        );
+
+        // 👉 oduzmi 1 dan (JS automatski hendluje prelaze)
+        currentDate.setDate(currentDate.getDate() - 1);
+        const pastDay = currentDate.getDate();
+        if (pastDay > selectedDay) {
+            await this.previousMonthButtonInDatePicker.click();
+        }
+        const pastDateButton = this.page.locator(
+            `.v-picker.v-card.v-picker--date .v-btn__content:has-text("${pastDay}")`
+        );
         await pastDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
         await pastDateButton.first().click();
-        await this.page.waitForTimeout(1000);
         await this.okButtonInDatePicekr.click();
-        const expectedDate = new Date();
-        expectedDate.setDate(pastDay);
-        const formattedDate = expectedDate.toLocaleDateString('en-US', {
+        const formattedDate = currentDate.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
@@ -99,22 +133,60 @@ export class TrailerInsertPermitBookPage extends BasePage {
         return formattedDate;
     }
 
+    // async selectExpiringDateMoreThan30Days(): Promise<string> {
+    //     await this.expiringDateField.click();
+    //     await this.page.waitForTimeout(1000);
+    //     const dateText = await this.currentDate.textContent();
+    //     const selectedDay = parseInt(dateText?.trim() || '0', 10);
+    //     const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
+    //     await nextMonthButton.click();
+    //     await nextMonthButton.click();
+    //     const futureDate = new Date();
+    //     futureDate.setMonth(futureDate.getMonth() + 2);
+    //     futureDate.setDate(selectedDay);
+    //     const futureDateDay = futureDate.getDate();
+    //     const futureDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${futureDateDay}")`);
+    //     await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
+    //     await futureDateButton.first().click();
+    //     await this.page.waitForTimeout(1000);
+    //     await this.okButtonInDatePicekr.click();
+    //     const formattedFutureDate = futureDate.toLocaleDateString('en-US', {
+    //         year: 'numeric',
+    //         month: 'short',
+    //         day: 'numeric',
+    //     });
+    //     return formattedFutureDate;
+    // }
+
     async selectExpiringDateMoreThan30Days(): Promise<string> {
         await this.expiringDateField.click();
-        await this.page.waitForTimeout(1000);
         const dateText = await this.currentDate.textContent();
         const selectedDay = parseInt(dateText?.trim() || '0', 10);
-        const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
+        const nextMonthButton = this.page.locator(
+            '.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right'
+        );
+        // 👉 idi 2 meseca unapred u UI
         await nextMonthButton.click();
         await nextMonthButton.click();
-        const futureDate = new Date();
-        futureDate.setMonth(futureDate.getMonth() + 2);
-        futureDate.setDate(selectedDay);
+        const now = new Date();
+        // 👉 broj dana u mesecu +2
+        const daysInTargetMonth = new Date(
+            now.getFullYear(),
+            now.getMonth() + 3,
+            0
+        ).getDate();
+        // 👉 zaštita (31 → 30, februar itd.)
+        const safeDay = Math.min(selectedDay, daysInTargetMonth);
+        const futureDate = new Date(
+            now.getFullYear(),
+            now.getMonth() + 2,
+            safeDay
+        );
+
         const futureDateDay = futureDate.getDate();
         const futureDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${futureDateDay}")`);
         await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
         await futureDateButton.first().click();
-        await this.page.waitForTimeout(1000);
         await this.okButtonInDatePicekr.click();
         const formattedFutureDate = futureDate.toLocaleDateString('en-US', {
             year: 'numeric',
@@ -124,7 +196,34 @@ export class TrailerInsertPermitBookPage extends BasePage {
         return formattedFutureDate;
     }
 
+    // async selectExpiringDateLessThan30Days(): Promise<string> {
+    //     await this.expiringDateField.click();
+    //     await this.page.waitForTimeout(1000);
+    //     const dateText = await this.currentDate.textContent();
+    //     const selectedDay = parseInt(dateText?.trim() || '0', 10);
+    //     const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
+    //     await nextMonthButton.click();
+    //     await this.page.waitForTimeout(1000);
+    //     const futureDate = new Date();
+    //     futureDate.setMonth(futureDate.getMonth() + 1);
+    //     futureDate.setDate(selectedDay);
+    //     const dayToSelect = futureDate.getDate();
+    //     const futureDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${dayToSelect}")`);
+    //     await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
+    //     await futureDateButton.first().click();
+    //     await this.page.waitForTimeout(1000);
+    //     await this.okButtonInDatePicekr.click();
+    //     const formattedDate = futureDate.toLocaleDateString('en-US', {
+    //         year: 'numeric',
+    //         month: 'short',
+    //         day: 'numeric',
+    //     });
+
+    //     return formattedDate;
+    // }
+
     async selectExpiringDateLessThan30Days(): Promise<string> {
+        await this.page.waitForLoadState('networkidle');
         await this.expiringDateField.click();
         await this.page.waitForTimeout(1000);
         const dateText = await this.currentDate.textContent();
@@ -132,11 +231,22 @@ export class TrailerInsertPermitBookPage extends BasePage {
         const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
         await nextMonthButton.click();
         await this.page.waitForTimeout(1000);
-        const futureDate = new Date();
-        futureDate.setMonth(futureDate.getMonth() + 1);
-        futureDate.setDate(selectedDay);
+        const now = new Date();
+        // 👉 broj dana u sledećem mesecu
+        const daysInNextMonth = new Date(
+            now.getFullYear(),
+            now.getMonth() + 2, 0).getDate();
+        // 👉 ako npr. 31 ne postoji → uzmi max (30, 28 itd.)
+        const safeDay = Math.min(selectedDay, daysInNextMonth);
+        const futureDate = new Date(
+            now.getFullYear(),
+            now.getMonth() + 1,
+            safeDay
+        );
         const dayToSelect = futureDate.getDate();
-        const futureDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${dayToSelect}")`);
+        const futureDateButton = this.page.locator(
+            `.v-picker.v-card.v-picker--date .v-btn__content:has-text("${dayToSelect}")`
+        );
         await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
         await futureDateButton.first().click();
         await this.page.waitForTimeout(1000);
@@ -146,7 +256,6 @@ export class TrailerInsertPermitBookPage extends BasePage {
             month: 'short',
             day: 'numeric',
         });
-
         return formattedDate;
     }
 

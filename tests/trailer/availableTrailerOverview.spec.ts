@@ -36,7 +36,7 @@ import { test } from '../fixtures/fixtures';
 
 test('Korisnik moze da pretrazuje trailer po yardi', async ({ availableTrailerSetup }) => {
     await availableTrailerSetup.selectYardFromStatusMenu(availableTrailerSetup.yardFilter, availableTrailerSetup.novaYardaOption);
-    await availableTrailerSetup.page.waitForResponse(response => response.url().includes('/api/trailers') && response.status() == 200 || response.status() == 304);
+    await availableTrailerSetup.page.waitForResponse(response => response.url().includes('/api/trailers/available') && response.status() == 200 || response.status() == 304);
     const count = await availableTrailerSetup.yardColumn.count();
     for (let i = 0; i < count; i++) {
         const cellText = await availableTrailerSetup.yardColumn.nth(i).textContent();
