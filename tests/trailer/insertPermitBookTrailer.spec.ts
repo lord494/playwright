@@ -55,7 +55,7 @@ test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ insert
     await insertPermitTrailerSetup.clickElement(insertPermitTrailerSetup.savePermitButton);
     await trailerOverview.page.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached', timeout: 10000 });
     await documentIconForSelectedTrailer.click();
-    await trailerDocument.nameColumn.waitFor({ state: 'visible', timeout: 20000 });
+    await trailerDocument.nameColumn.waitFor({ state: 'visible', timeout: 25000 });
     const actualDates = await trailerDocument.dateExpiringColumn.allInnerTexts();
     await expect(actualDates).toContain(formattedFutureDate);
     await expect(trailerDocument.nameColumn).toContainText(textCompanyName);

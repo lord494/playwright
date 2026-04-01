@@ -13,6 +13,7 @@ export default defineConfig({
     storageState: 'auth.json',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
+    timezoneId: 'Europe/Belgrade',
   },
   reporter: [['html', { outputFolder: 'playwright-report', open: 'never' }]],
   globalSetup: require.resolve('./globalSetup'),
