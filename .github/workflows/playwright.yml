@@ -206,15 +206,18 @@ jobs:
 
           docker run --rm \
             -v ${{ github.workspace }}/playwright-report:/app/playwright-report \
+            -v ${{ github.workspace }}/test-results:/app/test-results \
             ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest \
-            sh -c "npx playwright test $TEST_DIRS --trace=retain-on-failure --reporter=line" \
+            sh -c "cd /app && npx playwright test $TEST_DIRS --trace=retain-on-failure --reporter=line,html" \
             2>&1 | tee playwright-output.log
 
           TEST_EXIT_CODE=${PIPESTATUS[0]}
 
           echo "Playwright exit code: $TEST_EXIT_CODE"
-          echo "Saved Playwright output:"
-          cat playwright-output.log
+          echo "Checking generated report folders:"
+          ls -la
+          ls -la playwright-report || true
+          ls -la test-results || true
 
           exit $TEST_EXIT_CODE
 
