@@ -227,7 +227,7 @@ jobs:
               ]
             }')
 
-          echo "$RESPONSE" > claude-analysis.md
+          echo "$RESPONSE" | jq -r '.content[0].text' > claude-analysis.md
 
       - name: Upload Claude Analysis
         if: failure()
