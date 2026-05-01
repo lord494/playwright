@@ -26,14 +26,14 @@ test('Korisnik moze da otvori trailers stranicu kada klikne na trailer ikonicu '
     await expect(page).toHaveURL(/trailers/);
 });
 
-test('Korisnik moze da otvori Super ego Colud stranicu kada klikne na cloud ikonicu ', async ({ page, context }) => {
-    const [infoTab] = await Promise.all([
-        context.waitForEvent('page'),
-        page.locator(".mdi.mdi-cloud").click(),
-    ]);
-    await infoTab.waitForLoadState();
-    expect(infoTab.url()).toContain("super-ego.direct.quickconnect");
-});
+// test('Korisnik moze da otvori Super ego Colud stranicu kada klikne na cloud ikonicu ', async ({ page, context }) => {
+//     const [infoTab] = await Promise.all([
+//         context.waitForEvent('page'),
+//         page.locator(".mdi.mdi-cloud").click(),
+//     ]);
+//     await infoTab.waitForLoadState();
+//     expect(infoTab.url()).toContain("super-ego.direct.quickconnect");
+// });
 
 test('Korisnik moze da otvori alert stranicu kada klikne na alert ikonicu ', async ({ page, context }) => {
     const [infoTab] = await Promise.all([

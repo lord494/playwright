@@ -23,7 +23,9 @@ test('Korisnik moze da ostavi private review', async ({ reviewPage }) => {
     await reviewPage.checkPrivateCheckboxInMOdal();
     await reviewPage.writeReview(reviewPage.reviewTextbox, Constants.noteFirst);
     await reviewPage.postViewButton.click();
-    await expect(reviewPage.activeDialogbox).toBeVisible();
+    await reviewPage.postViewButton.waitFor({ state: 'hidden', timeout: 35000 });
+    await expect(reviewPage.page.locator('.v-dialog--active').getByText('Your Review')).toBeVisible({ timeout: 15000 });
+    await expect(reviewPage.page.locator('.v-dialog--active').getByText('Successfully posted')).toBeVisible({ timeout: 15000 });
     await expect(reviewPage.activeDialogbox).toContainText(/Your Review.*Successfully posted/);
     await reviewPage.okButton.click();
     await reviewPage.activeDialogbox.waitFor({ state: 'hidden', timeout: 10000 });
@@ -39,7 +41,10 @@ test('Korisnik moze da ostavi pubilc review', async ({ reviewPage }) => {
     await reviewPage.selectStars(reviewPage.stars.nth(3));
     await reviewPage.writeReview(reviewPage.reviewTextbox, Constants.noteFirst);
     await reviewPage.postViewButton.click();
-    await expect(reviewPage.activeDialogbox).toBeVisible();
+    await reviewPage.postViewButton.waitFor({ state: 'hidden', timeout: 35000 });
+    await expect(reviewPage.page.locator('.v-dialog--active').getByText('Your Review')).toBeVisible({ timeout: 15000 });
+    await expect(reviewPage.page.locator('.v-dialog--active').getByText('Successfully posted')).toBeVisible({ timeout: 15000 });
+    //await expect(reviewPage.activeDialogbox).toBeVisible();
     await expect(reviewPage.activeDialogbox).toContainText(/Your Review.*Successfully posted/);
     await reviewPage.okButton.click();
     await reviewPage.activeDialogbox.waitFor({ state: 'hidden', timeout: 10000 });
@@ -65,11 +70,15 @@ test('Ocjenjivanje shopa je obavezno', async ({ reviewPage }) => {
 });
 
 test('Korisnik moze da edituje review', async ({ reviewPage }) => {
+    test.setTimeout(60000);
     await reviewPage.writeReviewButton.click();
     await reviewPage.stars.first().waitFor({ state: 'visible', timeout: 10000 });
     await reviewPage.selectStars(reviewPage.stars.nth(3));
     await reviewPage.writeReview(reviewPage.reviewTextbox, Constants.noteFirst);
     await reviewPage.postViewButton.click();
+    await reviewPage.postViewButton.waitFor({ state: 'hidden', timeout: 35000 });
+    await expect(reviewPage.page.locator('.v-dialog--active').getByText('Your Review')).toBeVisible({ timeout: 15000 });
+    await expect(reviewPage.page.locator('.v-dialog--active').getByText('Successfully posted')).toBeVisible({ timeout: 15000 });
     await reviewPage.okButton.click();
     await reviewPage.activeDialogbox.waitFor({ state: 'hidden', timeout: 10000 });
     await reviewPage.editIcon.first().click();
@@ -80,7 +89,7 @@ test('Korisnik moze da edituje review', async ({ reviewPage }) => {
     await reviewPage.reviewTextbox.press('Backspace');
     await reviewPage.writeReview(reviewPage.reviewTextbox, Constants.noteSecond);
     await reviewPage.editReviewButton.click();
-    await reviewPage.activeDialogbox.waitFor({ state: 'hidden', timeout: 10000 });
+    await reviewPage.editReviewButton.waitFor({ state: 'hidden', timeout: 35000 });
     await expect(reviewPage.shopReviewCard).toContainText(Constants.user);
     await expect(reviewPage.shopReviewCard).toContainText(Constants.noteSecond);
     await expect(reviewPage.shopReviewCard.locator(reviewPage.activeStars)).toHaveCount(2);

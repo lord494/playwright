@@ -7,7 +7,7 @@ export default defineConfig({
   workers: 1,
   use: {
     headless: true,
-    baseURL: 'https://staging.superegoholding.app',
+    baseURL: 'https://staging.vrlz.app',
     browserName: 'chromium',
     trace: 'retain-on-failure',
     storageState: 'auth.json',

@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { expect, Locator, Page } from '@playwright/test';
 import { RecrutimentPage } from '../page/recruitment/recruitmentOverview.page';
+import { LeasingTeamsPage } from '../page/leasing/leasingTeams.page';
 import { time } from 'console';
 
 
@@ -278,4 +279,19 @@ export async function expectIcon(locator: Locator, expectedIcon?: 'mdi-check' | 
         await expect(className).toContain(expectedIcon);
     }
 };
+
+export function uniqueTeamName(prefix: string = 'PW'): string {
+    return `${prefix}_${Date.now()}_${generateRandomString(4)}`;
+}
+
+export function extractUserName(chipText: string): string {
+    return chipText.split(' - ')[0].trim();
+}
+
+export async function safeDeleteTeam(leasingTeams: LeasingTeamsPage, teamName: string): Promise<void> {
+    const card = leasingTeams.getCardByTeamName(teamName);
+    if ((await card.count()) === 0) return;
+    await leasingTeams.removeAllMembersFromTeam(teamName).catch(() => { });
+    await leasingTeams.deleteTeam(teamName).catch(() => { });
+}
 

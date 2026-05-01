@@ -38,39 +38,84 @@ const targetText3 = "1010 - MACK / ANTHEM / 2021";
 //     }
 // });
 
-const targetMap: Record<string, string> = {
-    'Test 1': "11996 - FREIGHTLINER / CASCADIA / 2025 *Default note*",
-    'Test 2': "55101 - FREIGHTLINER / CASCADIA / 2018",
-    'Test 3': "1010 - MACK / ANTHEM / 2021",
-};
+//////////////////
 
-test.beforeEach(async ({ page }, testInfo) => {
+// const targetMap: Record<string, string> = {
+//     'Test 1': "11996 - FREIGHTLINER / CASCADIA / 2025 *Default note*",
+//     'Test 2': "55101 - FREIGHTLINER / CASCADIA / 2018",
+//     'Test 3': "1010 - MACK / ANTHEM / 2021",
+// };
+
+// test.beforeEach(async ({ page }, testInfo) => {
+//     const availableTruck = new AvailableTruckPage(page);
+//     const targetText = targetMap[testInfo.title];
+
+//     console.log("TARGET TEXT:", JSON.stringify(targetText));
+
+//     await page.goto(Constants.availableTrukcUrl, {
+//         waitUntil: 'networkidle',
+//         timeout: 10000
+//     });
+
+//     page.on('dialog', async (dialog) => {
+//         await dialog.accept();
+//     });
+
+//     const statusColumns = page.locator('.status-column');
+//     const count = await statusColumns.count();
+
+//     console.log("COLUMNS COUNT:", count);
+
+//     let found = false;
+
+//     for (let i = 0; i < count; i++) {
+//         const column = statusColumns.nth(i);
+//         const text = await column.textContent();
+
+//         console.log(`--- COLUMN ${i} ---`);
+//         console.log("RAW TEXT:", JSON.stringify(text));
+
+//         const normalized = text?.replace(/\s+/g, " ").trim();
+
+//         console.log("NORMALIZED:", JSON.stringify(normalized));
+
+//         console.log("MATCH?", normalized?.includes(targetText));
+
+//         if (normalized?.includes(targetText)) {
+//             console.log("✅ MATCH FOUND at index:", i);
+
+//             await column.click({ button: 'right' });
+//             await availableTruck.deleteIconInStatusMenu.click();
+
+//             await page.waitForTimeout(1000);
+
+//             found = true;
+//             break;
+//         }
+//     }
+
+//     if (!found) {
+//         console.log("❌ NO MATCH FOUND");
+//     }
+// });
+
+test.beforeEach(async ({ page }) => {
     const availableTruck = new AvailableTruckPage(page);
-
-    const targetText = targetMap[testInfo.title];
-
-    await page.goto(Constants.availableTrukcUrl, {
-        waitUntil: 'networkidle',
-        timeout: 10000
-    });
-
+    const targetText = "11996 - FREIGHTLINER / CASCADIA / 2025 *Default note*";
+    await page.goto(Constants.availableTrukcUrl, { waitUntil: 'networkidle', timeout: 10000 });
     page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
-
     const statusColumns = page.locator('.status-column');
     const count = await statusColumns.count();
-    let found = false;
-
     for (let i = 0; i < count; i++) {
         const column = statusColumns.nth(i);
-        const text = await column.textContent();
-
-        if (text?.trim() === targetText) {
+        const text = await column.innerText();
+        const normalized = text.replace(/\s+/g, " ").trim();
+        if (normalized.includes(targetText)) {
             await column.click({ button: 'right' });
             await availableTruck.deleteIconInStatusMenu.click();
             await page.waitForTimeout(1000);
-            found = true;
             break;
         }
     }

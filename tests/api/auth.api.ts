@@ -17,5 +17,5 @@ export async function login() {
     const body = await response.json();
     console.log('LOGIN RESPONSE:', body);
 
-    return apiContext; // čuva sesiju (cookie / session state)
+    return apiContext;
 }

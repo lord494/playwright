@@ -4,9 +4,7 @@ import { getWeekRange } from '../../helpers/dateUtilis';
 import fs from 'fs';
 import { test } from '../fixtures/fixtures';
 
-
 test('Korisnik moze da pretrazuje User-a po imenu', async ({ dispatchDashboardSetup }) => {
-
     await Promise.all([
         dispatchDashboardSetup.page.waitForResponse(response =>
             response.url().includes('/api/drivers/dashboard') &&
@@ -18,7 +16,6 @@ test('Korisnik moze da pretrazuje User-a po imenu', async ({ dispatchDashboardSe
 });
 
 test('Korisnik moze da pretrazuje User-a po kamionu', async ({ dispatchDashboardSetup }) => {
-
     await Promise.all([
         dispatchDashboardSetup.page.waitForResponse(response =>
             response.url().includes('/api/drivers/dashboard') &&

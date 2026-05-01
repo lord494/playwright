@@ -109,7 +109,7 @@ export class Login {
   }
 
   async loginOnTms(email: string, password: string) {
-    await this.page.goto('https://staging.superegoholding.app/login', { timeout: 60000 });
+    await this.page.goto('https://staging.vrlz.app/login', { timeout: 60000 });
     await this.page.getByRole('textbox', { name: 'Login' }).fill(email);
     await this.page.getByRole('textbox', { name: 'Password' }).fill(password);
     await this.page.waitForTimeout(1000);

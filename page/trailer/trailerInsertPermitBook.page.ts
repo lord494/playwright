@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 import path from 'path';
 
@@ -222,40 +222,103 @@ export class TrailerInsertPermitBookPage extends BasePage {
     //     return formattedDate;
     // }
 
+    // async selectExpiringDateLessThan30Days(): Promise<string> {
+    //     await this.page.waitForLoadState('networkidle');
+    //     await this.expiringDateField.click();
+    //     await this.page.waitForTimeout(1000);
+    //     const dateText = await this.currentDate.textContent();
+    //     const selectedDay = parseInt(dateText?.trim() || '0', 10);
+    //     const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
+    //     await nextMonthButton.click();
+    //     await this.page.waitForTimeout(1000);
+    //     const now = new Date();
+    //     // 👉 broj dana u sledećem mesecu
+    //     const daysInNextMonth = new Date(
+    //         now.getFullYear(),
+    //         now.getMonth() + 2, 0).getDate();
+    //     // 👉 ako npr. 31 ne postoji → uzmi max (30, 28 itd.)
+    //     const safeDay = Math.min(selectedDay, daysInNextMonth);
+    //     const futureDate = new Date(
+    //         now.getFullYear(),
+    //         now.getMonth() + 1,
+    //         safeDay
+    //     );
+    //     const dayToSelect = futureDate.getDate();
+    //     const futureDateButton = this.page.locator(
+    //         `.v-picker.v-card.v-picker--date .v-btn__content:has-text("${dayToSelect}")`
+    //     );
+    //     await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
+    //     await futureDateButton.first().click();
+    //     await this.page.waitForTimeout(1000);
+    //     await this.okButtonInDatePicekr.click();
+    //     const formattedDate = futureDate.toLocaleDateString('en-US', {
+    //         year: 'numeric',
+    //         month: 'short',
+    //         day: 'numeric',
+    //     });
+    //     return formattedDate;
+    // }
+
     async selectExpiringDateLessThan30Days(): Promise<string> {
-        await this.page.waitForLoadState('networkidle');
+        // 1. otvori datepicker
+        await expect(this.expiringDateField).toBeVisible();
         await this.expiringDateField.click();
-        await this.page.waitForTimeout(1000);
-        const dateText = await this.currentDate.textContent();
-        const selectedDay = parseInt(dateText?.trim() || '0', 10);
-        const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
+
+        // 2. sačekaj da datepicker bude vidljiv
+        const datePicker = this.page.locator('.v-picker.v-card.v-picker--date');
+        await expect(datePicker).toBeVisible();
+
+        // 3. uzmi današnji dan iz JS-a (NE iz UI-a → stabilno)
+        const selectedDay = new Date().getDate();
+
+        // 4. idi na next month
+        const nextMonthButton = this.page.locator(
+            '.v-date-picker-header .v-icon.mdi-chevron-right'
+        );
+        await expect(nextMonthButton).toBeVisible();
         await nextMonthButton.click();
-        await this.page.waitForTimeout(1000);
+
+        // 5. sačekaj render novog mjeseca
+        await expect(this.page.locator('.v-date-picker-table')).toBeVisible();
+
+        // 6. izračunaj broj dana u next month
         const now = new Date();
-        // 👉 broj dana u sledećem mesecu
+
         const daysInNextMonth = new Date(
             now.getFullYear(),
-            now.getMonth() + 2, 0).getDate();
-        // 👉 ako npr. 31 ne postoji → uzmi max (30, 28 itd.)
+            now.getMonth() + 2,
+            0
+        ).getDate();
+
         const safeDay = Math.min(selectedDay, daysInNextMonth);
+
         const futureDate = new Date(
             now.getFullYear(),
             now.getMonth() + 1,
             safeDay
         );
+
         const dayToSelect = futureDate.getDate();
-        const futureDateButton = this.page.locator(
-            `.v-picker.v-card.v-picker--date .v-btn__content:has-text("${dayToSelect}")`
+
+        // 7. klik na dan (stabilan locator)
+        const dayButton = this.page.locator(
+            `.v-date-picker-table .v-btn:not(.v-btn--disabled) .v-btn__content:has-text("${dayToSelect}")`
         );
-        await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
-        await futureDateButton.first().click();
-        await this.page.waitForTimeout(1000);
+
+        await expect(dayButton.first()).toBeVisible();
+        await dayButton.first().click();
+
+        // 8. potvrdi datum
+        await expect(this.okButtonInDatePicekr).toBeVisible();
         await this.okButtonInDatePicekr.click();
+
+        // 9. return formatiran datum (za assert u testu)
         const formattedDate = futureDate.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
         });
+
         return formattedDate;
     }
 

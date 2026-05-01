@@ -258,4 +258,86 @@ export class Constants {
     static eldShifts = '/shifts'
     static dotInspectionUrl = '/dot-inspections';
     static eldTypesUrl = '/eld-types'
+
+    // ===== LEASING =====
+    static leasingClientsUrl = '/leasing/clients';
+    static leasingClientsUrlRegex = /\/leasing\/clients$/;
+
+    static newCompanyButtonLabel = 'New Company';
+    static newOwnerOperatorButtonLabel = 'New Owner Operator';
+    static exportButtonLabel = 'Export';
+
+    static leasingClientsSearchPlaceholder = 'Search clients';
+    static leasingClientsTestCompany = 'newComp';
+
+    static leasingClientsAllRadioLabel = 'All';
+    static leasingClientsActiveRadioLabel = 'Active';
+    static leasingClientsInactiveRadioLabel = 'Inactive';
+
+    static leasingClientsLeasingSalesLabel = 'Leasing Sales';
+    static leasingClientsRecruitingLabel = 'Recruiting';
+    static leasingClientsMaintenanceLabel = 'Maintenance';
+    static leasingClientsFuelLabel = 'Fuel';
+
+    static leasingClientsColumnName = 'Name';
+    static leasingClientsColumnClientType = 'Client type';
+    static leasingClientsColumnClientStatus = 'Client status';
+    static leasingClientsColumnPresidents = 'Presidents';
+    static leasingClientsColumnTrucks = 'Trucks';
+    static leasingClientsColumnTrailers = 'Trailers';
+    static leasingClientsColumnTruckTakenApproved = 'Truck - Taken/Approved';
+    static leasingClientsColumnTrailerTakenApproved = 'Trailer - Taken/Approved';
+
+    static leasingClientsApplyButtonLabel = 'Apply';
+    static leasingClientsSavedFiltersDialogTitle = 'Saved Filters';
+    static leasingClientsRowsPerPage10 = '10';
+
+    static leasingClientsStatusActive = 'Active';
+    static leasingClientsStatusApproved = 'Approved';
+    static leasingClientsStatusInactive = 'Inactive';
+    static leasingClientsStatusPending = 'Pending';
+
+    static leasingClientsCheckboxChipTrueValue = "'true'";
+    static leasingClientsCheckboxChipFalseValue = "'false'";
+
+    static leasingClientsAddFilterDialogTitle = 'Add Filter Name';
+    static leasingClientsFiltersNameLabel = 'Filters name';
+    static leasingClientsSaveButtonLabel = 'Save';
+
+    static leasingClientsClientTypeCompany = 'Company';
+    static leasingClientsPresidentValue = 'Petar Petrović';
+
+    // ===== LEASING TEAMS =====
+    static leasingTeamsUrl = '/leasing/leasing-teams';
+    static leasingTeamsUrlRegex = /\/leasing\/leasing-teams$/;
+
+    static leasingTeamsSelectTeamTypeLabel = 'Select leasing team type';
+    static leasingTeamsSearchUsersByRoleLabel = 'Search users by role';
+    static leasingTeamsCreateNewButtonLabel = 'Create New';
+    static leasingTeamsMoveAllButtonLabel = 'Move All';
+    static leasingTeamsDeleteTeamButtonLabel = 'Delete Team';
+
+    static leasingTeamsSalesTruckSection = 'Sales Truck';
+    static leasingTeamsSalesTrailerSection = 'Sales Trailer';
+    static leasingTeamsBillingSection = 'Billing';
+
+    static leasingTeamsCreateModalTitle = 'Create New Team';
+    static leasingTeamsCreateTeamTypeLabel = 'Select team type';
+    static leasingTeamsTeamNameLabel = 'Team Name';
+    static leasingTeamsTeamLeadLabel = 'Team Lead';
+    static leasingTeamsAddPeopleLabel = 'Add People';
+    static leasingTeamsCreateButtonLabel = 'Create';
+    static leasingTeamsCancelButtonLabel = 'Cancel';
+
+    static leasingTeamsExistingTeamName = 'Sales team 1';
+    static leasingTeamsRoleAdmin = 'ADMIN';
+    static leasingTeamsRoleDispatcher = 'DISPATCHER';
+
+    static leasingTeamsMoveAllModalTitle = 'Move All Members';
+    static leasingTeamsMoveAllSelectTeamLabel = 'Select team to move members';
+    static leasingTeamsMoveAllSubmitLabel = 'Submit';
+
+    static leasingTeamsValidationTeamTypeRequired = 'The Team type field is required';
+    static leasingTeamsValidationTeamNameRequired = 'The Team name field is required';
+    static leasingTeamsValidationTeamLeadRequired = 'The Team lead field is required';
 }

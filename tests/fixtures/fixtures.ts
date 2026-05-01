@@ -47,6 +47,10 @@ import { EditTrailersPage } from '../../page/trailer/editTrailer.page';
 import { TrailerInsertPermitBookPage } from '../../page/trailer/trailerInsertPermitBook.page';
 import { AvailableTrailersPage } from '../../page/trailer/availableTrailer.page';
 import { AddAvailableTrailersPage } from '../../page/trailer/addAvailableTrailer.page';
+import { LeasingHousePage } from '../../page/leasing/leasingHouse.page';
+import { LeasingClientsOverviewPage } from '../../page/leasing/leasingClientsOverview.page';
+import { LeasingTeamsPage } from '../../page/leasing/leasingTeams.page';
+import { LeasingTeamsCreateModalPage } from '../../page/leasing/leasingTeamsCreateModal.page';
 
 type TrailerData = {
     number?: string | null
@@ -148,6 +152,10 @@ export const test = base.extend<{
     trailerData: TrailerData;
     trailerDataForEdit: TrailerData;
     trailerDocumentOverview: TrailerDocumentPage;
+    leasingHousePage: LeasingHousePage;
+    leasingClientsOverview: LeasingClientsOverviewPage;
+    leasingTeams: LeasingTeamsPage;
+    leasingTeamsCreateModal: LeasingTeamsCreateModalPage;
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -160,6 +168,30 @@ export const test = base.extend<{
         const shop = new ShopPage(loggedPage);
         await loggedPage.goto(Constants.shopUrl, { waitUntil: 'networkidle' });
         await use(shop);
+    },
+
+    leasingHousePage: async ({ loggedPage }, use) => {
+        const leasingHouse = new LeasingHousePage(loggedPage);
+        await loggedPage.goto('/leasing/houses', { waitUntil: 'networkidle' });
+        await use(leasingHouse);
+    },
+
+    leasingClientsOverview: async ({ loggedPage }, use) => {
+        const leasingClients = new LeasingClientsOverviewPage(loggedPage);
+        await loggedPage.goto(Constants.leasingClientsUrl, { waitUntil: 'networkidle' });
+        await use(leasingClients);
+    },
+
+    leasingTeams: async ({ loggedPage }, use) => {
+        const leasingTeams = new LeasingTeamsPage(loggedPage);
+        await loggedPage.goto(Constants.leasingTeamsUrl, { waitUntil: 'networkidle' });
+        await leasingTeams.waitForLoaded();
+        await use(leasingTeams);
+    },
+
+    leasingTeamsCreateModal: async ({ loggedPage }, use) => {
+        const modal = new LeasingTeamsCreateModalPage(loggedPage);
+        await use(modal);
     },
 
     reviewPage: async ({ loggedPage }, use) => {
