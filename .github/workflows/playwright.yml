@@ -212,28 +212,22 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
-          npm install -g @anthropic-ai/claude-code
+          RESPONSE=$(curl https://api.anthropic.com/v1/messages \
+            --header "x-api-key: $ANTHROPIC_API_KEY" \
+            --header "anthropic-version: 2023-06-01" \
+            --header "content-type: application/json" \
+            --data '{
+              "model": "claude-sonnet-4-5",
+              "max_tokens": 1200,
+              "messages": [
+                {
+                  "role": "user",
+                  "content": "Playwright tests failed in GitHub Actions. Analyze possible reasons: flaky test, locator issue, timing/wait issue, backend/API issue, Docker/CI issue. Give: 1. Most likely reason, 2. Is it test bug or app bug, 3. What file should be checked, 4. Suggested Playwright fix."
+                }
+              ]
+            }')
 
-          claude -p "
-          Playwright tests failed in GitHub Actions.
-
-          Analyze the failure based on the available files.
-
-          Check:
-          - playwright-report
-          - test output
-          - possible flaky test issue
-          - locator issue
-          - timing/wait issue
-          - backend/API issue
-          - Docker/CI issue
-
-          Give me:
-          1. Most likely reason
-          2. Is it test bug or application bug?
-          3. What file should be checked
-          4. Suggested fix with Playwright code example if possible
-          " > claude-analysis.md
+          echo "$RESPONSE" > claude-analysis.md
 
       - name: Upload Claude Analysis
         if: failure()
