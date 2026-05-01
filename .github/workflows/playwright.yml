@@ -197,9 +197,7 @@ jobs:
           echo "Will run tests in: $UNIQUE_TEST_DIRS"
 
       - name: Run matched Playwright tests in Docker
-        id: playwright
         if: env.TEST_DIRS != ''
-        continue-on-error: true
         run: |
           echo "Running Playwright tests for changed areas: $TEST_DIRS"
 
@@ -217,7 +215,7 @@ jobs:
 
           TEST_EXIT_CODE=${PIPESTATUS[0]}
 
-          echo "exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
+          echo "$TEST_EXIT_CODE" > playwright-exit-code.txt
 
           echo "Playwright exit code: $TEST_EXIT_CODE"
           echo "Saved Playwright output:"
@@ -231,10 +229,25 @@ jobs:
           exit 0
 
       - name: Ask Claude to analyze failed Playwright tests
-        if: steps.playwright.outputs.exit_code != '0'
+        if: always()
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
+          echo "Claude step started."
+
+          if [ ! -f playwright-exit-code.txt ]; then
+            echo "No playwright-exit-code.txt found. Probably no tests were executed."
+            exit 0
+          fi
+
+          TEST_EXIT_CODE=$(cat playwright-exit-code.txt)
+          echo "Detected Playwright exit code: $TEST_EXIT_CODE"
+
+          if [ "$TEST_EXIT_CODE" = "0" ]; then
+            echo "Playwright tests passed. Claude analysis is not needed."
+            exit 0
+          fi
+
           echo "# Claude Analysis" > claude-analysis.md
 
           if [ ! -f playwright-output.log ]; then
@@ -260,7 +273,6 @@ jobs:
             }')")
 
           echo "$RESPONSE" > claude-raw-response.json
-
           echo "$RESPONSE" | jq -r '.content[0].text // .error.message // "Claude returned no readable response."' >> claude-analysis.md
 
       - name: Upload Claude Analysis
@@ -272,6 +284,7 @@ jobs:
             claude-analysis.md
             claude-raw-response.json
             playwright-output.log
+            playwright-exit-code.txt
           if-no-files-found: ignore
 
       - name: Upload Playwright HTML Report
@@ -291,5 +304,15 @@ jobs:
           if-no-files-found: ignore
 
       - name: Fail workflow if Playwright tests failed
-        if: steps.playwright.outputs.exit_code != '0'
-        run: exit 1
+        if: always()
+        run: |
+          if [ -f playwright-exit-code.txt ]; then
+            TEST_EXIT_CODE=$(cat playwright-exit-code.txt)
+
+            if [ "$TEST_EXIT_CODE" != "0" ]; then
+              echo "Playwright tests failed with exit code $TEST_EXIT_CODE"
+              exit 1
+            fi
+          fi
+
+          echo "No failed Playwright tests detected."
