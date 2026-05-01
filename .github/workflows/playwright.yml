@@ -198,37 +198,49 @@ jobs:
           echo "TEST_DIRS=$UNIQUE_TEST_DIRS" >> $GITHUB_ENV
           echo "Will run tests in: $UNIQUE_TEST_DIRS"
 
-      - name: Run matched Playwright tests in Docker
+            - name: Run matched Playwright tests in Docker
         if: env.TEST_DIRS != ''
-        run: |
+      - run: |
           echo "Running Playwright tests for changed areas: $TEST_DIRS"
 
+          set +e
+
           docker run --rm \
-          -v ${{ github.workspace }}/playwright-report:/app/playwright-report \
-          ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest \
-          sh -c "npx playwright test $TEST_DIRS \
-          --trace=retain-on-failure \
-          --reporter=line"\
-          2>&1 | tee playwright-output.log
+            -v ${{ github.workspace }}/playwright-report:/app/playwright-report \
+            ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest \
+            sh -c "npx playwright test $TEST_DIRS --trace=retain-on-failure --reporter=line" \
+            2>&1 | tee playwright-output.log
 
-          exit ${PIPESTATUS[0]}
+          TEST_EXIT_CODE=${PIPESTATUS[0]}
 
-      - name: Ask Claude to analyze failed Playwright tests
+          echo "Playwright exit code: $TEST_EXIT_CODE"
+          echo "Saved output:"
+          cat playwright-output.log
+
+          exit $TEST_EXIT_CODE
+
+            - name: Ask Claude to analyze failed Playwright tests
         if: failure()
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
+      - run: |
+          echo "Checking playwright-output.log..."
+          ls -la
+          cat playwright-output.log || echo "No playwright-output.log found"
+
+          TEST_OUTPUT=$(cat playwright-output.log)
+
           RESPONSE=$(curl https://api.anthropic.com/v1/messages \
             --header "x-api-key: $ANTHROPIC_API_KEY" \
             --header "anthropic-version: 2023-06-01" \
             --header "content-type: application/json" \
             --data "$(jq -n --arg output "$TEST_OUTPUT" '{
-              "model": "claude-sonnet-4-5",
-              "max_tokens": 1200,
-              "messages": [
+              model: "claude-sonnet-4-5",
+              max_tokens: 1500,
+              messages: [
                 {
-                  "role": "user",
-                  "content": "Analyze this failed Playwright test output. Be specific, do not give a generic template. Explain the exact reason, whether it is a test issue or app issue, and suggest a fix:\n\n\($output)"
+                  role: "user",
+                  content: "Analyze this failed Playwright test output. Be specific. Do not give a generic template. If there is an assertion error, explain expected vs received. Here is the output:\n\n\($output)"
                 }
               ]
             }')")
