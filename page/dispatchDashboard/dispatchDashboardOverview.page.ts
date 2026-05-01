@@ -141,5 +141,6 @@ export class DispatchDashboardOverview {
         await this.monthInDatePicker.click();
         await this.dateLabel.click();
         await this.page.click('.v-btn__content:text("13")');
+
     }
 }

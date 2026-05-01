@@ -205,7 +205,42 @@ jobs:
           docker run --rm \
           -v ${{ github.workspace }}/playwright-report:/app/playwright-report \
           ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest \
-          npx playwright test $TEST_DIRS
+          npx playwright test $TEST_DIRS --trace=retain-on-failure
+
+      - name: Ask Claude to analyze failed Playwright tests
+        if: failure()
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          npm install -g @anthropic-ai/claude-code
+
+          claude -p "
+          Playwright tests failed in GitHub Actions.
+
+          Analyze the failure based on the available files.
+
+          Check:
+          - playwright-report
+          - test output
+          - possible flaky test issue
+          - locator issue
+          - timing/wait issue
+          - backend/API issue
+          - Docker/CI issue
+
+          Give me:
+          1. Most likely reason
+          2. Is it test bug or application bug?
+          3. What file should be checked
+          4. Suggested fix with Playwright code example if possible
+          " > claude-analysis.md
+
+      - name: Upload Claude Analysis
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-analysis
+          path: claude-analysis.md
 
       - name: Upload Playwright HTML Report
         if: always()
