@@ -197,7 +197,9 @@ jobs:
           echo "Will run tests in: $UNIQUE_TEST_DIRS"
 
       - name: Run matched Playwright tests in Docker
+        id: playwright
         if: env.TEST_DIRS != ''
+        continue-on-error: true
         run: |
           echo "Running Playwright tests for changed areas: $TEST_DIRS"
 
@@ -215,6 +217,8 @@ jobs:
 
           TEST_EXIT_CODE=${PIPESTATUS[0]}
 
+          echo "exit_code=$TEST_EXIT_CODE" >> $GITHUB_OUTPUT
+
           echo "Playwright exit code: $TEST_EXIT_CODE"
           echo "Saved Playwright output:"
           cat playwright-output.log
@@ -224,10 +228,10 @@ jobs:
           ls -la playwright-report || true
           ls -la test-results || true
 
-          exit $TEST_EXIT_CODE
+          exit 0
 
       - name: Ask Claude to analyze failed Playwright tests
-        if: ${{ failure() && env.TEST_DIRS != '' }}
+        if: steps.playwright.outputs.exit_code != '0'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
@@ -257,9 +261,7 @@ jobs:
 
           echo "$RESPONSE" > claude-raw-response.json
 
-          ANALYSIS=$(echo "$RESPONSE" | jq -r '.content[0].text // .error.message // "Claude returned no readable response."')
-
-          echo "$ANALYSIS" >> claude-analysis.md
+          echo "$RESPONSE" | jq -r '.content[0].text // .error.message // "Claude returned no readable response."' >> claude-analysis.md
 
       - name: Upload Claude Analysis
         if: always()
@@ -287,3 +289,7 @@ jobs:
           name: playwright-test-results
           path: test-results
           if-no-files-found: ignore
+
+      - name: Fail workflow if Playwright tests failed
+        if: steps.playwright.outputs.exit_code != '0'
+        run: exit 1
