@@ -163,8 +163,6 @@ jobs:
 
       - name: Push Docker image
         run: docker push ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest
-      # - name: Build Docker image
-      #   run: docker build -t playwright-tests .
 
       - name: Detect changed folders and map to test dirs
         id: detect
@@ -172,7 +170,7 @@ jobs:
           echo "Detecting changes..."
 
           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
-          echo "Changed files:" 
+          echo "Changed files:"
           echo "$CHANGED_FILES"
 
           TEST_DIRS_SET=()
@@ -185,6 +183,7 @@ jobs:
                 TEST_DIRS_SET+=("$test_path")
               fi
             fi
+
             if [[ "$file" == tests/*/* ]]; then
               feature=$(echo "$file" | cut -d/ -f2)
               test_path="tests/$feature"
@@ -198,9 +197,9 @@ jobs:
           echo "TEST_DIRS=$UNIQUE_TEST_DIRS" >> $GITHUB_ENV
           echo "Will run tests in: $UNIQUE_TEST_DIRS"
 
-            - name: Run matched Playwright tests in Docker
+      - name: Run matched Playwright tests in Docker
         if: env.TEST_DIRS != ''
-      - run: |
+        run: |
           echo "Running Playwright tests for changed areas: $TEST_DIRS"
 
           set +e
@@ -214,23 +213,30 @@ jobs:
           TEST_EXIT_CODE=${PIPESTATUS[0]}
 
           echo "Playwright exit code: $TEST_EXIT_CODE"
-          echo "Saved output:"
+          echo "Saved Playwright output:"
           cat playwright-output.log
 
           exit $TEST_EXIT_CODE
 
-            - name: Ask Claude to analyze failed Playwright tests
+      - name: Ask Claude to analyze failed Playwright tests
         if: failure()
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      - run: |
+        run: |
+          echo "# Claude Analysis" > claude-analysis.md
+
+          if [ ! -f playwright-output.log ]; then
+            echo "playwright-output.log was not found." >> claude-analysis.md
+            exit 0
+          fi
+
           echo "Checking playwright-output.log..."
           ls -la
-          cat playwright-output.log || echo "No playwright-output.log found"
+          cat playwright-output.log
 
           TEST_OUTPUT=$(cat playwright-output.log)
 
-          RESPONSE=$(curl https://api.anthropic.com/v1/messages \
+          RESPONSE=$(curl -s https://api.anthropic.com/v1/messages \
             --header "x-api-key: $ANTHROPIC_API_KEY" \
             --header "anthropic-version: 2023-06-01" \
             --header "content-type: application/json" \
@@ -240,19 +246,26 @@ jobs:
               messages: [
                 {
                   role: "user",
-                  content: "Analyze this failed Playwright test output. Be specific. Do not give a generic template. If there is an assertion error, explain expected vs received. Here is the output:\n\n\($output)"
+                  content: "Analyze this failed Playwright test output. Be specific. Do not give a generic template. If there is an assertion error, explain expected vs received. Tell me if it is a test issue or application bug. Suggest a concrete Playwright fix if possible.\n\nHere is the output:\n\n\($output)"
                 }
               ]
             }')")
 
-          echo "$RESPONSE" | jq -r '.content[0].text' > claude-analysis.md
+          echo "$RESPONSE" > claude-raw-response.json
+
+          ANALYSIS=$(echo "$RESPONSE" | jq -r '.content[0].text // .error.message // "Claude returned no readable response."')
+
+          echo "$ANALYSIS" >> claude-analysis.md
 
       - name: Upload Claude Analysis
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: claude-analysis
-          path: claude-analysis.md
+          path: |
+            claude-analysis.md
+            claude-raw-response.json
+            playwright-output.log
 
       - name: Upload Playwright HTML Report
         if: always()
