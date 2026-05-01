@@ -165,7 +165,6 @@ jobs:
         run: docker push ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest
 
       - name: Detect changed folders and map to test dirs
-        id: detect
         run: |
           echo "Detecting changes..."
 
@@ -202,6 +201,9 @@ jobs:
         run: |
           echo "Running Playwright tests for changed areas: $TEST_DIRS"
 
+          mkdir -p playwright-report
+          mkdir -p test-results
+
           set +e
 
           docker run --rm \
@@ -214,7 +216,10 @@ jobs:
           TEST_EXIT_CODE=${PIPESTATUS[0]}
 
           echo "Playwright exit code: $TEST_EXIT_CODE"
-          echo "Checking generated report folders:"
+          echo "Saved Playwright output:"
+          cat playwright-output.log
+
+          echo "Checking generated folders:"
           ls -la
           ls -la playwright-report || true
           ls -la test-results || true
@@ -222,7 +227,7 @@ jobs:
           exit $TEST_EXIT_CODE
 
       - name: Ask Claude to analyze failed Playwright tests
-        if: failure()
+        if: ${{ failure() && env.TEST_DIRS != '' }}
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: |
@@ -232,10 +237,6 @@ jobs:
             echo "playwright-output.log was not found." >> claude-analysis.md
             exit 0
           fi
-
-          echo "Checking playwright-output.log..."
-          ls -la
-          cat playwright-output.log
 
           TEST_OUTPUT=$(cat playwright-output.log)
 
@@ -261,7 +262,7 @@ jobs:
           echo "$ANALYSIS" >> claude-analysis.md
 
       - name: Upload Claude Analysis
-        if: failure()
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: claude-analysis
@@ -269,6 +270,7 @@ jobs:
             claude-analysis.md
             claude-raw-response.json
             playwright-output.log
+          if-no-files-found: ignore
 
       - name: Upload Playwright HTML Report
         if: always()
@@ -276,3 +278,12 @@ jobs:
         with:
           name: playwright-report
           path: playwright-report
+          if-no-files-found: warn
+
+      - name: Upload Playwright Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results
+          path: test-results
+          if-no-files-found: ignore
