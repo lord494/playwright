@@ -33,7 +33,7 @@ test('Korisnik moze da edituje Contact', async ({ createdContact, contactPage, a
     await expect(contactPage.positionColumn).toContainText(Constants.readRole);
     await expect(contactPage.isActiveColumn).toContainText('NO');
     await contactPage.deleteIcon.click();
-    await expect(contactPage.snackMessage).toContainText(Constants.driverNameFraser + ' sssdsds successfully deleted');
+    await expect(contactPage.snackMessage).toContainText(Constants.driverNameFraser + ' 12sssdsds successfully deleted');
 });
 
 test('Korisnik moze da edituje Contact pomocu populate fields', async ({ createdContact, contactPage, addContactPage }) => {

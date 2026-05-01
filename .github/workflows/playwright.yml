@@ -202,10 +202,16 @@ jobs:
         if: env.TEST_DIRS != ''
         run: |
           echo "Running Playwright tests for changed areas: $TEST_DIRS"
+
           docker run --rm \
           -v ${{ github.workspace }}/playwright-report:/app/playwright-report \
           ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest \
-          npx playwright test $TEST_DIRS --trace=retain-on-failure
+          sh -c "npx playwright test $TEST_DIRS \
+          --trace=retain-on-failure \
+          --reporter=line"\
+          2>&1 | tee playwright-output.log
+
+          exit ${PIPESTATUS[0]}
 
       - name: Ask Claude to analyze failed Playwright tests
         if: failure()
@@ -216,16 +222,16 @@ jobs:
             --header "x-api-key: $ANTHROPIC_API_KEY" \
             --header "anthropic-version: 2023-06-01" \
             --header "content-type: application/json" \
-            --data '{
+            --data "$(jq -n --arg output "$TEST_OUTPUT" '{
               "model": "claude-sonnet-4-5",
               "max_tokens": 1200,
               "messages": [
                 {
                   "role": "user",
-                  "content": "Playwright tests failed in GitHub Actions. Analyze possible reasons: flaky test, locator issue, timing/wait issue, backend/API issue, Docker/CI issue. Give: 1. Most likely reason, 2. Is it test bug or app bug, 3. What file should be checked, 4. Suggested Playwright fix."
+                  "content": "Analyze this failed Playwright test output. Be specific, do not give a generic template. Explain the exact reason, whether it is a test issue or app issue, and suggest a fix:\n\n\($output)"
                 }
               ]
-            }')
+            }')")
 
           echo "$RESPONSE" | jq -r '.content[0].text' > claude-analysis.md
 
