@@ -207,6 +207,8 @@ jobs:
           set +e
 
           docker run --rm \
+            -e CI=true \
+            -e PLAYWRIGHT_HTML_OPEN=never \
             -v ${{ github.workspace }}/playwright-report:/app/playwright-report \
             -v ${{ github.workspace }}/test-results:/app/test-results \
             ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest \
