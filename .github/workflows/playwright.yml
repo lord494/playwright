@@ -225,7 +225,7 @@ jobs:
         if: failure()
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      run: |
+        run: |
           echo "# Claude Analysis" > claude-analysis.md
 
           if [ ! -f playwright-output.log ]; then
