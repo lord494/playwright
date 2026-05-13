@@ -117,6 +117,22 @@ export class Constants {
     static testCompany = 'testcompany';
     static stolenStatus = 'STOLEN';
     static novaYarda = 'Nova yarda';
+    // Verified yards available in the Transfer modal on staging (2026-05-11):
+    //   PARKING Testic Testoni, samo trailer 215, XYZ yard, Yardenko yardic
+    static transferDestinationYard = 'Yardenko yardic';
+
+    // Trailers known to have an existing available-trailer record on staging — these can be
+    // re-added to /available-trailers via the UI Add flow (which is actually a PUT to
+    // /api/trailers/available/{id}). Each parallel worker picks one of these by index so they
+    // don't collide. If any goes stale, swap it for another existing-record trailer.
+    static workerCandidateAvailableTrailers = [
+        '001923',
+        '002914',
+        '002919',
+        '002918',
+        '002920',
+        '002907',
+    ];
     static dealership = 'testOwn';
     static oldStateValue = 'old state';
     static newStateValue = 'new state';

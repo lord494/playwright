@@ -1,265 +1,332 @@
-import { Locator, Page } from "@playwright/test";
+import { Locator, Page, expect } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
+
+// All selectors verified against the live staging.vrlz.app DOM on 2026-05-11.
+//
+// Table layout (24 columns):
+//   1=Trailer, 2=Type, 3=Year, 4=Driver/Third party, 5=Sales person, 6=Truck, 7=Option,
+//   8=GPS, 9=GPS APP, 10=Sign, 11=Loaded, 12=Broken, 13=Availability, 14=Status,
+//   15=Location GPS, 16=Brokerage, 17=Assign Date, 18=Info, 19=Note, 20=Towing,
+//   21=Payment Start Date, 22=Payment Status, 23=Sales Ready, 24=Actions
+//
+// Yard is NOT a visible column — trailers are grouped via the API endpoint
+// `/api/trailers/available-trailers-by-yard?search=...`.
+//
+// Delete is a NATIVE BROWSER CONFIRM, not a Vuetify dialog.
 
 export class AvailableTrailersPage extends BasePage {
     readonly page: Page;
-    readonly addButton: Locator;
+
+    // Trailer number associated with this page-object instance, populated by fixtures
+    // (e.g. availableTrailerWithUiCreatedTrailer) for tests that operate on a specific trailer.
+    trailerNumber: string = '';
+
+    // Top toolbar
+    readonly allTrailersLink: Locator;
+    readonly statsLink: Locator;
+    readonly exportAllButton: Locator;
     readonly exportButton: Locator;
-    readonly statsButton: Locator;
-    // readonly companyFilter: Locator;
-    // readonly statusFilter: Locator;
-    readonly trailerNumberFilter: Locator;
-    readonly driverNameFilter: Locator;
-    //readonly ownerFilter: Locator;
-    //readonly dealerShipFilter: Locator;
-    readonly yardFilter: Locator;
-    // readonly testCompanyOption: Locator;
-    //readonly stolenStatusOption: Locator;
-    readonly novaYardaOption: Locator;
-    readonly trailerNameColumn: Locator;
-    readonly trailerTypeColumn: Locator;
-    //readonly trailerMakeColumn: Locator;
-    readonly trailerYearColumn: Locator;
-    //readonly vinNumberColumn: Locator;
-    readonly driverThirdPartyColumn: Locator;
-    //readonly ownerNameColumn: Locator;
-    //readonly dealershipColumn: Locator;
-    readonly yardColumn: Locator;
-    readonly statusColumn: Locator;
-    // readonly driverNameColumn: Locator;
-    // readonly reloadIconInCompanyColumn: Locator;
-    // readonly reloadIconInPlateColumn: Locator;
-    // readonly reloadIconInTempPlateExp: Locator;
-    // readonly reloadIconInDotColumn: Locator;
-    readonly truckColumn: Locator;
-    //readonly annualDotColumn: Locator;
-    //readonly repairsColumn: Locator;
-    readonly infoColumn: Locator;
-    readonly notesColumn: Locator;
+    readonly addButton: Locator;
+    readonly globalSearchInput: Locator;
+
+    // Table columns (1-based; verified against rendered headers)
+    readonly trailerNumberColumn: Locator;       // 1
+    readonly trailerTypeColumn: Locator;          // 2
+    readonly trailerYearColumn: Locator;          // 3
+    readonly driverThirdPartyColumn: Locator;     // 4
+    readonly salesPersonColumn: Locator;          // 5
+    readonly truckColumn: Locator;                // 6
+    readonly optionColumn: Locator;               // 7
+    readonly availabilityColumn: Locator;         // 13
+    readonly statusColumn: Locator;               // 14
+    readonly brokerageColumn: Locator;            // 16
+    readonly infoColumn: Locator;                 // 18
+    readonly notesColumn: Locator;                // 19
+    readonly towingColumn: Locator;               // 20
+    readonly actionsColumn: Locator;              // 24
+
+    // Row-level action icons
     readonly pencilIcon: Locator;
-    readonly deleteIcon: Locator;
-    // readonly uploadIcon: Locator;
-    // readonly documentIcon: Locator;
-    // readonly trailerAndTruckHistoryModal: Locator;
-    // readonly historyModal: Locator;
-    // readonly annualDotInspectionModal: Locator;
-    // readonly repairsModal: Locator;
-    // readonly addRepairButton: Locator;
+    readonly transferIcon: Locator;
+    readonly minusIcon: Locator;
+
+    // Info & Notes popovers
+    readonly infoButtonInRow: Locator;
+    readonly notesButtonInRow: Locator;
     readonly infoAndNoteModal: Locator;
-    readonly deleteIconInTrailerModal: Locator;
-    // readonly addHistoryButton: Locator;
-    // readonly truckFieldInTrailerModal: Locator;
-    // readonly fromFieldModal: Locator;
-    // readonly toFieldModal: Locator;
-    // readonly truckOptionFromMenu: Locator;
-    // readonly currentDate: Locator;
-    // readonly okButton: Locator;
-    // readonly editTrailerButtonInTrailerHistory: Locator;
-    // readonly oldState: Locator;
-    // readonly newState: Locator;
-    // readonly dateOfChanged: Locator;
-    // readonly addHistoryButtonModal: Locator;
-    // readonly activeDialogbox: Locator;
-    // readonly changedCompanyTitle: Locator;
-    // readonly pencilIconInModal: Locator;
-    // readonly invoiceNumber: Locator;
-    // readonly amount: Locator;
-    // readonly state: Locator;
-    // readonly city: Locator;
-    // readonly shopInfo: Locator;
-    // readonly repairCard: Locator;
-    // readonly deleteIconInInfoAndNoteModal: Locator;
-    readonly cancelButton: Locator;
     readonly commentInput: Locator;
     readonly commentPencilIcon: Locator;
-    readonly editButton: Locator;
     readonly commentList: Locator;
-    // readonly addAnnualDotButton: Locator;
-    // readonly annualdotInspectionModalCard: Locator;
-    readonly rentOrBuyColumn: Locator;
-    // readonly driverPhoneColumn: Locator;
-    // readonly plateColumn: Locator;
-    readonly availabilityColumn: Locator;
-    readonly brokerageColumn: Locator;
-    // readonly thirdPartyColumn: Locator;
-    // readonly reloadIconInTruckColumn: Locator;
-    // readonly reloadIconOnRentBuyColumn: Locator;
-    // readonly reloadIconInPhoneColumn: Locator;
-    // readonly reloadIconInLocationColumn: Locator;
-    readonly addButtonInModal: Locator;
-    //readonly snackbar: Locator;
-    readonly allTrailersButton: Locator;
-    readonly XiconInLoadedColumn: Locator;
-    readonly towingColumn: Locator;
-    readonly loadedColumn: Locator;
-    readonly trailerNumberInModal: Locator;
-    readonly saveButtonInModal: Locator;
+    readonly editButton: Locator;
+    readonly cancelButton: Locator;
+
+    // Edit modal
+    readonly editModal: Locator;
+    readonly editModalTitle: Locator;
+    readonly editModalSaveButton: Locator;
+    readonly editModalCancelButton: Locator;
+    readonly editModalTrailerNumberInput: Locator;
+    readonly editModalYardField: Locator;
+    readonly editModalTypeField: Locator;
+    readonly editModalYearField: Locator;
+    readonly editModalInCompanyCheckbox: Locator;
+    readonly editModalOutOfCompanyCheckbox: Locator;
+    readonly editModalAvailabilityField: Locator;
+    readonly editModalStatusField: Locator;
+    readonly editModalBrokerageField: Locator;
+    readonly editModalLoadedCheckbox: Locator;
+    readonly editModalBrokenCheckbox: Locator;
+    readonly editModalTowingCheckbox: Locator;
+    readonly editModalSignCheckbox: Locator;
+    readonly editModalSalesReadyCheckbox: Locator;
+
+    // Add Available Trailer modal (opens via the + button)
+    readonly addAvailableModal: Locator;
+    readonly addAvailableTrailerNumberField: Locator;
+    readonly addAvailableYardField: Locator;
+    readonly addAvailableSaveButton: Locator;
+    readonly addAvailableCancelButton: Locator;
+
+    // Transfer modal
+    readonly transferModal: Locator;
+    readonly transferModalTitle: Locator;
+    readonly transferModalDestinationYard: Locator;
+    readonly transferModalTransferButton: Locator;
+    readonly transferModalCancelButton: Locator;
+
+    // Misc
+    readonly snackbar: Locator;
+    readonly progressBar: Locator;
 
     constructor(page: Page) {
         super(page);
         this.page = page;
-        this.addButton = page.locator('.mdi.mdi-plus');
+
+        // Top toolbar — verified: links navigate to /trailers and /available-trailers-statistics
+        this.allTrailersLink = page.getByRole('link', { name: 'Trailers', exact: true });
+        this.statsLink = page.getByRole('link', { name: 'Stats', exact: true });
+        this.exportAllButton = page.getByRole('button', { name: 'Export All', exact: true });
         this.exportButton = page.getByRole('button', { name: 'Export', exact: true });
-        this.statsButton = page.locator('.v-btn__content', { hasText: 'Stats' });
-        this.trailerNumberFilter = page.locator('.v-text-field__slot').first();
-        this.driverNameFilter = page.locator('.v-text-field__slot').nth(1);
-        this.yardFilter = page.locator('.v-input', { hasText: 'Yard' }).locator('.v-input__control');
-        this.novaYardaOption = page.getByRole('option', { name: 'Nova yarda', exact: true });
-        this.trailerNameColumn = page.locator('tr td:nth-child(1)');
-        this.trailerTypeColumn = page.locator('tr td:nth-child(2)');
-        this.trailerYearColumn = page.locator('tr td:nth-child(3)');
-        this.driverThirdPartyColumn = page.locator('tr td:nth-child(5)');
-        this.yardColumn = page.locator('tr td:nth-child(4)');
-        this.statusColumn = page.locator('tr td:nth-child(15)');
-        // this.reloadIconInCompanyColumn = page.locator('tr td:nth-child(7) .v-icon--link.mdi-history');
-        // this.reloadIconInPlateColumn = page.locator('tr td:nth-child(14) .v-icon--link.mdi-history');
-        // this.reloadIconInTempPlateExp = page.locator('tr td:nth-child(15) .v-icon--link.mdi-history');
-        // this.reloadIconInDotColumn = page.locator('tr td:nth-child(20) .v-icon--link.mdi-history');
-        this.truckColumn = page.locator('tr td:nth-child(7)');
-        this.infoColumn = page.locator('tr td:nth-child(19)');
-        this.notesColumn = page.locator('tr td:nth-child(20)');
-        this.pencilIcon = page.locator('.mdi.mdi-pencil');
-        this.deleteIcon = page.locator('.mdi.mdi-minus-box-outline');
-        // this.trailerAndTruckHistoryModal = page.locator('.history-wraper.small');
-        // this.historyModal = page.locator('.field-history-wraper');
-        // this.annualDotInspectionModal = page.locator('.TrailerDotInspectionList');
-        // this.repairsModal = page.locator('.trailer-repairs');
-        // this.addRepairButton = page.getByRole('button', { name: 'Add repair', exact: true });
-        this.infoAndNoteModal = page.locator('.v-menu__content.theme--light.menuable__content__active');
-        this.deleteIconInTrailerModal = page.locator('.history-wraper.small .mdi.mdi-delete');
-        // this.addHistoryButton = page.getByRole('button', { name: 'Add history', exact: true });
-        // this.addHistoryButtonModal = page.getByRole('button', { name: 'Add History', exact: true });
-        // this.truckFieldInTrailerModal = page.locator('.v-input', { hasText: 'Truck' }).locator('.v-input__control');
-        // this.fromFieldModal = page.locator('.v-input', { hasText: 'From' }).locator('.v-input__control');
-        // this.toFieldModal = page.locator('.v-input', { hasText: 'To' }).locator('.v-input__control');
-        // this.truckOptionFromMenu = page.getByRole('option', { name: '11996', exact: true });
-        // this.currentDate = page.locator('.v-btn.v-date-picker-table__current');
-        // this.okButton = page.getByRole('button', { name: 'OK', exact: true });
-        // this.editTrailerButtonInTrailerHistory = page.getByRole('button', { name: 'Edit Trailer', exact: true });
-        // this.oldState = page.locator('.v-card__text .v-input__slot').first();
-        // this.newState = page.locator('.v-card__text .v-input__slot').nth(1);
-        // this.dateOfChanged = page.locator('.v-input', { hasText: 'Date of Change' }).locator('.v-input__control');
-        // this.activeDialogbox = page.locator('.v-dialog--active');
-        // this.changedCompanyTitle = page.locator('.TrailerFieldHistory__change');
-        // this.pencilIconInModal = page.locator('.field-history-wraper .mdi.mdi-pencil');
-        // this.invoiceNumber = page.locator('#invoice_number');
-        // this.amount = page.locator('#amount');
-        // this.state = page.locator('#state');
-        // this.city = page.locator('#city');
-        // this.shopInfo = page.locator('#shop_info');
-        // this.repairCard = page.locator('.trailer-repairs__stuff');
-        // this.deleteIconInInfoAndNoteModal = page.locator('.comments-wrapper .mdi.mdi-delete');
-        this.cancelButton = page.getByRole('button', { name: 'Cancel', exact: true });
+        // Add button is icon-only (mdi-plus) at the right side of the search bar
+        this.addButton = page.locator('button.v-btn.primary.v-size--small').locator('i.mdi-plus').or(page.locator('button:has(i.mdi-plus)')).first();
+        // Verified: single input on the page lives inside .TableFilters__field
+        this.globalSearchInput = page.locator('.TableFilters__field input').first();
+
+        // Table columns
+        this.trailerNumberColumn = page.locator('tbody tr td:nth-child(1)');
+        this.trailerTypeColumn = page.locator('tbody tr td:nth-child(2)');
+        this.trailerYearColumn = page.locator('tbody tr td:nth-child(3)');
+        this.driverThirdPartyColumn = page.locator('tbody tr td:nth-child(4)');
+        this.salesPersonColumn = page.locator('tbody tr td:nth-child(5)');
+        this.truckColumn = page.locator('tbody tr td:nth-child(6)');
+        this.optionColumn = page.locator('tbody tr td:nth-child(7)');
+        this.availabilityColumn = page.locator('tbody tr td:nth-child(13)');
+        this.statusColumn = page.locator('tbody tr td:nth-child(14)');
+        this.brokerageColumn = page.locator('tbody tr td:nth-child(16)');
+        this.infoColumn = page.locator('tbody tr td:nth-child(18)');
+        this.notesColumn = page.locator('tbody tr td:nth-child(19)');
+        this.towingColumn = page.locator('tbody tr td:nth-child(20)');
+        this.actionsColumn = page.locator('tbody tr td:nth-child(24)');
+
+        // Row-level action icons — verified: <button> elements with mdi-* classes
+        this.pencilIcon = page.locator('tbody tr button.mdi-pencil');
+        this.transferIcon = page.locator('tbody tr button.mdi-transfer');
+        this.minusIcon = page.locator('tbody tr button.mdi-minus-box-outline');
+
+        // Info & Notes (column 18/19 has a button with text)
+        this.infoButtonInRow = page.locator('tbody tr td:nth-child(18) button', { hasText: "Info's" });
+        this.notesButtonInRow = page.locator('tbody tr td:nth-child(19) button', { hasText: 'Notes' });
+        this.infoAndNoteModal = page.locator('.v-menu__content.menuable__content__active');
         this.commentInput = page.locator('.comments-wrapper .v-input__slot');
         this.commentPencilIcon = page.locator('.comments-wrapper .mdi.mdi-pencil');
-        this.editButton = page.getByRole('button', { name: 'Edit', exact: true });
         this.commentList = page.locator('.comments-wrapper .v-list-item');
-        // this.addAnnualDotButton = page.getByRole('button', { name: 'Add Annual DOT inspection', exact: true });
-        // this.annualdotInspectionModalCard = page.locator('.TrailerDotInspectionList__stuff');
-        this.rentOrBuyColumn = page.locator('tr td:nth-child(8)');
-        // this.driverPhoneColumn = page.locator('tr td:nth-child(6)');
-        // this.plateColumn = page.locator('tr td:nth-child(14)');
-        this.availabilityColumn = page.locator('tr td:nth-child(14)');
-        this.brokerageColumn = page.locator('tr td:nth-child(17)');
-        // this.thirdPartyColumn = page.locator('tr td:nth-child(3)');
-        // this.reloadIconInTruckColumn = page.locator('tr td:nth-child(5) .v-icon--link.mdi-history');
-        // this.reloadIconOnRentBuyColumn = page.locator('tr td:nth-child(4) .v-icon--link.mdi-history');
-        // this.reloadIconInPhoneColumn = page.locator('tr td:nth-child(6) .v-icon--link.mdi-history');
-        // this.reloadIconInLocationColumn = page.locator('tr td:nth-child(21) .v-icon--link.mdi-history');
-        // this.snackbar = page.locator('.v-snack__content');
-        this.addButtonInModal = page.getByRole('button', { name: 'Add', exact: true });
-        this.allTrailersButton = page.locator('.v-btn__content', { hasText: 'Trailers' });
-        this.XiconInLoadedColumn = page.locator('tr td:nth-child(12) .v-icon.mdi-close-octagon-outline');
-        this.towingColumn = page.locator('tr td:nth-child(21)');
-        this.loadedColumn = page.locator('tr td:nth-child(12)');
-        this.trailerNumberInModal = page.getByRole('textbox', { name: 'Trailer Number' });
-        this.saveButtonInModal = page.getByRole('button', { name: 'Save' });
+        this.editButton = page.getByRole('button', { name: 'Edit', exact: true });
+        this.cancelButton = page.getByRole('button', { name: 'Cancel', exact: true });
+
+        // Edit modal — verified labels
+        this.editModal = page.locator('.v-dialog--active').filter({ hasText: 'Edit Available Trailer' });
+        this.editModalTitle = this.editModal.locator('.v-card__title');
+        this.editModalSaveButton = this.editModal.getByRole('button', { name: 'Save', exact: true });
+        this.editModalCancelButton = this.editModal.getByRole('button', { name: 'Cancel', exact: true });
+        this.editModalTrailerNumberInput = this.editModal.locator('input[name="trailer_number"][type="text"]');
+        this.editModalYardField = this.editModal.getByLabel('Yard *', { exact: true });
+        this.editModalTypeField = this.editModal.getByLabel('Type', { exact: true });
+        this.editModalYearField = this.editModal.getByLabel('Year*', { exact: true });
+        this.editModalInCompanyCheckbox = this.editModal.getByLabel('In company', { exact: true });
+        this.editModalOutOfCompanyCheckbox = this.editModal.getByLabel('Out of company', { exact: true });
+        this.editModalAvailabilityField = this.editModal.getByLabel('Availability', { exact: true });
+        this.editModalStatusField = this.editModal.getByLabel('Status', { exact: true });
+        this.editModalBrokerageField = this.editModal.getByLabel('Brokerage', { exact: true });
+        this.editModalLoadedCheckbox = this.editModal.getByLabel('Loaded', { exact: true });
+        this.editModalBrokenCheckbox = this.editModal.getByLabel('Broken', { exact: true });
+        this.editModalTowingCheckbox = this.editModal.getByLabel('Towing', { exact: true });
+        this.editModalSignCheckbox = this.editModal.getByLabel('Sign', { exact: true });
+        this.editModalSalesReadyCheckbox = this.editModal.getByLabel('Sales Ready', { exact: true });
+
+        // Add Available Trailer modal — verified: title "Add Available Trailer"
+        this.addAvailableModal = page.locator('.v-dialog--active').filter({ hasText: 'Add Available Trailer' });
+        this.addAvailableTrailerNumberField = this.addAvailableModal.getByLabel('Trailer Number *', { exact: true });
+        this.addAvailableYardField = this.addAvailableModal.getByLabel('Yard *', { exact: true });
+        this.addAvailableSaveButton = this.addAvailableModal.getByRole('button', { name: 'Save', exact: true });
+        this.addAvailableCancelButton = this.addAvailableModal.getByRole('button', { name: 'Cancel', exact: true });
+
+        // Transfer modal — verified: title contains "Transfer trailer ... from ... to"
+        this.transferModal = page.locator('.v-dialog--active').filter({ hasText: 'Transfer trailer' });
+        this.transferModalTitle = this.transferModal.locator('.v-card__title');
+        this.transferModalDestinationYard = this.transferModal.getByLabel('Select target yard', { exact: true });
+        this.transferModalTransferButton = this.transferModal.getByRole('button', { name: 'Transfer', exact: true });
+        this.transferModalCancelButton = this.transferModal.getByRole('button', { name: 'Cancel', exact: true });
+
+        // Misc
+        this.snackbar = page.locator('.v-snack__content');
+        this.progressBar = page.locator('.v-data-table__progress');
     }
 
-    async selectCompanyFromMenu(companyMenu: Locator, optionFromCompanyMenu: Locator) {
-        await this.selectFromMenu(companyMenu, optionFromCompanyMenu);
+    getRowByTrailerNumber(trailerNumber: string): Locator {
+        return this.page.locator('tbody tr', {
+            has: this.page.locator('td:nth-child(1)', { hasText: trailerNumber })
+        });
     }
 
-    async selectStatusFromStatusMenu(statusMenu: Locator, optionFromStatusMenu: Locator) {
-        await this.selectFromMenu(statusMenu, optionFromStatusMenu);
+    async waitForTableLoaded(): Promise<void> {
+        await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+        // Either the table has at least one row, or it shows an empty state — both are fine.
+        await this.page.waitForFunction(() => {
+            const rows = document.querySelectorAll('tbody tr');
+            const empty = document.querySelector('.v-data-table__empty-wrapper');
+            return rows.length > 0 || !!empty;
+        }, { timeout: 15000 });
     }
 
-    async selectYardFromStatusMenu(yardMenu: Locator, optionFromYardMenu: Locator) {
-        await this.selectFromMenu(yardMenu, optionFromYardMenu);
+    async searchTrailer(query: string): Promise<void> {
+        await this.globalSearchInput.waitFor({ state: 'visible', timeout: 10000 });
+        await this.globalSearchInput.click();
+        await this.globalSearchInput.fill('');
+        await Promise.all([
+            this.page.waitForResponse(
+                res => res.url().includes('/api/trailers') &&
+                    (res.status() === 200 || res.status() === 304),
+                { timeout: 15000 }
+            ).catch(() => { }),
+            this.globalSearchInput.type(query, { delay: 30 })
+        ]);
+        await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
     }
 
-    async enterTrailerName(trailerNumberFilter: Locator, number: string) {
-        await this.fillInputField(trailerNumberFilter, number);
+    async clearSearch(): Promise<void> {
+        await this.globalSearchInput.click();
+        await this.globalSearchInput.fill('');
+        await this.page.waitForResponse(
+            res => res.url().includes('/api/trailers') &&
+                (res.status() === 200 || res.status() === 304),
+            { timeout: 15000 }
+        ).catch(() => { });
+        await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
     }
 
-    async enterDriverName(driverNameFilter: Locator, name: string) {
-        await this.fillInputField(driverNameFilter, name);
+    // Opens the "+" Add modal, picks the trailer from the autocomplete, and saves.
+    // The Yard field in this modal is disabled and pre-filled with a default — the user
+    // cannot change it here; transfer between yards is done via the Transfer action.
+    // Trailer must already exist on /trailers.
+    async addToAvailable(trailerNumber: string): Promise<void> {
+        await this.page.locator('button.v-btn.primary.v-size--small:has(i.mdi-plus)').first().click();
+        await this.addAvailableModal.waitFor({ state: 'visible', timeout: 10000 });
+
+        // Trailer Number is a v-autocomplete — type to filter, then click the matching option.
+        await this.addAvailableTrailerNumberField.click();
+        await this.addAvailableTrailerNumberField.type(trailerNumber, { delay: 30 });
+        const optionsMenu = this.page.locator('.v-menu__content.menuable__content__active');
+        await optionsMenu.waitFor({ state: 'visible', timeout: 10000 });
+        const option = optionsMenu.locator('.v-list-item', { hasText: trailerNumber }).first();
+        await option.waitFor({ state: 'visible', timeout: 15000 });
+        await option.click();
+
+        await Promise.all([
+            this.page.waitForResponse(
+                r => r.url().includes('/api/trailers') && (r.status() === 200 || r.status() === 304),
+                { timeout: 15000 }
+            ).catch(() => { }),
+            this.addAvailableSaveButton.click()
+        ]);
+        await this.addAvailableModal.waitFor({ state: 'detached', timeout: 10000 });
+        await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
     }
 
-    async enterOwnerrName(ownerNameFilter: Locator, name: string) {
-        await this.fillInputField(ownerNameFilter, name);
+    async openEditModalForRow(trailerNumber: string): Promise<void> {
+        const row = this.getRowByTrailerNumber(trailerNumber).first();
+        await row.waitFor({ state: 'visible', timeout: 10000 });
+        await row.locator('button.mdi-pencil').click();
+        await this.editModal.waitFor({ state: 'visible', timeout: 10000 });
     }
 
-    async enterDealershiprName(dealershipNameFilter: Locator, name: string) {
-        await this.fillInputField(dealershipNameFilter, name);
+    async openTransferModalForRow(trailerNumber: string): Promise<void> {
+        const row = this.getRowByTrailerNumber(trailerNumber).first();
+        await row.waitFor({ state: 'visible', timeout: 10000 });
+        await row.locator('button.mdi-transfer').click();
+        await this.transferModal.waitFor({ state: 'visible', timeout: 10000 });
     }
 
-    async selectTruckInTrailerModal(truckMenu: Locator, truckNumber: string, option: Locator) {
-        await this.fillAndSelectFromMenu(truckMenu, truckNumber, option);
+    async cancelTransfer(): Promise<void> {
+        await this.transferModalCancelButton.click();
+        await this.transferModal.waitFor({ state: 'detached', timeout: 10000 });
     }
 
-    // async selectExpiringDateInPastMonth(): Promise<string> {
-    //     await this.fromFieldModal.click();
-    //     const dateText = await this.currentDate.textContent();
-    //     const selectedDay = parseInt(dateText?.trim() || '1', 10);
-    //     const prevMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-left');
-    //     await prevMonthButton.click();
-    //     const pastDate = new Date();
-    //     pastDate.setMonth(pastDate.getMonth() - 1);
-    //     pastDate.setDate(selectedDay);
-    //     const dayToSelect = pastDate.getDate();
-    //     const pastDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${dayToSelect}")`);
-    //     await pastDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
-    //     await pastDateButton.first().click();
-    //     const formattedDate = `${(pastDate.getMonth() + 1).toString().padStart(2, '0')}/` +
-    //         `${pastDate.getDate().toString().padStart(2, '0')}/` +
-    //         `${pastDate.getFullYear()}`;
-    //     return formattedDate;
-    // }
-
-    async enterOldState(oldState: Locator, text: string) {
-        await this.fillInputField(oldState, text);
+    async transferTrailer(trailerNumber: string, destinationYard: string): Promise<void> {
+        await this.openTransferModalForRow(trailerNumber);
+        await this.transferModalDestinationYard.click();
+        // The v-menu__content for v-select opens outside the dialog
+        await this.page.locator('.v-menu__content.menuable__content__active')
+            .locator('.v-list-item', { hasText: destinationYard }).first()
+            .click();
+        await Promise.all([
+            this.page.waitForResponse(
+                res => res.url().includes('/api/trailers') &&
+                    (res.status() === 200 || res.status() === 304),
+                { timeout: 15000 }
+            ).catch(() => { }),
+            this.transferModalTransferButton.click()
+        ]);
+        await this.transferModal.waitFor({ state: 'detached', timeout: 10000 });
     }
 
-    async enterNewState(newState: Locator, text: string) {
-        await this.fillInputField(newState, text);
+    // Delete uses native browser confirm. Caller must use deleteTrailerAccept / deleteTrailerDismiss
+    // which set up the dialog handler before clicking.
+
+    async deleteTrailerAccept(trailerNumber: string): Promise<void> {
+        const row = this.getRowByTrailerNumber(trailerNumber).first();
+        await row.waitFor({ state: 'visible', timeout: 10000 });
+        const minus = row.locator('button.mdi-minus-box-outline');
+        // Native confirm — accept on next dialog event
+        this.page.once('dialog', async (d) => { await d.accept(); });
+        await Promise.all([
+            this.page.waitForResponse(
+                res => res.url().includes('/api/trailers') &&
+                    (res.status() === 200 || res.status() === 304),
+                { timeout: 15000 }
+            ).catch(() => { }),
+            minus.click()
+        ]);
     }
 
-    async enterInvoiceNumber(invoiceNumberField: Locator, invoniceNumber: string) {
-        await this.fillInputField(invoiceNumberField, invoniceNumber);
+    async deleteTrailerDismissAndCapture(trailerNumber: string): Promise<{ message: string }> {
+        const row = this.getRowByTrailerNumber(trailerNumber).first();
+        await row.waitFor({ state: 'visible', timeout: 10000 });
+        let captured = '';
+        const handler = async (d: any) => { captured = d.message(); await d.dismiss(); };
+        this.page.once('dialog', handler);
+        await row.locator('button.mdi-minus-box-outline').click();
+        // wait briefly for the dialog event to fire
+        await expect.poll(() => captured, { timeout: 5000 }).not.toEqual('');
+        return { message: captured };
     }
 
-    async enterAmount(amountField: Locator, amount: string) {
-        await this.fillInputField(amountField, amount);
-    }
-
-    async enterState(stateField: Locator, state: string) {
-        await this.fillInputField(stateField, state);
-    }
-
-    async enterCity(cityField: Locator, city: string) {
-        await this.fillInputField(cityField, city);
-    }
-
-    async enterShopInfo(shopInfoField: Locator, info: string) {
-        await this.fillInputField(shopInfoField, info);
-    }
-
-    async enterNoteInInfoAndNoteModal(note: string) {
-        await this.fillInputField(this.commentInput, note);
-    }
-
-    async enterAndSelectAvailableTrailer(trailerNumberFilter: Locator, number: string, option: Locator) {
-        await this.fillAndSelectFromMenu(trailerNumberFilter, number, option);
+    async assertEveryRowMatches(predicate: (row: Locator, index: number) => Promise<boolean>): Promise<void> {
+        const count = await this.page.locator('tbody tr').count();
+        expect(count).toBeGreaterThan(0);
+        for (let i = 0; i < count; i++) {
+            const row = this.page.locator('tbody tr').nth(i);
+            const ok = await predicate(row, i);
+            if (!ok) throw new Error(`Row ${i} failed predicate (text="${(await row.textContent())?.slice(0, 200)}")`);
+        }
     }
 }

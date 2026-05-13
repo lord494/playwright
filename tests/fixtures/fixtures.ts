@@ -5,7 +5,7 @@ import { EditAndWriteReview } from '../../page/shop/editAndWriteReview.page';
 import { AddShopPage } from '../../page/shop/addShop.page';
 import { ContactsPage } from '../../page/contacts/contactsOverview.page';
 import { AddContactsPage } from '../../page/contacts/addContact.page';
-import { generateRandomString, get17RandomNumbers, get6RandomNumber, waitForPrebookLoads, getIconFromCell } from '../../helpers/dateUtilis';
+import { generateRandomString, get17RandomNumbers, get6RandomNumber, waitForPrebookLoads, getIconFromCell, safeDeleteAvailableTrailer } from '../../helpers/dateUtilis';
 import { BoardsPage } from '../../page/Content/boards.page';
 import { CompaniesPage } from '../../page/Content/companies.page';
 import { DocumentPage } from '../../page/Content/documentModal.page';
@@ -149,6 +149,8 @@ export const test = base.extend<{
     addAvailableTrailer: AddAvailableTrailersPage;
     editAvailableTrailerSetup: EditTrailersPage;
     availableTrailer: AvailableTrailersPage;
+    availableTrailerWithUiCreatedTrailer: AvailableTrailersPage;
+    availableTrailerData: { number: string };
     trailerData: TrailerData;
     trailerDataForEdit: TrailerData;
     trailerDocumentOverview: TrailerDocumentPage;
@@ -885,7 +887,7 @@ export const test = base.extend<{
     availableTrailerSetup: async ({ loggedPage }, use) => {
         const availableTrailer = new AvailableTrailersPage(loggedPage);
         await loggedPage.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
-        await expect(availableTrailer.yardColumn.first()).toBeVisible({ timeout: 15000 });
+        await availableTrailer.waitForTableLoaded();
         await use(availableTrailer);
     },
 
@@ -894,11 +896,13 @@ export const test = base.extend<{
         await use(addAvailableTrailer);
     },
 
-    editAvailableTrailerSetup: async ({ loggedPage, availableTrailer, addTrailer }, use) => {
+    editAvailableTrailerSetup: async ({ loggedPage, trailerOverview, availableTrailer, addTrailer }, use) => {
+        // Create the trailer via /trailers (it lands automatically in /available-trailers),
+        // then navigate, search, and open the edit modal.
         const editAvailableTrailerSetup = new EditTrailersPage(loggedPage);
-        await loggedPage.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
-        await availableTrailer.driverThirdPartyColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-        await availableTrailer.clickElement(availableTrailer.addButton);
+        await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await trailerOverview.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+        await trailerOverview.clickElement(trailerOverview.addButton);
         const trailerNumber = get6RandomNumber().join('');
         await addTrailer.fillTrailerNumber(addTrailer.trailerNumber, trailerNumber);
         await addTrailer.selectTrailerType(addTrailer.trailertype.last(), addTrailer.dryVanType);
@@ -906,26 +910,82 @@ export const test = base.extend<{
         await addTrailer.selectPickUpDate(addTrailer.pickUpDate, addTrailer.currentDate);
         await addTrailer.selectDealerhip(addTrailer.dealership, addTrailer.kemonipexDealreship);
         await addTrailer.selectTrailerMake(addTrailer.trailerMake.last(), addTrailer.trailerMakeOption);
-        const randomNumberString = get17RandomNumbers().join('');
-        await addTrailer.fillVinNumber(addTrailer.vinNumber, randomNumberString);
+        const randomVin = get17RandomNumbers().join('');
+        await addTrailer.fillVinNumber(addTrailer.vinNumber, randomVin);
         await addTrailer.clickSaveButton();
-        await addTrailer.page.locator('.v-progress-linear__background.primary').waitFor({ state: 'hidden', timeout: 10000 });
         await addTrailer.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
-        await addTrailer.page.waitForLoadState('networkidle', { timeout: 5000 });
-        await availableTrailer.enterTrailerName(availableTrailer.trailerNumberFilter, trailerNumber);
-        await addTrailer.page.waitForLoadState('networkidle', { timeout: 5000 });
-        const trailerCell = addTrailer.page.locator(`td:nth-child(1):has-text("${trailerNumber}")`);
-        await expect(trailerCell).toBeVisible({ timeout: 10000 });
-        const row = trailerCell.locator('xpath=ancestor::tr');
-        const pencil = row.locator('.mdi.mdi-pencil');
-        await expect(pencil).toBeVisible({ timeout: 10000 });
-        await pencil.click();
+        await loggedPage.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await availableTrailer.waitForTableLoaded();
+        await availableTrailer.searchTrailer(trailerNumber);
+        await availableTrailer.openEditModalForRow(trailerNumber);
         await use(editAvailableTrailerSetup);
+        // Cleanup
+        await safeDeleteAvailableTrailer(loggedPage, trailerNumber);
     },
 
     availableTrailer: async ({ loggedPage }, use) => {
         const availableTrailer = new AvailableTrailersPage(loggedPage);
         await use(availableTrailer);
+    },
+
+    // Creates a UNIQUE trailer on /trailers and navigates to /available-trailers.
+    // Trailer number is stored on the returned page object as `.trailerNumber`.
+    // NOTE: This fixture intentionally does NOT add the trailer to /available-trailers via the UI.
+    // The Add-Available-Trailer Save button does not currently dispatch a request on staging,
+    // so the UI add flow is blocked.
+    availableTrailerWithUiCreatedTrailer: async ({ loggedPage, trailerOverview, addTrailer }, use) => {
+        await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await trailerOverview.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+        await trailerOverview.clickElement(trailerOverview.addButton);
+        const trailerNumber = get6RandomNumber().join('');
+        await addTrailer.fillTrailerNumber(addTrailer.trailerNumber, trailerNumber);
+        await addTrailer.selectTrailerType(addTrailer.trailertype.last(), addTrailer.dryVanType);
+        await addTrailer.selectTrailerYear(addTrailer.trailerYear, addTrailer.year2002);
+        await addTrailer.selectPickUpDate(addTrailer.pickUpDate, addTrailer.currentDate);
+        await addTrailer.selectDealerhip(addTrailer.dealership, addTrailer.kemonipexDealreship);
+        await addTrailer.selectTrailerMake(addTrailer.trailerMake.last(), addTrailer.trailerMakeOption);
+        const randomVin = get17RandomNumbers().join('');
+        await addTrailer.fillVinNumber(addTrailer.vinNumber, randomVin);
+        await addTrailer.clickSaveButton();
+        await addTrailer.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
+
+        const availableTrailer = new AvailableTrailersPage(loggedPage);
+        await loggedPage.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await availableTrailer.waitForTableLoaded();
+        availableTrailer.trailerNumber = trailerNumber;
+
+        await use(availableTrailer);
+
+        // Cleanup: trailer is on /trailers only — safeDeleteAvailableTrailer falls through to /trailers
+        await safeDeleteAvailableTrailer(loggedPage, trailerNumber);
+    },
+
+    // Provides a guaranteed trailer in /available-trailers for the current worker.
+    // Picks a worker-specific candidate from Constants.workerCandidateAvailableTrailers,
+    // and if that candidate isn't currently in the table, re-adds it via the UI Add flow
+    // (which is actually a PUT to /api/trailers/available/{id} for trailers with an
+    // existing available-trailer record). This guarantees each test starts with the
+    // expected row present, regardless of prior test runs.
+    // Depends on `availableTrailerSetup` so navigation happens once.
+    // Mirrors the existing `trailerData` pattern: { number: string } accessed via property.
+    availableTrailerData: async ({ availableTrailerSetup }, use, testInfo) => {
+        const candidates = Constants.workerCandidateAvailableTrailers;
+        const number = candidates[testInfo.workerIndex % candidates.length];
+
+        // Is the trailer already in /available-trailers?
+        await availableTrailerSetup.searchTrailer(number);
+        const existing = await availableTrailerSetup.getRowByTrailerNumber(number).count();
+        if (existing === 0) {
+            // When the search filter narrows to zero rows, the yard sections (and their +
+            // buttons) are hidden. Clear the search so the Add button is reachable, then
+            // re-add via the UI Add flow.
+            await availableTrailerSetup.clearSearch();
+            await availableTrailerSetup.addToAvailable(number);
+            // Re-search so the test starts in a known filtered state.
+            await availableTrailerSetup.searchTrailer(number);
+        }
+
+        await use({ number });
     },
 
     trailerData: async ({ loggedPage }, use) => {

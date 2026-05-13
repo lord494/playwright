@@ -2,6 +2,7 @@ import fs from 'fs';
 import { expect, Locator, Page } from '@playwright/test';
 import { RecrutimentPage } from '../page/recruitment/recruitmentOverview.page';
 import { LeasingTeamsPage } from '../page/leasing/leasingTeams.page';
+import { Constants } from './constants';
 import { time } from 'console';
 
 
@@ -293,5 +294,58 @@ export async function safeDeleteTeam(leasingTeams: LeasingTeamsPage, teamName: s
     if ((await card.count()) === 0) return;
     await leasingTeams.removeAllMembersFromTeam(teamName).catch(() => { });
     await leasingTeams.deleteTeam(teamName).catch(() => { });
+}
+
+export function generateUniqueTrailerNumber(): string {
+    const workerIndex = process.env.TEST_WORKER_INDEX ?? '0';
+    return `${workerIndex}${Date.now().toString().slice(-7)}`;
+}
+
+export async function waitForAvailableTrailerRow(page: Page, trailerNumber: string, timeoutMs: number = 10000): Promise<void> {
+    const row = page.locator('tr', {
+        has: page.locator('td:nth-child(1)', { hasText: trailerNumber })
+    });
+    await expect.poll(async () => await row.count(), { timeout: timeoutMs, message: `Waiting for trailer ${trailerNumber} to appear in /available-trailers` }).toBeGreaterThan(0);
+}
+
+// Best-effort cleanup helper. Operates on /trailers ONLY (the UI flow to add a trailer
+// to /available-trailers is currently broken on staging, so any test-created trailer
+// stays on /trailers).
+// Hard-capped at 12s total — never fails the test, never blocks teardown excessively.
+// Verified selectors against staging.vrlz.app DOM 2026-05-11:
+//   - /trailers trailer-number filter: getByLabel('Trailer/VIN #')
+//     (the page has 7 .TableFilters__field inputs: Company, All, Status, Trailer/VIN #,
+//      Driver, Owner, Dealership — disambiguation by label is required)
+//   - /trailers trailer-number column: td:nth-child(2) (header "Trl #")
+//   - /trailers delete: native browser confirm
+export async function safeDeleteAvailableTrailer(page: Page, trailerNumber: string): Promise<void> {
+    const acceptDialog = async (d: any) => { try { await d.accept(); } catch { /* ignore */ } };
+    const cleanup = (async () => {
+        try {
+            await page.goto(Constants.trailerUrl, { waitUntil: 'domcontentloaded', timeout: 8000 });
+            const filter = page.getByLabel('Trailer/VIN #', { exact: true });
+            if (await filter.isVisible({ timeout: 2000 }).catch(() => false)) {
+                await filter.click({ timeout: 2000 });
+                await page.keyboard.type(trailerNumber, { delay: 40 });
+                await page.waitForResponse(
+                    r => r.url().includes('/api/trailers') && (r.status() === 200 || r.status() === 304),
+                    { timeout: 5000 }
+                ).catch(() => { });
+            }
+            const row = page.locator('tbody tr', {
+                has: page.locator('td:nth-child(2)', { hasText: trailerNumber })
+            });
+            if (await row.count().catch(() => 0) > 0) {
+                page.on('dialog', acceptDialog);
+                await row.first().locator('button.mdi-delete, i.mdi-delete').first().click({ timeout: 3000 });
+                await page.waitForTimeout(800);
+                page.off('dialog', acceptDialog);
+            }
+        } catch { /* best-effort */ }
+    })();
+    await Promise.race([
+        cleanup,
+        new Promise<void>(resolve => setTimeout(resolve, 12000)),
+    ]);
 }
 

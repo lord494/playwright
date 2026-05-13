@@ -1,97 +1,43 @@
 import { expect } from '@playwright/test';
-import { Constants } from '../../helpers/constants';
-import { AddTrailersPage } from '../../page/trailer/addTrailer.page';
-import { get17RandomNumbers, get6RandomNumber } from '../../helpers/dateUtilis';
-import { EditTrailersPage } from '../../page/trailer/editTrailer.page';
-import { AvailableTrailersPage } from '../../page/trailer/availableTrailer.page';
 import { test } from '../fixtures/fixtures';
 
-// test.use({ storageState: 'auth.json' });
+// Wave A1 — edit modal lifecycle (5.1) + persisted change (5.4).
+// Save verified to dispatch PUT /api/trailers/available/{id} (200) on staging.
 
-// test.beforeEach(async ({ page }) => {
-//     const trailer = new AvailableTrailersPage(page);
-//     const add = new AddTrailersPage(page);
-//     await page.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle' });
-//     await trailer.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-//     await trailer.clickElement(trailer.addButton);
-//     const trailerNumber = get6RandomNumber().join('');
-//     await add.fillTrailerNumber(add.trailerNumber, trailerNumber);
-//     await add.selectTrailerType(add.trailertype.last(), add.dryVanType);
-//     await add.selectTrailerYear(add.trailerYear, add.year2002);
-//     await add.selectPickUpDate(add.pickUpDate, add.currentDate);
-//     await add.selectDealerhip(add.dealership, add.kemonipexDealreship);
-//     await add.selectTrailerMake(add.trailerMake.last(), add.trailerMakeOption);
-//     const randomNumberString = get17RandomNumbers().join('');
-//     await add.fillVinNumber(add.vinNumber, randomNumberString);
-//     await add.clickSaveButton();
-//     await page.locator('.v-progress-linear__background.primary').waitFor({ state: 'hidden', timeout: 10000 });
-//     await add.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
-//     await page.waitForLoadState('networkidle', { timeout: 5000 });
-//     await trailer.enterTrailerName(trailer.trailerNumberFilter, trailerNumber);
-//     await page.waitForLoadState('networkidle', { timeout: 5000 });
-//     const trailerCell = page.locator(`td:nth-child(1):has-text("${trailerNumber}")`);
-//     await expect(trailerCell).toBeVisible({ timeout: 10000 });
-//     const row = trailerCell.locator('xpath=ancestor::tr');
-//     const pencil = row.locator('.mdi.mdi-pencil');
-//     await expect(pencil).toBeVisible({ timeout: 10000 });
-//     await pencil.click();
-// });
+test('Klik na pencil otvara edit modal sa pravim trailerom (test 5.1)', async ({ availableTrailerSetup, availableTrailerData }) => {
+    await availableTrailerSetup.searchTrailer(availableTrailerData.number);
+    await availableTrailerSetup.openEditModalForRow(availableTrailerData.number);
 
-// test('Korisnik moze da edituje trailer - In company', async ({ editAvailableTrailerSetup, availableTrailer }) => {
-//     // const edit = new EditTrailersPage(page);
-//     // const trailer = new AvailableTrailersPage(page);
-//     await editAvailableTrailerSetup.check(editAvailableTrailerSetup.inCompanyCheckbox);
-//     await editAvailableTrailerSetup.selectDriver(editAvailableTrailerSetup.driverMenu, Constants.driverName, editAvailableTrailerSetup.driverOption);
-//     await editAvailableTrailerSetup.addTruckIfEmpty(editAvailableTrailerSetup.truckField.first(), Constants.truckName, editAvailableTrailerSetup.truckOption);
-//     await editAvailableTrailerSetup.selectRentOrBuy(editAvailableTrailerSetup.rentBuyMenu, editAvailableTrailerSetup.rentOption);
-//     await editAvailableTrailerSetup.selectCompany(editAvailableTrailerSetup.companyMenu, editAvailableTrailerSetup.companyOption);
-//     await editAvailableTrailerSetup.fillPhoneNumber(editAvailableTrailerSetup.driverPhoneField.first(), Constants.phoneNumberOfUserApp);
-//     await editAvailableTrailerSetup.selectYard(editAvailableTrailerSetup.yardField, editAvailableTrailerSetup.yardOption);
-//     await editAvailableTrailerSetup.plateField.clear();
-//     await editAvailableTrailerSetup.fillPlate(editAvailableTrailerSetup.plateField, Constants.plateNumber);
-//     await editAvailableTrailerSetup.selectDriverState(editAvailableTrailerSetup.driverStateMenu, editAvailableTrailerSetup.driverStateOption);
-//     await editAvailableTrailerSetup.selectOwner(editAvailableTrailerSetup.ownerMenu, editAvailableTrailerSetup.ownerOption);
-//     await editAvailableTrailerSetup.selectStatus(editAvailableTrailerSetup.statusMenu, editAvailableTrailerSetup.statusOption);
-//     await editAvailableTrailerSetup.selectAvailability(editAvailableTrailerSetup.availabilityMenu, editAvailableTrailerSetup.availabilityOption);
-//     await editAvailableTrailerSetup.clickSaveButton();
-//     await editAvailableTrailerSetup.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
-//     await editAvailableTrailerSetup.page.locator('.v-btn__content', { hasText: 'Save' }).waitFor({ state: 'hidden', timeout: 5000 });
-//     await availableTrailer.page.locator('.v-progress-linear__background.primary').waitFor({ state: 'hidden', timeout: 10000 });
-//     await expect(availableTrailer.driverNameColumn.first()).toContainText(Constants.driverName);
-//     await expect(availableTrailer.truckColumn.first()).toContainText(Constants.truckName);
-//     await expect(availableTrailer.rentOrBuyColumn.first()).toContainText(Constants.rent);
-//     await expect(availableTrailer.driverThirdPartyColumn.first()).toContainText(Constants.rocketCompany);
-//     await expect(availableTrailer.driverPhoneColumn.first()).toContainText(Constants.phoneNumberOfUserApp);
-//     await expect(availableTrailer.yardColumn.first()).toContainText(Constants.novaYarda);
-//     await expect(availableTrailer.plateColumn.first()).toContainText(Constants.plateNumber);
-//     await expect(availableTrailer.ownerNameColumn.first()).toContainText(Constants.ownerTrailer);
-//     await expect(availableTrailer.statusColumn.first()).toContainText(Constants.stolenStatus);
-//     await expect(availableTrailer.availabilityColumn.first()).toContainText(Constants.available);
-// });
+    await expect(availableTrailerSetup.editModal).toBeVisible({ timeout: 10000 });
+    await expect(availableTrailerSetup.editModalTitle).toContainText('Edit Available Trailer');
+    await expect(availableTrailerSetup.editModalTrailerNumberInput).toHaveValue(availableTrailerData.number);
 
-// test('Korisnik moze da edituje trailer - Out of company', async ({ editAvailableTrailerSetup, availableTrailer }) => {
-//     // const edit = new EditTrailersPage(page);
-//     // const trailer = new AvailableTrailersPage(page);
-//     await editAvailableTrailerSetup.check(editAvailableTrailerSetup.outOfCompanyCheckbox);
-//     await editAvailableTrailerSetup.selectThirdParty(editAvailableTrailerSetup.thirdPartyMenu, editAvailableTrailerSetup.thirdPartyOption);
-//     await editAvailableTrailerSetup.selectRentOrBuy(editAvailableTrailerSetup.rentBuyMenu, editAvailableTrailerSetup.rentOption);
-//     await editAvailableTrailerSetup.fillPhoneNumber(editAvailableTrailerSetup.driverPhoneField.first(), Constants.phoneNumberOfUserApp);
-//     await editAvailableTrailerSetup.selectYard(editAvailableTrailerSetup.yardField, editAvailableTrailerSetup.yardOption);
-//     await editAvailableTrailerSetup.plateField.clear();
-//     await editAvailableTrailerSetup.fillPlate(editAvailableTrailerSetup.plateField, Constants.plateNumber);
-//     await editAvailableTrailerSetup.selectDriverState(editAvailableTrailerSetup.driverStateMenu, editAvailableTrailerSetup.driverStateOption);
-//     await editAvailableTrailerSetup.selectOwner(editAvailableTrailerSetup.ownerMenu, editAvailableTrailerSetup.ownerOption);
-//     await editAvailableTrailerSetup.selectStatus(editAvailableTrailerSetup.statusMenu, editAvailableTrailerSetup.statusOption);
-//     await editAvailableTrailerSetup.selectAvailability(editAvailableTrailerSetup.availabilityMenu, editAvailableTrailerSetup.availabilityOption);
-//     await editAvailableTrailerSetup.clickSaveButton();
-//     await editAvailableTrailerSetup.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
-//     await availableTrailer.page.locator('.v-progress-linear__background.primary').waitFor({ state: 'hidden', timeout: 10000 });
-//     await expect(availableTrailer.thirdPartyColumn.first()).toContainText(Constants.owner);
-//     await expect(availableTrailer.rentOrBuyColumn.first()).toContainText(Constants.rent);
-//     await expect(availableTrailer.driverPhoneColumn.first()).toContainText(Constants.phoneNumberOfUserApp);
-//     await expect(availableTrailer.yardColumn.first()).toContainText(Constants.novaYarda);
-//     await expect(availableTrailer.plateColumn.first()).toContainText(Constants.plateNumber);
-//     await expect(availableTrailer.ownerNameColumn.first()).toContainText(Constants.ownerTrailer);
-//     await expect(availableTrailer.statusColumn.first()).toContainText(Constants.stolenStatus);
-//     await expect(availableTrailer.availabilityColumn.first()).toContainText(Constants.available);
-// });
+    await availableTrailerSetup.editModalCancelButton.click();
+    await availableTrailerSetup.editModal.waitFor({ state: 'detached', timeout: 10000 });
+});
+
+test('Korisnik moze da toggluje Towing polje preko edit modala i promena se persistira (test 5.4)', async ({ availableTrailerSetup, availableTrailerData }) => {
+    await availableTrailerSetup.searchTrailer(availableTrailerData.number);
+
+    // Capture the initial Towing state so we can restore it.
+    await availableTrailerSetup.openEditModalForRow(availableTrailerData.number);
+    const initiallyChecked = await availableTrailerSetup.editModalTowingCheckbox.isChecked();
+
+    // Vuetify v-checkbox toggle: click the v-input--checkbox wrapper, not the hidden input.
+    const towingWrapper = availableTrailerSetup.editModal.locator('.v-input--checkbox').filter({ hasText: 'Towing' });
+    await towingWrapper.click();
+    await expect(availableTrailerSetup.editModalTowingCheckbox).toBeChecked({ checked: !initiallyChecked, timeout: 5000 });
+
+    await availableTrailerSetup.editModalSaveButton.click();
+    await availableTrailerSetup.editModal.waitFor({ state: 'detached', timeout: 10000 });
+
+    // Verify persisted across reload: re-open the edit modal
+    await availableTrailerSetup.searchTrailer(availableTrailerData.number);
+    await availableTrailerSetup.openEditModalForRow(availableTrailerData.number);
+    await expect(availableTrailerSetup.editModalTowingCheckbox).toBeChecked({ checked: !initiallyChecked, timeout: 10000 });
+
+    // Restore to original
+    await availableTrailerSetup.editModal.locator('.v-input--checkbox').filter({ hasText: 'Towing' }).click();
+    await availableTrailerSetup.editModalSaveButton.click();
+    await availableTrailerSetup.editModal.waitFor({ state: 'detached', timeout: 10000 });
+});
