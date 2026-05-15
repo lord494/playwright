@@ -148,9 +148,9 @@ export class LeasingClientsOverviewPage extends BasePage {
     }
 
     private async changeStatusRadio(radio: Locator): Promise<void> {
-        const progress = this.page.locator('.v-data-table__progress');
         await radio.click({ force: true });
-        await progress.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+        await this.page.waitForLoadState('networkidle');
+        await this.page.locator('.v-data-table__progress').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => { });
         await expect(radio).toBeChecked();
         await expect(this.paginationText).toContainText(/\d+\s*-\s*\d+\s+of\s+\d+/, { timeout: 10000 });
     }
@@ -244,7 +244,15 @@ export class LeasingClientsOverviewPage extends BasePage {
         await this.saveFilterFab.click({ force: true });
         await this.addFilterNameDialog.waitFor({ state: 'visible', timeout: 5000 });
         await this.addFilterNameInput.fill(filterName);
-        await this.clickElement(this.addFilterNameSaveButton);
+        await Promise.all([
+            this.page.waitForResponse(
+                res => /\/api\//.test(res.url())
+                    && ['POST', 'PUT'].includes(res.request().method())
+                    && [200, 201, 204].includes(res.status()),
+                { timeout: 10000 }
+            ).catch(() => { }),
+            this.clickElement(this.addFilterNameSaveButton),
+        ]);
         await this.addFilterNameDialog.waitFor({ state: 'hidden', timeout: 10000 });
         await this.page.waitForLoadState('networkidle');
     }
@@ -274,6 +282,11 @@ export class LeasingClientsOverviewPage extends BasePage {
     async openSavedFiltersDialog(): Promise<void> {
         await this.savedFiltersFab.click({ force: true });
         await this.savedFiltersDialog.waitFor({ state: 'visible', timeout: 10000 });
+        await this.page.waitForLoadState('networkidle');
+        await expect.poll(
+            async () => this.savedFiltersDialog.locator('tbody tr').count(),
+            { timeout: 10000, intervals: [200, 400, 800] }
+        ).toBeGreaterThan(0);
     }
 
     async setRowsPerPage10(): Promise<void> {
@@ -297,6 +310,12 @@ export class LeasingClientsOverviewPage extends BasePage {
     async getPaginationText(): Promise<string> {
         await expect(this.paginationText).toContainText(/\d+\s*-\s*\d+\s+of\s+\d+/, { timeout: 10000 });
         return (await this.paginationText.textContent()) ?? '';
+    }
+
+    async getPaginationTotal(): Promise<number> {
+        const text = await this.getPaginationText();
+        const m = text.match(/of\s+(\d+)/);
+        return m ? parseInt(m[1], 10) : 0;
     }
 
     getRowByName(name: string): Locator {

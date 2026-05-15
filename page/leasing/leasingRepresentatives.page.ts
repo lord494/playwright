@@ -439,11 +439,22 @@ export class LeasingRepresentativesPage extends BasePage {
     // has at least one company chip. Used by behavioral tests that need a
     // populated card without assuming a specific rep is populated on staging.
     async findFirstNonEmptyRepName(): Promise<string> {
-        const names = await this.getRepresentativeNames();
-        for (const name of names) {
-            if ((await this.getCompanyChipCountForRep(name)) > 0) return name;
-        }
-        throw new Error('No representative in the current role has any companies');
+        let found = '';
+        await expect.poll(async () => {
+            const names = await this.getRepresentativeNames();
+            for (const name of names) {
+                if ((await this.getCompanyChipCountForRep(name)) > 0) {
+                    found = name;
+                    return true;
+                }
+            }
+            return false;
+        }, {
+            timeout: 15000,
+            intervals: [200, 400, 800],
+            message: 'No representative in the current role has any companies',
+        }).toBeTruthy();
+        return found;
     }
 
     async pickStablePoolChipTexts(n: number, skip: number = 5): Promise<string[]> {

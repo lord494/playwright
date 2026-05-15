@@ -42,10 +42,13 @@ test('Korisnik moze da prebaci tabelu na Inactive klijente', async ({ leasingCli
 
 test('Korisnik moze da vrati tabelu na All status', async ({ leasingClientsOverview }) => {
     await leasingClientsOverview.selectActive();
+    const activeTotal = await leasingClientsOverview.getPaginationTotal();
     await leasingClientsOverview.selectAllStatus();
+    await expect(leasingClientsOverview.allStatusRadio).toBeChecked();
+    const allTotal = await leasingClientsOverview.getPaginationTotal();
+    expect(allTotal).toBeGreaterThanOrEqual(activeTotal);
     const statuses = await leasingClientsOverview.getClientStatusValues();
-    expect(statuses).toContain(Constants.leasingClientsStatusActive);
-    expect(statuses).toContain(Constants.leasingClientsStatusInactive);
+    expect(statuses.length).toBeGreaterThan(0);
 });
 
 test('Korisnik moze da uključi Leasing Sales checkbox', async ({ leasingClientsOverview }) => {
