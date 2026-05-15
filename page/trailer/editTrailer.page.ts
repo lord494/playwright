@@ -3,9 +3,7 @@ import { BasePage } from "../../helpers/base";
 
 export class EditTrailersPage extends BasePage {
     readonly page: Page;
-    readonly yardField: Locator;
     readonly plateField: Locator;
-    readonly yardOption: Locator;
     readonly inCompanyCheckbox: Locator;
     readonly outOfCompanyCheckbox: Locator;
     readonly driverMenu: Locator;
@@ -37,9 +35,7 @@ export class EditTrailersPage extends BasePage {
     constructor(page: Page) {
         super(page);
         this.page = page;
-        this.yardField = page.getByRole('dialog').locator('div').filter({ hasText: /^Yard$/ }).nth(1);
         this.plateField = page.locator('input[name="plate"]');
-        this.yardOption = page.getByRole('option', { name: 'Nova yarda', exact: true });
         this.inCompanyCheckbox = page.getByText('In company', { exact: true });
         this.outOfCompanyCheckbox = page.getByText('Out of company', { exact: true });
         this.driverMenu = page.getByRole('dialog').locator('div').filter({ hasText: /^Driver$/ }).nth(1);
@@ -63,7 +59,7 @@ export class EditTrailersPage extends BasePage {
         this.availabilityMenu = page.getByRole('button', { name: 'Availability' });
         this.availabilityOption = page.getByRole('option', { name: 'available', exact: true });
         this.dialogBox = page.locator('.v-dialog.v-dialog--active');
-        this.thirdPartyMenu = page.getByRole('textbox', { name: 'Third Party' });
+        this.thirdPartyMenu = page.getByRole('textbox', { name: 'Third Party', exact: true });
         this.thirdPartyOption = page.getByRole('option', { name: '4 Aces Logistics.', exact: true });
         this.startDateField = page.getByRole('button', { name: 'Start Date' });
         this.temproraryThirdParyCheckbox = page.getByText('Temporary third party?', { exact: true });
@@ -71,10 +67,6 @@ export class EditTrailersPage extends BasePage {
 
     async fillPlate(plateField: Locator, plateNumber: string) {
         await this.fillInputField(plateField, plateNumber);
-    }
-
-    async selectYard(yardMenu: Locator, yard: Locator) {
-        await this.selectFromMenu(yardMenu, yard);
     }
 
     async check(checkbox: Locator): Promise<void> {

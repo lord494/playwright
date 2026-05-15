@@ -11,7 +11,6 @@ test('Korisnik moze da edituje trailer - In company', async ({ editTrailerSetup,
     await editTrailer.selectRentOrBuy(editTrailer.rentBuyMenu, editTrailer.rentOption);
     await editTrailer.selectCompany(editTrailer.companyMenu, editTrailer.companyOption);
     await editTrailer.fillPhoneNumber(editTrailer.driverPhoneField.first(), Constants.phoneNumberOfUserApp);
-    await editTrailer.selectYard(editTrailer.yardField, editTrailer.yardOption);
     await editTrailer.plateField.clear();
     await editTrailer.fillPlate(editTrailer.plateField, Constants.plateNumber);
     await editTrailer.selectDriverState(editTrailer.driverStateMenu, editTrailer.driverStateOption);
@@ -25,7 +24,6 @@ test('Korisnik moze da edituje trailer - In company', async ({ editTrailerSetup,
     await expect(trailerOverview.rentOrBuyColumn.first()).toContainText(Constants.rent);
     await expect(trailerOverview.companyNameColumn.first()).toContainText(Constants.rocketCompany);
     await expect(trailerOverview.driverPhoneColumn.first()).toContainText(Constants.phoneNumberOfUserApp);
-    await expect(trailerOverview.yardColumn.first()).toContainText(Constants.novaYarda);
     await expect(trailerOverview.plateColumn.first()).toContainText(Constants.plateNumber);
     await expect(trailerOverview.ownerNameColumn.first()).toContainText(Constants.ownerTrailer);
     await expect(trailerOverview.statusColumn.first()).toContainText(Constants.stolenStatus);
@@ -42,9 +40,7 @@ test('Korisnik moze da edituje trailer - Out of company', async ({ editTrailerSe
     await editTrailer.check(editTrailer.outOfCompanyCheckbox);
     await editTrailer.selectThirdParty(editTrailer.thirdPartyMenu, editTrailer.thirdPartyOption);
     await editTrailer.selectRentOrBuy(editTrailer.rentBuyMenu, editTrailer.rentOption);
-    await editTrailer.fillPhoneNumber(editTrailer.driverPhoneField.first(), Constants.phoneNumberOfUserApp);
     await editTrailer.page.waitForLoadState('networkidle', { timeout: 10000 });
-    await editTrailer.selectYard(editTrailer.yardField, editTrailer.yardOption);
     await editTrailer.plateField.clear();
     await editTrailer.fillPlate(editTrailer.plateField, Constants.plateNumber);
     await editTrailer.selectDriverState(editTrailer.driverStateMenu, editTrailer.driverStateOption);
@@ -55,8 +51,6 @@ test('Korisnik moze da edituje trailer - Out of company', async ({ editTrailerSe
     await editTrailer.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
     await expect(trailerOverview.thirdPartyColumn.first()).toContainText(Constants.owner);
     await expect(trailerOverview.rentOrBuyColumn.first()).toContainText(Constants.rent);
-    await expect(trailerOverview.driverPhoneColumn.first()).toContainText(Constants.phoneNumberOfUserApp);
-    await expect(trailerOverview.yardColumn.first()).toContainText(Constants.novaYarda);
     await expect(trailerOverview.plateColumn.first()).toContainText(Constants.plateNumber);
     await expect(trailerOverview.ownerNameColumn.first()).toContainText(Constants.ownerTrailer);
     await expect(trailerOverview.statusColumn.first()).toContainText(Constants.stolenStatus);

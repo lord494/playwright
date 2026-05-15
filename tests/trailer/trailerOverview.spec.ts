@@ -26,17 +26,6 @@ test('Korisnik moze da pretrazuje trailer po statusu', async ({ trailerOverviewS
     }
 });
 
-test('Korisnik moze da pretrazuje trailer po yardi', async ({ trailerOverviewSetup }) => {
-    await trailerOverviewSetup.selectYardFromStatusMenu(trailerOverviewSetup.yardFilter, trailerOverviewSetup.novaYardaOption);
-    await trailerOverviewSetup.page.waitForLoadState('networkidle');
-    await expect(trailerOverviewSetup.yardColumn.first()).toContainText(Constants.novaYarda, { timeout: 5000 });
-    const count = await trailerOverviewSetup.yardColumn.count();
-    for (let i = 0; i < count; i++) {
-        const cellText = await trailerOverviewSetup.yardColumn.nth(i).textContent();
-        expect(cellText?.trim()).toBe(Constants.novaYarda);
-    }
-});
-
 test('Korisnik moze da pretrazuje trailer po broju trailera', async ({ trailerOverviewSetup }) => {
     await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await trailerOverviewSetup.enterTrailerName(trailerOverviewSetup.trailerNumberFilter, Constants.trailerTest);

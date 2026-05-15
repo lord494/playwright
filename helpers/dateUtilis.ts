@@ -2,6 +2,7 @@ import fs from 'fs';
 import { expect, Locator, Page } from '@playwright/test';
 import { RecrutimentPage } from '../page/recruitment/recruitmentOverview.page';
 import { LeasingTeamsPage } from '../page/leasing/leasingTeams.page';
+import { LeasingRepresentativesPage } from '../page/leasing/leasingRepresentatives.page';
 import { Constants } from './constants';
 import { time } from 'console';
 
@@ -294,6 +295,16 @@ export async function safeDeleteTeam(leasingTeams: LeasingTeamsPage, teamName: s
     if ((await card.count()) === 0) return;
     await leasingTeams.removeAllMembersFromTeam(teamName).catch(() => { });
     await leasingTeams.deleteTeam(teamName).catch(() => { });
+}
+
+// Best-effort cleanup for a leasing-representative card: removes every company
+// chip currently on that card, accepting the native confirms. Used inside
+// try/finally blocks so mutating representative tests leave staging in the
+// same state they started.
+export async function safeRestoreRepresentativeCard(reps: LeasingRepresentativesPage, repName: string,): Promise<void> {
+    const card = reps.getCardByRepName(repName);
+    if ((await card.count()) === 0) return;
+    await reps.removeAllCompaniesFromRep(repName).catch(() => { });
 }
 
 export function generateUniqueTrailerNumber(): string {

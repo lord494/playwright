@@ -356,4 +356,38 @@ export class Constants {
     static leasingTeamsValidationTeamTypeRequired = 'The Team type field is required';
     static leasingTeamsValidationTeamNameRequired = 'The Team name field is required';
     static leasingTeamsValidationTeamLeadRequired = 'The Team lead field is required';
+
+    // ===== LEASING REPRESENTATIVES =====
+    static leasingRepresentativesUrl = '/leasing/representatives';
+    static leasingRepresentativesUrlRegex = /\/leasing\/representatives$/;
+
+    static leasingRepresentativesSearchLabel = 'Search representative';
+    static leasingRepresentativesSearchButtonLabel = 'Search';
+    static leasingRepresentativesMoveAllButtonLabel = 'Move All';
+    static leasingRepresentativesUntieAllButtonLabel = 'Untie All';
+
+    static leasingRepresentativesRoleSalesTruckManager = 'Sales Truck Manager';
+    static leasingRepresentativesRoleSalesTrailerManager = 'Sales Trailer Manager';
+    static leasingRepresentativesRoleAcoountingManager = 'Acoounting manager';
+    static leasingRepresentativesRoleCollection = 'Collection';
+
+    static leasingRepresentativesMoveAllDialogTitle = 'Move All Companies';
+    static leasingRepresentativesMoveAllSelectLabel = 'Select representative to move companies';
+    static leasingRepresentativesSubmitButtonLabel = 'Submit';
+    static leasingRepresentativesCancelButtonLabel = 'Cancel';
+
+    // Native confirm dialog messages (note: app contains typo "comanies")
+    static leasingRepresentativesUntieAllConfirmText = 'Are you sure you want to untie all comanies from this representative?';
+    static leasingRepresentativesChipCloseConfirmText = 'Are you sure you want to remove representative for this company?';
+
+    static leasingRepresentativesExistingRepName = 'Bosko QA Test';
+    static leasingRepresentativesSearchTerm = 'Bosko';
+
+    // Empty reps on staging in the default Sales Truck Manager role — used as
+    // safe sandboxes for mutating tests (drag/move/untie). They start with 0
+    // companies, so cleanup just removes whatever the test added.
+    static leasingRepresentativesEmptyRep1 = 'Managerko Trukic';
+    static leasingRepresentativesEmptyRep2 = 'Sales truck manager 2';
+    static leasingRepresentativesEmptyRep3 = 'sales truck test';
+    static leasingRepresentativesEmptyRep4 = 'Super truck manager';
 }

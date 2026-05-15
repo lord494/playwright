@@ -51,6 +51,7 @@ import { LeasingHousePage } from '../../page/leasing/leasingHouse.page';
 import { LeasingClientsOverviewPage } from '../../page/leasing/leasingClientsOverview.page';
 import { LeasingTeamsPage } from '../../page/leasing/leasingTeams.page';
 import { LeasingTeamsCreateModalPage } from '../../page/leasing/leasingTeamsCreateModal.page';
+import { LeasingRepresentativesPage } from '../../page/leasing/leasingRepresentatives.page';
 
 type TrailerData = {
     number?: string | null
@@ -158,6 +159,7 @@ export const test = base.extend<{
     leasingClientsOverview: LeasingClientsOverviewPage;
     leasingTeams: LeasingTeamsPage;
     leasingTeamsCreateModal: LeasingTeamsCreateModalPage;
+    leasingRepresentatives: LeasingRepresentativesPage;
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -194,6 +196,13 @@ export const test = base.extend<{
     leasingTeamsCreateModal: async ({ loggedPage }, use) => {
         const modal = new LeasingTeamsCreateModalPage(loggedPage);
         await use(modal);
+    },
+
+    leasingRepresentatives: async ({ loggedPage }, use) => {
+        const leasingRepresentatives = new LeasingRepresentativesPage(loggedPage);
+        await loggedPage.goto(Constants.leasingRepresentativesUrl, { waitUntil: 'networkidle' });
+        await leasingRepresentatives.waitForLoaded();
+        await use(leasingRepresentatives);
     },
 
     reviewPage: async ({ loggedPage }, use) => {

@@ -18,10 +18,10 @@ test('Korisnik moze da doda trailer', async ({ trailerOverviewSetup, addTrailer 
     await addTrailer.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
     const trailerNameColumn = await trailerOverviewSetup.page.locator(`//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/ancestor::tr/td[2]`).textContent();
     const trailerTypeColumn = await trailerOverviewSetup.page.locator(`//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/ancestor::tr/td[3]`).textContent();
-    const trailerYearColumn = await trailerOverviewSetup.page.locator(`//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/ancestor::tr/td[16]`).textContent();
-    const trailerMakeColumn = await trailerOverviewSetup.page.locator(`//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/ancestor::tr/td[15]`).textContent();
+    const trailerYearColumn = await trailerOverviewSetup.page.locator(`//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/ancestor::tr/td[15]`).textContent();
+    const trailerMakeColumn = await trailerOverviewSetup.page.locator(`//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/ancestor::tr/td[14]`).textContent();
     const dealershipColumn = await trailerOverviewSetup.page.locator(`//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/ancestor::tr/td[9]`).textContent();
-    const vinNumberColumn = await trailerOverviewSetup.page.locator(`//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/ancestor::tr/td[17]`).textContent();
+    const vinNumberColumn = await trailerOverviewSetup.page.locator(`//td[@class='trailer-number']/div[normalize-space()='${trailerNumber}']/ancestor::tr/td[16]`).textContent();
     expect(trailerNameColumn).toContain(trailerNumber);
     expect(trailerTypeColumn).toContain('Dry van');
     expect(trailerYearColumn).toContain('2002');
