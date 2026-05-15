@@ -148,9 +148,11 @@ export class LeasingClientsOverviewPage extends BasePage {
     }
 
     private async changeStatusRadio(radio: Locator): Promise<void> {
-        const initial = (await this.paginationText.textContent()) ?? '';
+        const progress = this.page.locator('.v-data-table__progress');
         await radio.click({ force: true });
-        await expect(this.paginationText).not.toHaveText(initial, { timeout: 10000 });
+        await progress.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+        await expect(radio).toBeChecked();
+        await expect(this.paginationText).toContainText(/\d+\s*-\s*\d+\s+of\s+\d+/, { timeout: 10000 });
     }
 
     async toggleLeasingSales(): Promise<void> {
@@ -293,6 +295,7 @@ export class LeasingClientsOverviewPage extends BasePage {
     }
 
     async getPaginationText(): Promise<string> {
+        await expect(this.paginationText).toContainText(/\d+\s*-\s*\d+\s+of\s+\d+/, { timeout: 10000 });
         return (await this.paginationText.textContent()) ?? '';
     }
 

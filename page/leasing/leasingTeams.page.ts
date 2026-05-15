@@ -63,6 +63,11 @@ export class LeasingTeamsPage extends BasePage {
     async waitForLoaded(): Promise<void> {
         await this.wrapper.waitFor({ state: 'visible', timeout: 10000 });
         await this.teamsContainer.waitFor({ state: 'visible', timeout: 10000 });
+        await this.usersWithoutTeamHolder.waitFor({ state: 'visible', timeout: 10000 });
+        await expect.poll(async () => this.availableUserChips.count(), {
+            timeout: 15000,
+            intervals: [200, 400, 800],
+        }).toBeGreaterThan(0);
     }
 
     // ===== SECTIONS / CARDS =====
