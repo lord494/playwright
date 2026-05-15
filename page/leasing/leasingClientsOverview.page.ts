@@ -339,6 +339,22 @@ export class LeasingClientsOverviewPage extends BasePage {
         return this.getColumnValues(Constants.leasingClientsColumnClientStatus);
     }
 
+    async collectStatusValuesUntilFound(targetStatuses: string[], maxPages = 6): Promise<string[]> {
+        const collected: string[] = [];
+        const found = new Set<string>();
+        for (let i = 0; i < maxPages; i++) {
+            const statuses = await this.getClientStatusValues();
+            for (const s of statuses) {
+                collected.push(s);
+                if (targetStatuses.includes(s)) found.add(s);
+            }
+            if (targetStatuses.every(t => found.has(t))) return collected;
+            if (await this.nextPageButton.isDisabled().catch(() => true)) break;
+            await this.goToNextPage();
+        }
+        return collected;
+    }
+
     async getNameColumnValues(): Promise<string[]> {
         return this.getColumnValues(Constants.leasingClientsColumnName);
     }

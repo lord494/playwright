@@ -150,10 +150,13 @@ test('Korisnik moze da sacuva filter, pronadje ga u Saved Filters modalu i ponov
         await leasingClientsOverview.filterByNameHeader(Constants.leasingClientsTestCompany);
         await leasingClientsOverview.saveCurrentFilter(filterName);
 
+        // Reload so the saved-filters dialog fetches fresh data from the backend
+        // rather than the in-memory cache populated when the page first loaded.
+        await loggedPage.reload({ waitUntil: 'networkidle' });
+
         await leasingClientsOverview.openSavedFiltersDialog();
         await expect(leasingClientsOverview.getSavedFilterRow(filterName)).toBeVisible({ timeout: 10000 });
         await loggedPage.keyboard.press('Escape');
-        await loggedPage.reload({ waitUntil: 'networkidle' });
 
         await leasingClientsOverview.restoreSavedFilter(filterName);
         const names = await leasingClientsOverview.getNameColumnValues();

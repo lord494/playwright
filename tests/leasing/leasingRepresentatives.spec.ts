@@ -99,17 +99,40 @@ test('Korisnik moze da otvori Move All Companies modal i da ga zatvori dugmetom 
 
 test('Move All select prikazuje ostale representative-e iz iste role kao target opcije', async ({ leasingRepresentatives }) => {
     const allReps = await leasingRepresentatives.getRepresentativeNames();
-    const sourceRep = await leasingRepresentatives.findFirstNonEmptyRepName();
-    await leasingRepresentatives.openMoveAllDialog(sourceRep);
 
-    const options = await leasingRepresentatives.getMoveAllTargetOptions();
-    expect(options.length).toBeGreaterThan(0);
-    expect(options).not.toContain(sourceRep);
-    for (const option of options) {
-        expect(allReps).toContain(option);
+    // Self-heal: prior mutating tests in this file may have untied all
+    // companies in this role, leaving findFirstNonEmptyRepName with nothing to
+    // return. Seed one chip onto a known sandbox rep so the Move All button is
+    // enabled, then clean up in the finally block.
+    let sourceRep: string;
+    let seeded = false;
+    try {
+        sourceRep = await leasingRepresentatives.findFirstNonEmptyRepName();
+    } catch {
+        sourceRep = Constants.leasingRepresentativesEmptyRep1;
+        await safeRestoreRepresentativeCard(leasingRepresentatives, sourceRep);
+        await leasingRepresentatives.waitForCardEmpty(sourceRep);
+        const seedCompany = await leasingRepresentatives.pickStablePoolChipText();
+        await leasingRepresentatives.dragCompanyToRep(seedCompany, sourceRep);
+        seeded = true;
     }
 
-    await leasingRepresentatives.closeMoveAllDialogWithCancel();
+    try {
+        await leasingRepresentatives.openMoveAllDialog(sourceRep);
+
+        const options = await leasingRepresentatives.getMoveAllTargetOptions();
+        expect(options.length).toBeGreaterThan(0);
+        expect(options).not.toContain(sourceRep);
+        for (const option of options) {
+            expect(allReps).toContain(option);
+        }
+
+        await leasingRepresentatives.closeMoveAllDialogWithCancel();
+    } finally {
+        if (seeded) {
+            await safeRestoreRepresentativeCard(leasingRepresentatives, sourceRep);
+        }
+    }
 });
 
 test('Klik na Untie All otvara native confirm sa odgovarajucim tekstom', async ({ leasingRepresentatives }) => {
