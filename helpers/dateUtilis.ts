@@ -307,6 +307,49 @@ export async function safeRestoreRepresentativeCard(reps: LeasingRepresentatives
     await reps.removeAllCompaniesFromRep(repName).catch(() => { });
 }
 
+// Deletes orphan PW_Test_<timestamp> saved-filter rows the test account
+// accumulated from prior runs whose cleanup silently failed (the test's finally
+// block uses `.catch(() => {})`). Without this, the Saved Filters dialog ends
+// up with so many PW_Test_* rows that a freshly-saved one lands past page 1
+// and the visibility assertion times out.
+// Uses page.request (not the UI) — faster, and bypasses dialog pagination.
+// Best-effort: returns the number of deletions; never throws.
+export async function cleanupOrphanSavedFilters(page: Page, tableName: string): Promise<number> {
+    try {
+        const auth = JSON.parse(fs.readFileSync('auth.json', 'utf-8'));
+        const msAuth = auth.cookies?.find((c: { name: string }) => c.name === 'msAuthKey');
+        if (!msAuth) return 0;
+        const payload = JSON.parse(Buffer.from(msAuth.value.split('.')[1], 'base64').toString('utf-8'));
+        const userId: string | undefined = payload?.user?.id;
+        if (!userId) return 0;
+
+        const allItems: { _id: string; label: string }[] = [];
+        let total = Infinity;
+        for (let p = 1; allItems.length < total && p < 50; p++) {
+            const resp = await page.request.get(
+                `/api/table-filter/${userId}/${tableName}?page=${p}&itemsPerPage=10&sortDesc[]=false&mustSort=false&multiSort=false`,
+            );
+            if (!resp.ok()) break;
+            const body = await resp.json();
+            total = body.total ?? 0;
+            const items = (body.tableFilters || []) as { _id: string; label: string }[];
+            if (items.length === 0) break;
+            allItems.push(...items);
+        }
+
+        let deleted = 0;
+        for (const item of allItems) {
+            if (/^PW_Test_\d+$/.test(item.label)) {
+                const r = await page.request.delete(`/api/table-filter/${item._id}`);
+                if (r.ok()) deleted++;
+            }
+        }
+        return deleted;
+    } catch {
+        return 0;
+    }
+}
+
 export function generateUniqueTrailerNumber(): string {
     const workerIndex = process.env.TEST_WORKER_INDEX ?? '0';
     return `${workerIndex}${Date.now().toString().slice(-7)}`;

@@ -1,5 +1,6 @@
 import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
+import { cleanupOrphanSavedFilters } from '../../helpers/dateUtilis';
 import { test } from '../fixtures/fixtures';
 
 test('Korisnik moze da vidi leasing clients stranicu', async ({ leasingClientsOverview }) => {
@@ -145,6 +146,10 @@ test('Korisnik moze da filtrira tabelu preko header filtera u Client status kolo
 });
 
 test('Korisnik moze da sacuva filter, pronadje ga u Saved Filters modalu i ponovo ga primijeni klikom na cached ikonu', async ({ leasingClientsOverview, loggedPage }) => {
+    // Purge PW_Test_* orphans from previous runs so the newly-saved filter
+    // lands on page 1 of the (10-rows-per-page, server-paginated) dialog.
+    await cleanupOrphanSavedFilters(loggedPage, Constants.leasingClientsSavedFiltersTableKey);
+
     const filterName = `PW_Test_${Date.now()}`;
     try {
         await leasingClientsOverview.filterByNameHeader(Constants.leasingClientsTestCompany);

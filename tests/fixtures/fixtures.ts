@@ -200,7 +200,7 @@ export const test = base.extend<{
 
     leasingRepresentatives: async ({ loggedPage }, use) => {
         const leasingRepresentatives = new LeasingRepresentativesPage(loggedPage);
-        await loggedPage.goto(Constants.leasingRepresentativesUrl, { waitUntil: 'networkidle' });
+        await loggedPage.goto(Constants.leasingRepresentativesUrl, { waitUntil: 'networkidle', timeout: 20000 });
         await leasingRepresentatives.waitForLoaded();
         await use(leasingRepresentatives);
     },

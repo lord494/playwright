@@ -74,6 +74,7 @@ export class LeasingRepresentativesPage extends BasePage {
     async waitForLoaded(): Promise<void> {
         await this.wrapper.waitFor({ state: 'visible', timeout: 10000 });
         await this.cardsContainer.waitFor({ state: 'visible', timeout: 10000 });
+        await this.unassignedCompanyChips.first().waitFor({ state: 'visible', timeout: 20000 });
     }
 
     // ===== ROLE AUTOCOMPLETE =====

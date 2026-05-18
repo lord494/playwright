@@ -317,6 +317,7 @@ export class Constants {
     static leasingClientsCheckboxChipFalseValue = "'false'";
 
     static leasingClientsAddFilterDialogTitle = 'Add Filter Name';
+    static leasingClientsSavedFiltersTableKey = 'ALL_LEASING_CLIENTS';
     static leasingClientsFiltersNameLabel = 'Filters name';
     static leasingClientsSaveButtonLabel = 'Save';
 
