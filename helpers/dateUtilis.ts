@@ -3,6 +3,7 @@ import { expect, Locator, Page } from '@playwright/test';
 import { RecrutimentPage } from '../page/recruitment/recruitmentOverview.page';
 import { LeasingTeamsPage } from '../page/leasing/leasingTeams.page';
 import { LeasingRepresentativesPage } from '../page/leasing/leasingRepresentatives.page';
+import { LeasingClientsOverviewPage } from '../page/leasing/leasingClientsOverview.page';
 import { Constants } from './constants';
 import { time } from 'console';
 
@@ -348,6 +349,63 @@ export async function cleanupOrphanSavedFilters(page: Page, tableName: string): 
     } catch {
         return 0;
     }
+}
+
+// Generates a unique company name for New Company tests. Includes the worker
+// index so two workers cannot collide on the same name.
+export function uniqueCompanyName(prefix: string = Constants.newCompanyTestPrefix): string {
+    const workerIndex = process.env.TEST_WORKER_INDEX ?? '0';
+    return `${prefix}${workerIndex}_${Date.now()}_${generateRandomString(4)}`;
+}
+
+// Generates a unique { firstName, lastName, fullName } triple for New Owner
+// Operator tests. `firstName` is unique per worker+timestamp (so multi-worker
+// safe); `lastName` is also unique to dodge the same-full-name uniqueness
+// constraint observed on the /ms-leasing/presidents endpoint for the New
+// Company flow — owner operators are also persisted as presidents server-side.
+export function uniqueOwnerOperatorName(
+    prefix: string = Constants.newOwnerOperatorTestPrefix,
+): { firstName: string; lastName: string; fullName: string } {
+    const workerIndex = process.env.TEST_WORKER_INDEX ?? '0';
+    const stamp = `${workerIndex}_${Date.now()}_${generateRandomString(4)}`;
+    const firstName = `${prefix}${stamp}`;
+    const lastName = `Last${stamp}`;
+    return { firstName, lastName, fullName: `${firstName} ${lastName}` };
+}
+
+// Best-effort cleanup for a leasing client created during tests. Searches by
+// `identifier` on /leasing/clients, then locates the row first by exact-text
+// match (`getRowByName`) and falls back to substring match
+// (`getMainRowContaining`) — the fallback is needed for owner operators
+// whose displayed Name cell spans multiple segments (e.g., "First Middle
+// Last") where the test only tracked "First Last". Clicks the row delete
+// icon and accepts the native confirm. Hard-capped so a flaky cleanup never
+// holds up teardown. Verified against staging.vrlz.app DOM 2026-05-19.
+export async function safeDeleteLeasingClient(page: Page, identifier: string): Promise<void> {
+    const acceptDialog = async (d: any) => { try { await d.accept(); } catch { /* ignore */ } };
+    const cleanup = (async () => {
+        try {
+            const clients = new LeasingClientsOverviewPage(page);
+            await page.goto(Constants.leasingClientsUrl, { waitUntil: 'domcontentloaded', timeout: 8000 });
+            // Type into the search input directly. The full searchClients()
+            // path polls every row's name and times out (10s) when the row's
+            // Name cell isn't an exact substring of the identifier (e.g.,
+            // owner operators where the cell contains a middle name). Plain
+            // fill + wait-for-row is fast and works for both shapes.
+            await clients.searchClientsInput.fill(identifier).catch(() => { });
+            await page.waitForLoadState('networkidle').catch(() => { });
+            const row = clients.getMainRowContaining(identifier);
+            if (await row.count().catch(() => 0) === 0) return;
+            page.on('dialog', acceptDialog);
+            await row.first().locator('.mdi-delete').first().click({ timeout: 3000 });
+            await row.first().waitFor({ state: 'detached', timeout: 5000 }).catch(() => { });
+        } catch { /* best-effort */ }
+        finally { page.off('dialog', acceptDialog); }
+    })();
+    await Promise.race([
+        cleanup,
+        new Promise<void>(resolve => setTimeout(resolve, 15000)),
+    ]);
 }
 
 export function generateUniqueTrailerNumber(): string {

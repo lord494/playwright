@@ -52,6 +52,12 @@ import { LeasingClientsOverviewPage } from '../../page/leasing/leasingClientsOve
 import { LeasingTeamsPage } from '../../page/leasing/leasingTeams.page';
 import { LeasingTeamsCreateModalPage } from '../../page/leasing/leasingTeamsCreateModal.page';
 import { LeasingRepresentativesPage } from '../../page/leasing/leasingRepresentatives.page';
+import { NewCompanyModalPage } from '../../page/leasing/newCompanyModal.page';
+import { LeasingClientDetailPage } from '../../page/leasing/leasingClientDetail.page';
+import { NewOwnerOperatorModalPage } from '../../page/leasing/newOwnerOperatorModal.page';
+import { EditCompanyModalPage } from '../../page/leasing/editCompanyModal.page';
+import { EditOwnerOperatorModalPage } from '../../page/leasing/editOwnerOperatorModal.page';
+import { UnderwritingModalPage } from '../../page/leasing/underwritingModal.page';
 
 type TrailerData = {
     number?: string | null
@@ -160,6 +166,14 @@ export const test = base.extend<{
     leasingTeams: LeasingTeamsPage;
     leasingTeamsCreateModal: LeasingTeamsCreateModalPage;
     leasingRepresentatives: LeasingRepresentativesPage;
+    newCompanyModal: NewCompanyModalPage;
+    openNewCompanyModal: NewCompanyModalPage;
+    leasingClientDetail: LeasingClientDetailPage;
+    newOwnerOperatorModal: NewOwnerOperatorModalPage;
+    openNewOwnerOperatorModal: NewOwnerOperatorModalPage;
+    editCompanyModal: EditCompanyModalPage;
+    editOwnerOperatorModal: EditOwnerOperatorModalPage;
+    underwritingModal: UnderwritingModalPage;
 }>({
     loggedPage: async ({ browser }, use) => {
         const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
@@ -203,6 +217,52 @@ export const test = base.extend<{
         await loggedPage.goto(Constants.leasingRepresentativesUrl, { waitUntil: 'networkidle', timeout: 20000 });
         await leasingRepresentatives.waitForLoaded();
         await use(leasingRepresentatives);
+    },
+
+    newCompanyModal: async ({ loggedPage }, use) => {
+        const modal = new NewCompanyModalPage(loggedPage);
+        await use(modal);
+    },
+
+    // Navigates to /leasing/clients and opens the New Company modal so each test
+    // starts in a known state.
+    openNewCompanyModal: async ({ leasingClientsOverview, newCompanyModal }, use) => {
+        await leasingClientsOverview.openNewCompanyModal();
+        await newCompanyModal.expectOpen();
+        await use(newCompanyModal);
+    },
+
+    leasingClientDetail: async ({ loggedPage }, use) => {
+        const detail = new LeasingClientDetailPage(loggedPage);
+        await use(detail);
+    },
+
+    newOwnerOperatorModal: async ({ loggedPage }, use) => {
+        const modal = new NewOwnerOperatorModalPage(loggedPage);
+        await use(modal);
+    },
+
+    // Navigates to /leasing/clients and opens the New Owner Operator modal so
+    // each test starts in a known state.
+    openNewOwnerOperatorModal: async ({ leasingClientsOverview, newOwnerOperatorModal }, use) => {
+        await leasingClientsOverview.openNewOwnerOperatorModal();
+        await newOwnerOperatorModal.expectOpen();
+        await use(newOwnerOperatorModal);
+    },
+
+    editCompanyModal: async ({ loggedPage }, use) => {
+        const modal = new EditCompanyModalPage(loggedPage);
+        await use(modal);
+    },
+
+    editOwnerOperatorModal: async ({ loggedPage }, use) => {
+        const modal = new EditOwnerOperatorModalPage(loggedPage);
+        await use(modal);
+    },
+
+    underwritingModal: async ({ loggedPage }, use) => {
+        const modal = new UnderwritingModalPage(loggedPage);
+        await use(modal);
     },
 
     reviewPage: async ({ loggedPage }, use) => {

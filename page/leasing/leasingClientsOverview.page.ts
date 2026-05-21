@@ -190,6 +190,19 @@ export class LeasingClientsOverviewPage extends BasePage {
         await this.activeDialog.waitFor({ state: 'visible', timeout: 10000 });
     }
 
+    /**
+     * Click the pencil icon on the first row containing `identifier` anywhere
+     * in its cells. Tolerates the expandable-subrow layout that Owner Operators
+     * with a middle name produce (the subrow has no pencil; pick the main row).
+     * Caller is expected to have searched/filtered first.
+     */
+    async openEditClientModalForRow(identifier: string): Promise<void> {
+        const row = this.getMainRowContaining(identifier);
+        await row.waitFor({ state: 'visible', timeout: 10000 });
+        await row.locator('.mdi-pencil').first().click();
+        await this.activeDialog.waitFor({ state: 'visible', timeout: 10000 });
+    }
+
     async filterByNameHeader(value: string): Promise<void> {
         await this.filterByHeader(Constants.leasingClientsColumnName, value);
     }
@@ -322,6 +335,16 @@ export class LeasingClientsOverviewPage extends BasePage {
         return this.page.locator('tr', { has: this.page.getByText(name, { exact: true }) });
     }
 
+    /**
+     * Returns the first MAIN data row (not expanded subrow) that contains the
+     * given text anywhere in its cells. Useful when the displayed name spans
+     * multiple text nodes (e.g., owner operators with First + Middle + Last
+     * names) so `getRowByName` exact-text matching can't find it.
+     */
+    getMainRowContaining(text: string): Locator {
+        return this.page.locator('tbody tr:not(.v-data-table__expanded-content)', { hasText: text }).first();
+    }
+
     async getColumnValues(headerLabel: string): Promise<string[]> {
         const headerTexts = await this.page.locator('thead th[role="columnheader"]').allTextContents();
         const headerIdx = headerTexts.findIndex(t => t.trim() === headerLabel);
@@ -357,5 +380,65 @@ export class LeasingClientsOverviewPage extends BasePage {
 
     async getNameColumnValues(): Promise<string[]> {
         return this.getColumnValues(Constants.leasingClientsColumnName);
+    }
+
+    /**
+     * Like `searchClients`, but tolerates rows that auto-expand a
+     * "Related Companies" subrow (which happens when the row has a Sister
+     * company, a Same-President connection, or a multi-part name like
+     * Owner Operators with a middle name). Plain `searchClients` polls
+     * `getNameColumnValues` and trips on the subrow contents — this variant
+     * just types into the input and waits for any main row to contain the
+     * search text.
+     */
+    async searchClientsForExpandableRow(text: string): Promise<void> {
+        await this.fillInputField(this.searchClientsInput, text);
+        await this.getMainRowContaining(text).waitFor({ state: 'visible', timeout: 10000 });
+    }
+
+    /**
+     * Returns the Name of the first row whose Client type cell reads
+     * "Owner Operator" (rendered as just "Owner" on staging 2026-05-18).
+     *
+     * Strategy: scan the current page first (fast happy path). If no owner is
+     * visible — staging now has enough Companies that an Owner Operator can
+     * sit beyond page 1 — fall back to the Client type column filter, which
+     * narrows the table to Owner rows in one round-trip. After reading the
+     * name we reload `/leasing/clients` so downstream test steps see an
+     * unfiltered table (the filter would otherwise hide newly created
+     * Company-type rows).
+     */
+    async getFirstOwnerOperatorName(): Promise<string> {
+        const scanCurrentPage = async (): Promise<string | null> => {
+            const rows = this.page.locator('tbody tr:not(.v-data-table__expanded-content)');
+            const count = await rows.count();
+            for (let i = 0; i < count; i++) {
+                const tds = await rows.nth(i).locator('td').allTextContents();
+                const trimmed = tds.map(s => s.trim());
+                const isOwner = trimmed.some(c => /^Owner(\s*Operator)?$/i.test(c));
+                if (isOwner && trimmed[0]) return trimmed[0];
+            }
+            return null;
+        };
+
+        const fastPath = await scanCurrentPage();
+        if (fastPath) return fastPath;
+
+        await this.filterByClientType(true);
+        const filtered = await scanCurrentPage();
+        // Reload so the test's later searchClients(...) for a Company-type row
+        // isn't filtered out by the Owner filter we just applied.
+        await this.page.goto(Constants.leasingClientsUrl, { waitUntil: 'networkidle' });
+
+        if (filtered) return filtered;
+        throw new Error('No Owner Operator row found on /leasing/clients (page 1 scan and Client type filter both empty)');
+    }
+
+    /** Click the eye icon in the row for the given company name; navigates to /leasing/client/{id}. */
+    async openOverviewForRow(companyName: string): Promise<void> {
+        const row = this.getRowByName(companyName);
+        await row.waitFor({ state: 'visible', timeout: 5000 });
+        await row.locator('button:has(.mdi-eye)').first().click();
+        await this.page.waitForURL(/\/leasing\/client\/\d+/, { timeout: 10000 });
     }
 }

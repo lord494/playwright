@@ -324,6 +324,274 @@ export class Constants {
     static leasingClientsClientTypeCompany = 'Company';
     static leasingClientsPresidentValue = 'Petar Petrović';
 
+    // ===== NEW COMPANY MODAL (Leasing Clients) =====
+    static newCompanyModalTitle = 'New company';
+
+    // Section titles inside the modal
+    static newCompanySectionCompanyInfo = 'Company information';
+    static newCompanySectionCooperation = 'Cooperation';
+    static newCompanySectionStatus = 'Company status';
+    static newCompanySectionPresident = 'President';
+    static newCompanySectionContact = 'Contact';
+    static newCompanySectionRepresentatives = 'Representatives';
+    static newCompanySectionNote = 'Note';
+    static newCompanySectionComments = 'Comments';
+
+    // Field labels
+    static newCompanyLabelClientId = 'Client ID';
+    static newCompanyLabelName = 'Name*';
+    static newCompanyLabelMC = 'MC';
+    static newCompanyLabelDOT = 'DOT';
+    static newCompanyLabelAddress = 'Address';
+    static newCompanyLabelCity = 'City';
+    static newCompanyLabelState = 'State';
+    static newCompanyLabelZIP = 'ZIP';
+    static newCompanyLabelFEIN = 'FEIN';
+    static newCompanyLabelSisterCompany = 'Sister company';
+    static newCompanyLabelRiskLevel = 'Risk level';
+    static newCompanyLabelIsMuslim = 'Is it muslim?';
+    static newCompanyLabelCooperationStartDate = 'Cooperation start date';
+    static newCompanyLabelLeasingAndSales = 'Leasing and sales';
+    // App contains the typo "Regruting"
+    static newCompanyLabelRegruting = 'Regruting';
+    static newCompanyLabelMaintenance = 'Maintenance';
+    static newCompanyLabelFuel = 'Fuel';
+    static newCompanyLabelSearchPresident = 'Search president';
+    static newCompanyLabelContactPosition = 'Position';
+    static newCompanyLabelContactName = 'Name';
+    static newCompanyLabelContactEmail = 'Email';
+    static newCompanyLabelContactPhone = 'Phone';
+    static newCompanyLabelInvoices = 'Invoices';
+    static newCompanyLabelContracts = 'Contracts';
+    static newCompanyLabelInsurance = 'Insurance';
+    static newCompanyLabelSalesManagerTrucks = 'Sales Manager for Trucks';
+    static newCompanyLabelSalesPersTrucks = 'Sales Pers for Trucks';
+    static newCompanyLabelSalesManagerTrailers = 'Sales Manager for Trailers';
+    static newCompanyLabelSalesPersTrailer = 'Sales Pers for Trailer';
+    static newCompanyLabelAccTeamLeader = 'Acc Team Leader';
+    static newCompanyLabelAccPerson = 'Acc Person';
+    static newCompanyLabelCollectionPerson = 'Collection Person';
+    static newCompanyLabelNote = 'Note';
+
+    // Add president nested modal
+    static newCompanyAddPresidentButton = 'Add president';
+    static newCompanyAddPresidentTitle = 'Add president';
+
+    // Edit president nested modal (opened via the pencil icon on a president card)
+    // Submit button text mirrors Add president → must be scoped to the edit dialog.
+    static newCompanyEditPresidentTitle = 'Edit president';
+    static newCompanyEditPresidentButton = 'Edit president';
+
+    // Confirmation dialogs raised by the (-) and trash buttons on a president card.
+    // Both share the title "Warning"; the body + action button name disambiguate them.
+    static newCompanyPresidentWarningTitle = 'Warning';
+    static newCompanyUnpairPresidentText = 'Are you sure that you want to remove this president from this company?';
+    static newCompanyDeletePresidentText = 'Are you sure that you want to delete this president?';
+    static newCompanyUnpairConfirmButton = 'Unpair';
+    static newCompanyDeleteConfirmButton = 'Delete';
+    static newCompanyConfirmCancelButton = 'Cancel';
+
+    // Edit contact nested modal (opened via the pencil icon on a contact card).
+    // Submit button text mirrors the dialog title — must be scoped to the dialog.
+    static newCompanyEditContactTitle = 'Edit contact';
+    static newCompanyEditContactButton = 'Edit contact';
+
+    // Delete contact confirm dialog — same "Warning" title as the president
+    // ones; disambiguate by body text + DELETE action button.
+    static newCompanyDeleteContactText = 'Are you sure that you want to delete this contact?';
+    static newCompanyPresidentLabelFirstName = 'First name*';
+    static newCompanyPresidentLabelMiddleName = 'Middle name';
+    static newCompanyPresidentLabelLastName = 'Last name*';
+    static newCompanyPresidentLabelAddress = 'Address';
+    static newCompanyPresidentLabelCity = 'City';
+    static newCompanyPresidentLabelState = 'State';
+    static newCompanyPresidentLabelZIP = 'ZIP';
+    static newCompanyPresidentLabelSSN = 'SSN';
+
+    static newCompanyAddContactButton = 'Add contact';
+    static newCompanyCancelButton = 'Cancel';
+    static newCompanySaveButton = 'Save';
+
+    // Connection modal that opens after clicking .mdi-link-variant next to a
+    // picked existing president (one that already exists on other companies).
+    static newCompanyConnectionModalTitle = 'Found possible connections';
+    static newCompanyConnectionTypeSamePresident = 'Connection type: Same President';
+    static newCompanyConnectButton = 'Connect';
+    static newCompanyDisconnectButton = 'Disconnect';
+    static newCompanyRelationTypeSamePresident = 'Same President';
+
+    // Validation
+    static newCompanyValidationNameRequired = 'The name field is required';
+    static newCompanyContactEmailHint = "Email won't be hidden";
+    static newCompanyContactPhoneHint = "Phone won't be hidden";
+
+    // Risk level options (from /leasing/clients New Company modal, 2026-05-18)
+    static newCompanyRiskLevelA = 'A';
+    static newCompanyRiskLevelB = 'B';
+    static newCompanyRiskLevelC = 'C';
+    static newCompanyRiskLevelD = 'D';
+    static newCompanyRiskLevelF = 'F';
+    static newCompanyRiskLevelL = 'L';
+
+    // Contact Position options
+    static newCompanyPositionPresident = 'President';
+    static newCompanyPositionOwnerOperator = 'Owner Operator';
+    static newCompanyPositionOffice = 'Office';
+    static newCompanyPositionCompanyHash = 'Company #';
+    static newCompanyPositionSafety = 'Safety';
+    static newCompanyPositionAccounting = 'Accounting';
+    static newCompanyPositionManager = 'Manager';
+    static newCompanyPositionMain = 'Main';
+
+    // Default status of a freshly created company
+    static newCompanyDefaultStatus = 'Pending';
+
+    // Sample sister company that exists on staging (2026-05-18)
+    static newCompanySampleSisterCompany = 'date doo';
+
+    // Prefix used for company names created by these tests — used to identify
+    // and clean up leftovers from previous test runs.
+    static newCompanyTestPrefix = 'PWNewCo';
+
+    // ===== EDIT COMPANY / OWNER OPERATOR MODAL (Leasing Clients) =====
+    // The modals opened by the pencil icon on /leasing/clients reuse the same
+    // field set as the New * modals but expose Approve / Decline buttons and
+    // (once status flips to Approved) a set of Underwriting / Billing /
+    // Insured Collection / Receiviables-Collection / Lawsuit sections.
+    static editCompanyModalTitle = 'Edit company';
+    static editOwnerOperatorModalTitle = 'Edit owner';
+
+    static editClientApproveButton = 'Approve';
+    static editClientDeclineButton = 'Decline';
+
+    // Status values displayed in the modal status chip + the /leasing/clients
+    // Client status column. Verified against staging.vrlz.app 2026-05-20 —
+    // the Decline button leaves a "Decline" chip (NOT "Declined" — that
+    // mismatch is on the app side; pin the observed text so a regression
+    // toward "Declined" surfaces here as a deliberate change).
+    static editClientStatusApproved = 'Approved';
+    static editClientStatusDeclined = 'Decline';
+    static editClientStatusPending = 'Pending';
+
+    // Sections that only appear after the client is Approved.
+    static editClientSectionUnderwriting = 'Underwriting';
+    static editClientSectionBillingInfo = 'Billing info';
+
+    // Add New (case-insensitive label on staging — chip-style buttons render
+    // "ADD NEW" in upper-case but the underlying text node is "Add new").
+    static editClientAddNewButton = 'Add new';
+
+    // ===== ADD UNDERWRITING MODAL =====
+    // Opened from the Edit modal Underwriting section's Add new button.
+    // Modal headline is "Underwriting" (h3 inside its own v-dialog--active).
+    static underwritingModalTitle = 'Underwriting';
+    static underwritingLabelStatus = 'Status';
+    static underwritingLabelStartDate = 'Start date';
+    static underwritingLabelExpiredDate = 'Expired date';
+    static underwritingLabelUnits = 'Units';
+    static underwritingLabelUnitsType = 'Units type';
+    static underwritingLabelApprovedBy = 'Approved By';
+    static underwritingLabelNote = 'Note';
+    static underwritingSaveButton = 'Save';
+
+    // Status options inside the Add Underwriting modal (verified 2026-05-20).
+    // NOTE: there is no plain "Approved" — the option that grants Truck/Trailer
+    // limits is "Approved units".
+    static underwritingStatusApprovedUnits = 'Approved units';
+    static underwritingStatusHold = 'Hold';
+    static underwritingStatusNoLimit = 'No limit';
+    static underwritingStatusNoMoreUnits = 'No more units';
+
+    // Units type options.
+    static underwritingUnitsTypeTruck = 'Truck';
+    static underwritingUnitsTypeTrailer = 'Trailer';
+
+    // Approved By options.
+    static underwritingApprovedByUnderwriting = 'Underwriting';
+    static underwritingApprovedByPresident = 'President';
+
+    // ===== NEW OWNER OPERATOR MODAL (Leasing Clients) =====
+    static newOwnerOperatorModalTitle = 'New owner';
+
+    // Section titles
+    static newOwnerOperatorSectionOwnerInfo = 'Owner information';
+    static newOwnerOperatorSectionCooperation = 'Cooperation';
+    static newOwnerOperatorSectionStatus = 'Owner operator status';
+    static newOwnerOperatorSectionContact = 'Contact';
+    static newOwnerOperatorSectionRepresentatives = 'Representatives';
+    static newOwnerOperatorSectionNote = 'Note';
+    static newOwnerOperatorSectionComments = 'Comments';
+
+    // Field labels
+    static newOwnerOperatorLabelClientId = 'Client ID';
+    static newOwnerOperatorLabelFirstName = 'First name*';
+    static newOwnerOperatorLabelMiddleName = 'Middle name';
+    static newOwnerOperatorLabelLastName = 'Last name*';
+    static newOwnerOperatorLabelAddress = 'Address';
+    static newOwnerOperatorLabelCity = 'City';
+    static newOwnerOperatorLabelState = 'State';
+    static newOwnerOperatorLabelZIP = 'ZIP';
+    static newOwnerOperatorLabelSSN = 'SSN';
+    static newOwnerOperatorLabelRiskLevel = 'Risk level';
+    static newOwnerOperatorLabelAreTheyMuslim = 'Are they muslim?';
+    static newOwnerOperatorLabelCooperationStartDate = 'Cooperation start date';
+    static newOwnerOperatorLabelLeasingAndSales = 'Leasing and sales';
+    static newOwnerOperatorLabelRegruting = 'Regruting';
+    static newOwnerOperatorLabelMaintenance = 'Maintenance';
+    static newOwnerOperatorLabelFuel = 'Fuel';
+    static newOwnerOperatorLabelContactPosition = 'Position';
+    static newOwnerOperatorLabelContactName = 'Name';
+    static newOwnerOperatorLabelContactEmail = 'Email';
+    static newOwnerOperatorLabelContactPhone = 'Phone';
+    static newOwnerOperatorLabelInvoices = 'Invoices';
+    static newOwnerOperatorLabelContracts = 'Contracts';
+    static newOwnerOperatorLabelInsurance = 'Insurance';
+    static newOwnerOperatorLabelSalesManagerTrucks = 'Sales Manager for Trucks';
+    static newOwnerOperatorLabelSalesPersTrucks = 'Sales Pers for Trucks';
+    static newOwnerOperatorLabelSalesManagerTrailers = 'Sales Manager for Trailers';
+    static newOwnerOperatorLabelSalesPersTrailer = 'Sales Pers for Trailer';
+    static newOwnerOperatorLabelAccTeamLeader = 'Acc Team Leader';
+    static newOwnerOperatorLabelAccPerson = 'Acc Person';
+    static newOwnerOperatorLabelCollectionPerson = 'Collection Person';
+    static newOwnerOperatorLabelNote = 'Note';
+
+    static newOwnerOperatorAddContactButton = 'Add contact';
+    static newOwnerOperatorCancelButton = 'Cancel';
+    static newOwnerOperatorSaveButton = 'Save';
+
+    // Validation messages
+    static newOwnerOperatorValidationFirstNameRequired = 'The First Name field is required';
+    static newOwnerOperatorValidationLastNameRequired = 'The Last Name field is required';
+    static newOwnerOperatorContactEmailHint = "Email won't be hidden";
+    static newOwnerOperatorContactPhoneHint = "Phone won't be hidden";
+
+    // Risk level options (same set as the New Company modal, verified 2026-05-19)
+    static newOwnerOperatorRiskLevelA = 'A';
+    static newOwnerOperatorRiskLevelB = 'B';
+    static newOwnerOperatorRiskLevelC = 'C';
+    static newOwnerOperatorRiskLevelD = 'D';
+    static newOwnerOperatorRiskLevelF = 'F';
+    static newOwnerOperatorRiskLevelL = 'L';
+
+    // Contact Position options
+    static newOwnerOperatorPositionPresident = 'President';
+    static newOwnerOperatorPositionOwnerOperator = 'Owner Operator';
+    static newOwnerOperatorPositionOffice = 'Office';
+    static newOwnerOperatorPositionCompanyHash = 'Company #';
+    static newOwnerOperatorPositionSafety = 'Safety';
+    static newOwnerOperatorPositionAccounting = 'Accounting';
+    static newOwnerOperatorPositionManager = 'Manager';
+    static newOwnerOperatorPositionMain = 'Main';
+
+    // Default status of a freshly created owner operator.
+    static newOwnerOperatorDefaultStatus = 'Pending';
+    // The /leasing/clients table shows owner operators with a "Owner" client-type label.
+    static newOwnerOperatorClientType = 'Owner';
+
+    // Prefix used for owner-operator first names created by these tests — for
+    // identification and cleanup of leftovers from previous runs.
+    static newOwnerOperatorTestPrefix = 'PWOwn';
+
     // ===== LEASING TEAMS =====
     static leasingTeamsUrl = '/leasing/leasing-teams';
     static leasingTeamsUrlRegex = /\/leasing\/leasing-teams$/;
