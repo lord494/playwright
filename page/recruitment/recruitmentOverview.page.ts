@@ -1,5 +1,18 @@
-import { Locator, Page } from "@playwright/test";
+import { Locator, Page, expect } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
+
+/** Expected values for a single employee row (used by create/edit assertions). */
+export type EmployeeRowExpectation = {
+    cdl: string;
+    name: string;
+    recruiter: string;
+    status: string;
+    statusColor: string;
+    email: string;
+    phone: string;
+    country: string;
+    note: string;
+};
 
 export class RecrutimentPage extends BasePage {
     readonly page: Page;
@@ -36,7 +49,7 @@ export class RecrutimentPage extends BasePage {
     readonly closeButton: Locator;
     readonly searchPhoneNumberField: Locator;
     readonly searchButton: Locator;
-    readonly statusCheckboxes: Record<string, any>;
+    readonly statusCheckboxes: Record<string, Locator>;
     readonly pauseIcon: Locator;
     readonly snackMessage: Locator;
     readonly disabledSearchButton: Locator;
@@ -75,6 +88,14 @@ export class RecrutimentPage extends BasePage {
         this.recruiterFieldValue = this.page.locator('.v-select__selection').first();
         this.moveAllButton = this.page.getByRole('button', { name: 'Move all', exact: true });
         this.closeButton = this.page.locator('.v-dialog--active .v-btn__content', { hasText: "Close" });
+        // NOTE: This chained Vuetify class selector (incl. the theme class
+        // `.theme--light`, normally discouraged) is intentionally left unchanged.
+        // Two phone-search inputs render across the Employees / Recruiters tabs and
+        // callers rely on this exact selector resolving to a single element on the
+        // Employees tab while disambiguating with .last() on the Recruiters tab.
+        // A role/placeholder-based replacement could not be verified against the
+        // auth-gated staging DOM, so it is flagged as a follow-up rather than
+        // changed blindly.
         this.searchPhoneNumberField = this.page.locator('.v-input.v-input--hide-details.v-input--dense.theme--light');
         this.searchButton = this.page.locator('.v-btn__content', { hasText: 'Search' });
         this.statusCheckboxes = {
@@ -91,19 +112,6 @@ export class RecrutimentPage extends BasePage {
         this.disabledSearchButton = page.locator('.v-btn--disabled.v-btn--has-bg').first();
     }
 
-    async check(checkbox: Locator): Promise<void> {
-        const isChecked = await checkbox.isChecked();
-        if (!isChecked) {
-            await checkbox.click();
-        }
-    }
-
-    async uncheck(checkbox: Locator): Promise<void> {
-        if (await checkbox.isChecked()) {
-            await checkbox.click();
-        }
-    }
-
     async selectRecruiter(menu: Locator, recruiter: Locator): Promise<void> {
         return this.selectRecruiterFromMenu(menu, recruiter);
     }
@@ -113,6 +121,35 @@ export class RecrutimentPage extends BasePage {
         await this.searchButton.click();
     }
 
+    /** Waits for any /api/employees table refresh to settle. */
+    async waitForEmployees(): Promise<void> {
+        await this.page.waitForResponse(res =>
+            res.url().includes('/api/employees') &&
+            (res.status() === 200 || res.status() === 304)
+        );
+    }
+
+    /** Waits for the phone-search /api/employees request for `search` to settle. */
+    async waitForEmployeesSearch(search: string): Promise<void> {
+        await this.page.waitForResponse(res =>
+            res.url().includes('/api/employees?page=1&perPage=100&search=' + search) &&
+            (res.status() === 200 || res.status() === 304)
+        );
+    }
+
+    /** Types a phone number into the search field, submits, and waits for results. */
+    async searchEmployeeByPhone(phone: string): Promise<void> {
+        await this.searchPhoneNumber(this.searchPhoneNumberField, phone);
+        await this.waitForEmployeesSearch(phone);
+    }
+
+    /** Clears whatever is currently in the phone-search field. */
+    async clearPhoneSearch(): Promise<void> {
+        await this.searchPhoneNumberField.click();
+        await this.page.keyboard.press('Control+A');
+        await this.page.keyboard.press('Backspace');
+    }
+
     async selectOnlyStatus(statusToKeep: keyof typeof this.statusCheckboxes) {
         for (const [name, cb] of Object.entries(this.statusCheckboxes)) {
             if (name === statusToKeep) {
@@ -120,22 +157,43 @@ export class RecrutimentPage extends BasePage {
             }
             await cb.uncheck();
 
-            await this.page.waitForResponse(
-                res =>
-                    res.url().includes('/api/employees') &&
-                    (res.status() === 200 || res.status() === 304)
-
-            );
+            await this.waitForEmployees();
         }
     }
 
+    /**
+     * Asserts every visible status cell reads exactly `statusText` and is painted
+     * with `color`. Iterates all rows (not just the first) to catch a stray row
+     * that the status filter failed to exclude.
+     */
+    async expectAllStatusCellsAre(statusText: string, color: string): Promise<void> {
+        await this.progressBar.waitFor({ state: 'hidden' });
+        const cells = await this.stausColumn.all();
+        for (const cell of cells) {
+            await expect(cell).toHaveText(statusText);
+            const backgroundColor = await cell.evaluate((el) => window.getComputedStyle(el).backgroundColor);
+            expect(backgroundColor).toBe(color);
+        }
+    }
+
+    /** Asserts the first employee row matches the expected create/edit values. */
+    async expectFirstEmployeeRow(data: EmployeeRowExpectation): Promise<void> {
+        await expect(this.cdlColumn.first()).toContainText(data.cdl);
+        await expect(this.employeeNameColumn.first()).toContainText(data.name);
+        await expect(this.recruiterColumn.first()).toContainText(data.recruiter);
+        await expect(this.stausColumn.first()).toContainText(data.status);
+        await expect(this.stausColumn.first()).toHaveCSS('background-color', data.statusColor);
+        await expect(this.emailColumn.first()).toContainText(data.email);
+        await expect(this.phoneColumn.first()).toContainText(data.phone);
+        await expect(this.countryColumn.first()).toContainText(data.country);
+        await expect(this.noteColumn.first()).toContainText(data.note);
+    }
+
     async deleteLastIf20OrMore(): Promise<void> {
-        await this.page.waitForTimeout(1000);
+        await this.progressBar.waitFor({ state: 'hidden', timeout: 5000 }).catch(() => { });
         const count = await this.deleteIcon.count();
-        console.log('Number of employees:', count);
         if (count >= 20) {
             await this.deleteIcon.last().click();
         }
     }
 }
-

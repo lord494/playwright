@@ -5,57 +5,27 @@ import { test } from '../fixtures/fixtures';
 
 test('Korisnik moze da filtrira zaposlene da se prikazu samo unemployed statusi', async ({ recruitmentOverviewSetup }) => {
     await recruitmentOverviewSetup.selectOnlyStatus('unemployed');
-    await recruitmentOverviewSetup.progressBar.waitFor({ state: 'hidden' });
-    const statusCells = await recruitmentOverviewSetup.stausColumn.all();
-    for (const cell of statusCells) {
-        await expect(cell).toHaveText(Constants.unemployedStatus);
-        const backgroundColor = await cell.evaluate((el) => window.getComputedStyle(el).backgroundColor);
-        expect(backgroundColor).toBe(Constants.unemployedStatusColor);
-    }
+    await recruitmentOverviewSetup.expectAllStatusCellsAre(Constants.unemployedStatus, Constants.unemployedStatusColor);
 });
 
 test('Korisnik moze da filtrira zaposlene da se prikazu samo employed statusi', async ({ recruitmentOverviewSetup }) => {
     await recruitmentOverviewSetup.selectOnlyStatus('employed');
-    await recruitmentOverviewSetup.progressBar.waitFor({ state: 'hidden' });
-    const statusCells = await recruitmentOverviewSetup.stausColumn.all();
-    for (const cell of statusCells) {
-        await expect(cell).toHaveText(Constants.employedStatus);
-        const backgroundColor = await cell.evaluate((el) => window.getComputedStyle(el).backgroundColor);
-        expect(backgroundColor).toBe(Constants.employedStatusColor);
-    }
+    await recruitmentOverviewSetup.expectAllStatusCellsAre(Constants.employedStatus, Constants.employedStatusColor);
 });
 
 test('Korisnik moze da filtrira zaposlene da se prikazu samo blocked statusi', async ({ recruitmentOverviewSetup }) => {
     await recruitmentOverviewSetup.selectOnlyStatus('blocked');
-    await recruitmentOverviewSetup.progressBar.waitFor({ state: 'hidden' });
-    const statusCells = await recruitmentOverviewSetup.stausColumn.all();
-    for (const cell of statusCells) {
-        await expect(cell).toHaveText(Constants.blockedStatus);
-        const backgroundColor = await cell.evaluate((el) => window.getComputedStyle(el).backgroundColor);
-        expect(backgroundColor).toBe(Constants.blockedStatusColor);
-    }
+    await recruitmentOverviewSetup.expectAllStatusCellsAre(Constants.blockedStatus, Constants.blockedStatusColor);
 });
 
 test('Korisnik moze da filtrira zaposlene da se prikazu samo ex drivers statusi', async ({ recruitmentOverviewSetup }) => {
     await recruitmentOverviewSetup.selectOnlyStatus('retired');
-    await recruitmentOverviewSetup.progressBar.waitFor({ state: 'hidden' });
-    const statusCells = await recruitmentOverviewSetup.stausColumn.all();
-    for (const cell of statusCells) {
-        await expect(cell).toHaveText(Constants.exDriversStatus);
-        const backgroundColor = await cell.evaluate((el) => window.getComputedStyle(el).backgroundColor);
-        expect(backgroundColor).toBe(Constants.exDriversStatusColor);
-    }
+    await recruitmentOverviewSetup.expectAllStatusCellsAre(Constants.exDriversStatus, Constants.exDriversStatusColor);
 });
 
 test('Korisnik moze da filtrira zaposlene da se prikazu samo hold statusi', async ({ recruitmentOverviewSetup }) => {
     await recruitmentOverviewSetup.selectOnlyStatus('hold');
-    await recruitmentOverviewSetup.progressBar.waitFor({ state: 'hidden' });
-    const statusCells = await recruitmentOverviewSetup.stausColumn.all();
-    for (const cell of statusCells) {
-        await expect(cell).toHaveText(Constants.holdStatus);
-        const backgroundColor = await cell.evaluate((el) => window.getComputedStyle(el).backgroundColor);
-        expect(backgroundColor).toBe(Constants.holdStatusColor);
-    }
+    await recruitmentOverviewSetup.expectAllStatusCellsAre(Constants.holdStatus, Constants.holdStatusColor);
 });
 
 test('Korisnik moze da se prebaci na recruiter tab', async ({ recruitmentOverviewSetup }) => {
@@ -74,21 +44,23 @@ test('Korisnik moze da prebaci broj na drugog regrutera sa Move akcijom', async 
     const randomPhone = getRandom10Number().join('');
     const randomCdl = get6RandomNumber().join('');
     await recruitmentOverviewSetup.addNewEmployeeButton.click();
-    await addNewEmployee.enterCdl(addNewEmployee.cdlField, randomCdl)
-    await addNewEmployee.selectRecruiter(addNewEmployee.recruiterMenu, addNewEmployee.recruiterOption);
-    await addNewEmployee.enterName(addNewEmployee.nameField, Constants.driverName);
-    await addNewEmployee.enterEmail(addNewEmployee.emailField, Constants.testEmail);
-    await addNewEmployee.enterPhone(addNewEmployee.phoneField, randomPhone);
-    await addNewEmployee.enterCountry(addNewEmployee.countryField, Constants.state);
-    await addNewEmployee.enterNote(addNewEmployee.noteField, Constants.noteFirst);
-    await addNewEmployee.selectStatus(addNewEmployee.stausMenu, addNewEmployee.unemployedStatus);
+    await addNewEmployee.fillEmployeeForm({
+        cdl: randomCdl,
+        recruiterOption: addNewEmployee.recruiterOption,
+        name: Constants.driverName,
+        email: Constants.testEmail,
+        phone: randomPhone,
+        country: Constants.state,
+        note: Constants.noteFirst,
+        statusOption: addNewEmployee.unemployedStatus,
+    });
     await addNewEmployee.saveButton.click();
-    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
+    await recruitmentOverviewSetup.waitForEmployees();
     await recruitmentOverviewSetup.dialogBox.waitFor({ state: 'detached' });
     await recruitmentOverviewSetup.recruiterTab.click();
     await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.recruiterOption);
     await recruitmentOverviewSetup.searchPhoneNumber(recruitmentOverviewSetup.searchPhoneNumberField.last(), randomPhone);
-    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
+    await recruitmentOverviewSetup.waitForEmployees();
     await recruitmentOverviewSetup.clickElement(recruitmentOverviewSetup.checkboxOfEmployee);
     await recruitmentOverviewSetup.moveButton.click();
     await recruitmentOverviewSetup.dialogBox.waitFor({ state: 'visible' });
@@ -96,9 +68,9 @@ test('Korisnik moze da prebaci broj na drugog regrutera sa Move akcijom', async 
     await recruitmentOverviewSetup.okButton.click();
     await recruitmentOverviewSetup.dialogBox.waitFor({ state: 'detached' });
     await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.secondRecruiterOption.first());
-    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
+    await recruitmentOverviewSetup.waitForEmployees();
     await recruitmentOverviewSetup.searchPhoneNumber(recruitmentOverviewSetup.searchPhoneNumberField.last(), randomPhone);
-    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
+    await recruitmentOverviewSetup.waitForEmployees();
     await recruitmentOverviewSetup.clickElement(recruitmentOverviewSetup.pencilIcon);
     await expect(recruitmentOverviewSetup.recruiterFieldValue).toContainText(Constants.seconPlaywrightRecruiter);
 });
@@ -123,7 +95,7 @@ test('Test koji dodaje novog usera, radi se Move All akcija i brise se dodati us
     await recruitmentOverviewSetup.page.goto(Constants.recruitmentUrl, { waitUntil: 'networkidle', timeout: 50000 });
     await recruitmentOverviewSetup.recruiterTab.click();
     await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.stagingRecruiterOption);
-    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+    await recruitmentOverviewSetup.waitForEmployees();
     await recruitmentOverviewSetup.progressBar.waitFor({ state: 'hidden', timeout: 15000 });
     const phoneColumnTexts = await recruitmentOverviewSetup.phoneColumn.allTextContents();
     await recruitmentOverviewSetup.moveAllButton.click();
@@ -132,7 +104,7 @@ test('Test koji dodaje novog usera, radi se Move All akcija i brise se dodati us
     await recruitmentOverviewSetup.okButton.click();
     await recruitmentOverviewSetup.dialogBox.waitFor({ state: 'detached', timeout: 80000 });
     await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.temporaryUserOption.first());
-    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+    await recruitmentOverviewSetup.waitForEmployees();
     const phoneColumnTextsAfterMove = await recruitmentOverviewSetup.phoneColumn.allTextContents();
     for (const phone of phoneColumnTexts) {
         expect(phoneColumnTextsAfterMove).toContain(phone);
@@ -150,9 +122,9 @@ test('Korisnik ne moze da doda hold status ako je ispunjen max capacity', async 
     const randomPhone = getRandom10Number().join('');
     await recruitmentOverviewSetup.recruiterTab.click();
     await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.recruiterPetarPetrovicOption);
-    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+    await recruitmentOverviewSetup.waitForEmployees();
     await recruitmentOverviewSetup.selectOnlyStatus('hold');
-    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+    await recruitmentOverviewSetup.waitForEmployees();
     const neededCount = 20;
     const currentCount = await recruitmentOverviewSetup.deleteIcon.count();
     if (currentCount < neededCount) {
@@ -164,14 +136,16 @@ test('Korisnik ne moze da doda hold status ako je ispunjen max capacity', async 
         await recruitmentOverviewSetup.employeesTab.click();
     }
     await recruitmentOverviewSetup.addNewEmployeeButton.click();
-    await addNewEmployee.enterCdl(addNewEmployee.cdlField, randomCdl)
-    await addNewEmployee.selectRecruiter(addNewEmployee.recruiterMenu, addNewEmployee.recruiterPetarPetrovicOption);
-    await addNewEmployee.enterName(addNewEmployee.nameField, Constants.driverName);
-    await addNewEmployee.enterEmail(addNewEmployee.emailField, Constants.testEmail);
-    await addNewEmployee.enterPhone(addNewEmployee.phoneField, randomPhone);
-    await addNewEmployee.enterCountry(addNewEmployee.countryField, Constants.state);
-    await addNewEmployee.enterNote(addNewEmployee.noteField, Constants.noteFirst);
-    await addNewEmployee.selectStatus(addNewEmployee.stausMenu, addNewEmployee.holdStatus);
+    await addNewEmployee.fillEmployeeForm({
+        cdl: randomCdl,
+        recruiterOption: addNewEmployee.recruiterPetarPetrovicOption,
+        name: Constants.driverName,
+        email: Constants.testEmail,
+        phone: randomPhone,
+        country: Constants.state,
+        note: Constants.noteFirst,
+        statusOption: addNewEmployee.holdStatus,
+    });
     await addNewEmployee.saveButton.click();
     await expect(addNewEmployee.alertMessage).toBeVisible({ timeout: 5000 });
     await expect(addNewEmployee.alertMessage).toContainText('Recruiter Petar Petrovic has reached their maximum HOLD capacity (20/20). Cannot add new HOLD employee. Please free up space by moving or changing the status of existing HOLD employees.');
@@ -180,17 +154,17 @@ test('Korisnik ne moze da doda hold status ako je ispunjen max capacity', async 
 test('Korisnik moze da stopira hold broj', async ({ recruitmentOverviewSetup, addNewEmployee }) => {
     await recruitmentOverviewSetup.recruiterTab.click();
     await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.recruiterPetarPetrovicOption);
-    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+    await recruitmentOverviewSetup.waitForEmployees();
     await recruitmentOverviewSetup.selectOnlyStatus('hold');
-    await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+    await recruitmentOverviewSetup.waitForEmployees();
     const count = await recruitmentOverviewSetup.deleteIcon.count();
     if (count === 0) {
         await addNewEmployee.addHoldNumbers();
         await recruitmentOverviewSetup.recruiterTab.click();
         await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.recruiterPetarPetrovicOption);
-        await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+        await recruitmentOverviewSetup.waitForEmployees();
         await recruitmentOverviewSetup.selectOnlyStatus('hold');
-        await recruitmentOverviewSetup.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
+        await recruitmentOverviewSetup.waitForEmployees();
     }
     const numberOfPauseIcon = await recruitmentOverviewSetup.pauseIcon.count();
     let found = false;

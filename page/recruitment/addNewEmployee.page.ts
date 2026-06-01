@@ -3,11 +3,27 @@ import { BasePage } from "../../helpers/base";
 import { Constants } from "../../helpers/constants";
 import { get6RandomNumber, getRandom10Number } from "../../helpers/dateUtilis";
 
+/**
+ * Data for filling the Add/Edit employee modal. `recruiterOption` and
+ * `statusOption` are the menu-option locators to pick (declared as readonly
+ * fields on this page, or on RecrutimentPage for the "Test Automation"
+ * recruiter used by the edit flow).
+ */
+export type EmployeeFormData = {
+    cdl: string;
+    recruiterOption: Locator;
+    name: string;
+    email: string;
+    phone: string;
+    country: string;
+    note: string;
+    statusOption: Locator;
+};
+
 export class AddNewEmployeePage extends BasePage {
     readonly page: Page;
     readonly cdlField: Locator;
     readonly recruiterMenu: Locator;
-    readonly numberOfDaysField: Locator;
     readonly nameField: Locator;
     readonly emailField: Locator;
     readonly phoneField: Locator;
@@ -33,7 +49,6 @@ export class AddNewEmployeePage extends BasePage {
         this.page = page;
         this.cdlField = this.page.getByRole('textbox', { name: 'CDL' });
         this.recruiterMenu = this.page.getByRole('textbox', { name: 'Recruiter' });
-        this.numberOfDaysField = this.page.getByText('Number of days');
         this.nameField = this.page.getByRole('textbox', { name: 'Name*' });
         this.emailField = this.page.getByRole('textbox', { name: 'Email' });
         this.phoneField = this.page.getByRole('textbox', { name: 'Phone*' });
@@ -41,8 +56,8 @@ export class AddNewEmployeePage extends BasePage {
         this.noteField = this.page.getByRole('textbox', { name: 'Note' });
         this.stausMenu = this.page.getByRole('textbox', { name: 'Status' });
         this.saveButton = this.page.getByRole('button', { name: 'Save' });
-        this.recruiterOption = this.page.locator('.v-list-item__title').filter({ hasText: 'Playwright Regruter' });
-        this.recruiterPetarPetrovicOption = this.page.locator('.v-list-item__title').filter({ hasText: 'Petar Petrovic' });
+        this.recruiterOption = this.page.locator('.v-list-item__title').filter({ hasText: Constants.plawrightRecruiter });
+        this.recruiterPetarPetrovicOption = this.page.locator('.v-list-item__title').filter({ hasText: Constants.recruiterPetarPetrovic });
         this.empolyedStatus = this.page.getByRole('option', { name: 'Employed', exact: true });
         this.unemployedStatus = this.page.getByRole('option', { name: 'Unemployed' });
         this.blockedStatus = this.page.getByRole('option', { name: 'Blocked' });
@@ -55,36 +70,63 @@ export class AddNewEmployeePage extends BasePage {
         this.addNewEmployeeButton = this.page.getByRole('button', { name: 'Add new employee' });
     }
 
-    enterCdl(field: Locator, cdl: string): Promise<void> {
-        return this.fillInputField(field, cdl);
+    enterCdl(cdl: string): Promise<void> {
+        return this.fillInputField(this.cdlField, cdl);
     }
 
-    selectRecruiter(menu: Locator, recruiter: Locator): Promise<void> {
-        return this.selectFromMenu(menu, recruiter);
+    selectRecruiter(recruiter: Locator): Promise<void> {
+        return this.selectFromMenu(this.recruiterMenu, recruiter);
     }
 
-    enterName(field: Locator, name: string): Promise<void> {
-        return this.fillInputField(field, name);
+    enterName(name: string): Promise<void> {
+        return this.fillInputField(this.nameField, name);
     }
 
-    enterEmail(field: Locator, email: string): Promise<void> {
-        return this.fillInputField(field, email);
+    enterEmail(email: string): Promise<void> {
+        return this.fillInputField(this.emailField, email);
     }
 
-    enterPhone(field: Locator, phone: string): Promise<void> {
-        return this.fillInputField(field, phone);
+    enterPhone(phone: string): Promise<void> {
+        return this.fillInputField(this.phoneField, phone);
     }
 
-    enterCountry(field: Locator, country: string): Promise<void> {
-        return this.fillInputField(field, country);
+    enterCountry(country: string): Promise<void> {
+        return this.fillInputField(this.countryField, country);
     }
 
-    enterNote(field: Locator, note: string): Promise<void> {
-        return this.fillInputField(field, note);
+    enterNote(note: string): Promise<void> {
+        return this.fillInputField(this.noteField, note);
     }
 
-    selectStatus(menu: Locator, status: Locator): Promise<void> {
-        return this.selectFromMenu(menu, status);
+    selectStatus(status: Locator): Promise<void> {
+        return this.selectFromMenu(this.stausMenu, status);
+    }
+
+    /** Fills every field of a fresh Add Employee modal (does NOT click Save). */
+    async fillEmployeeForm(data: EmployeeFormData): Promise<void> {
+        await this.enterCdl(data.cdl);
+        await this.selectRecruiter(data.recruiterOption);
+        await this.enterName(data.name);
+        await this.enterEmail(data.email);
+        await this.enterPhone(data.phone);
+        await this.enterCountry(data.country);
+        await this.enterNote(data.note);
+        await this.selectStatus(data.statusOption);
+    }
+
+    /**
+     * Re-fills the Edit Employee modal, clearing each field before typing
+     * (via BasePage.fillInputFieldEdit). Does NOT click Save.
+     */
+    async editEmployeeForm(data: EmployeeFormData): Promise<void> {
+        await this.fillInputFieldEdit(this.cdlField, data.cdl);
+        await this.selectRecruiter(data.recruiterOption);
+        await this.fillInputFieldEdit(this.nameField, data.name);
+        await this.fillInputFieldEdit(this.emailField, data.email);
+        await this.fillInputFieldEdit(this.phoneField, data.phone);
+        await this.fillInputFieldEdit(this.countryField, data.country);
+        await this.fillInputFieldEdit(this.noteField, data.note);
+        await this.selectStatus(data.statusOption);
     }
 
     async addHoldNumbers(): Promise<void> {
@@ -92,14 +134,16 @@ export class AddNewEmployeePage extends BasePage {
         const randomPhone = getRandom10Number().join('');
         await this.employeesTab.click();
         await this.addNewEmployeeButton.click();
-        await this.enterCdl(this.cdlField, randomCdl)
-        await this.selectRecruiter(this.recruiterMenu, this.recruiterPetarPetrovicOption);
-        await this.enterName(this.nameField, Constants.driverName);
-        await this.enterEmail(this.emailField, Constants.testEmail);
-        await this.enterPhone(this.phoneField, randomPhone);
-        await this.enterCountry(this.countryField, Constants.state);
-        await this.enterNote(this.noteField, Constants.noteFirst);
-        await this.selectStatus(this.stausMenu, this.holdStatus);
+        await this.fillEmployeeForm({
+            cdl: randomCdl,
+            recruiterOption: this.recruiterPetarPetrovicOption,
+            name: Constants.driverName,
+            email: Constants.testEmail,
+            phone: randomPhone,
+            country: Constants.state,
+            note: Constants.noteFirst,
+            statusOption: this.holdStatus,
+        });
         await this.saveButton.click();
         await this.page.waitForResponse(response => response.url().includes('/api/employees') && (response.status() == 200 || response.status() == 304));
     }
