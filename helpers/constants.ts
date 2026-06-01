@@ -312,6 +312,22 @@ export class Constants {
     static leasingClientsStatusApproved = 'Approved';
     static leasingClientsStatusInactive = 'Inactive';
     static leasingClientsStatusPending = 'Pending';
+    static leasingClientsStatusDecline = 'Decline';
+    static leasingClientsStatusOther = 'Other';
+
+    // The Active / Inactive status radios each expand to a FAMILY of statuses,
+    // not a single value (verified against the header-filter chip on staging
+    // 2026-05-26):
+    //   Active   -> Active / Active Debtor / Active Lawsuit / Active Repo /
+    //               Active No Communication / Approved
+    //   Inactive -> Inactive / Inactive Debtor / Inactive Settled /
+    //               Inactive Lawsuit / Inactive Repo / Inactive No Communication /
+    //               Decline / Pending / Other
+    // Match by these keyword stems (case-sensitive `includes`) so the sub-status
+    // variants are all covered. "Inactive" does NOT contain the stem "Active"
+    // (capital A), so the two groups stay disjoint.
+    static leasingClientsActiveStatusKeywords = ['Active', 'Approved'];
+    static leasingClientsInactiveStatusKeywords = ['Inactive', 'Decline', 'Pending', 'Other'];
 
     static leasingClientsCheckboxChipTrueValue = "'true'";
     static leasingClientsCheckboxChipFalseValue = "'false'";
@@ -463,6 +479,13 @@ export class Constants {
 
     static editClientApproveButton = 'Approve';
     static editClientDeclineButton = 'Decline';
+    // New status-transition buttons added alongside Approve/Decline. The
+    // button label matches the resulting status chip text for each.
+    static editClientBlacklistButton = 'Blacklist';
+    static editClientInactiveButton = 'Inactive';
+    // Only visible when the current status is Inactive — clicking raises a
+    // native window.confirm and, on accept, flips the client back to Pending.
+    static editClientReturneeButton = 'Returnee';
 
     // Status values displayed in the modal status chip + the /leasing/clients
     // Client status column. Verified against staging.vrlz.app 2026-05-20 —
@@ -472,6 +495,12 @@ export class Constants {
     static editClientStatusApproved = 'Approved';
     static editClientStatusDeclined = 'Decline';
     static editClientStatusPending = 'Pending';
+    static editClientStatusBlacklist = 'Blacklist';
+    static editClientStatusInactive = 'Inactive';
+
+    // Native window.confirm message raised by clicking Returnee on an
+    // Inactive client.
+    static editClientReturneeConfirmText = 'Are you sure that you want to return this client to pending status?';
 
     // Sections that only appear after the client is Approved.
     static editClientSectionUnderwriting = 'Underwriting';
@@ -591,6 +620,12 @@ export class Constants {
     // Prefix used for owner-operator first names created by these tests — for
     // identification and cleanup of leftovers from previous runs.
     static newOwnerOperatorTestPrefix = 'PWOwn';
+
+    // Common prefix shared by ALL leasing test-created entities (companies
+    // PWNewCo*, owner operators PWOwn*). Used to tell ephemeral, worker-owned
+    // rows apart from stable staging data — anything starting with this is
+    // transient and may be deleted mid-run by a concurrent worker's afterEach.
+    static leasingTestEntityPrefix = 'PW';
 
     // ===== LEASING TEAMS =====
     static leasingTeamsUrl = '/leasing/leasing-teams';

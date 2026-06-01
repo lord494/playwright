@@ -23,10 +23,16 @@ export class EditCompanyModalPage extends BasePage {
     // ===== Status =====
     /** The `Company status` h3 (scoped) and its chip + buttons. */
     readonly statusHeader: Locator;
-    /** The currently displayed status chip ("Pending" / "Approved" / "Declined"). */
+    /** The currently displayed status chip ("Pending" / "Approved" / "Declined" / "Blacklist" / "Inactive"). */
     readonly statusChip: Locator;
     readonly approveButton: Locator;
     readonly declineButton: Locator;
+    /** Sets the status to Blacklist. Visible in Pending/Approved/Decline/Inactive states. */
+    readonly blacklistButton: Locator;
+    /** Sets the status to Inactive. Visible in Pending/Approved/Decline/Blacklist states. */
+    readonly inactiveButton: Locator;
+    /** Returns an Inactive client to Pending via a native window.confirm. Visible only in Inactive state. */
+    readonly returneeButton: Locator;
 
     // ===== Underwriting =====
     /** Only rendered when the company has Approved status. */
@@ -113,6 +119,13 @@ export class EditCompanyModalPage extends BasePage {
         this.statusChip = this.statusHeader.locator('xpath=following-sibling::*[1]');
         this.approveButton = this.dialog.getByRole('button', { name: Constants.editClientApproveButton, exact: true });
         this.declineButton = this.dialog.getByRole('button', { name: Constants.editClientDeclineButton, exact: true });
+        // Blacklist / Inactive / Returnee render with uppercase text in the
+        // DOM ("BLACKLIST" / "INACTIVE") while Approve / Decline are
+        // title-case. Match case-insensitively so the locators are robust to
+        // either casing if the app normalizes them later.
+        this.blacklistButton = this.dialog.getByRole('button', { name: new RegExp(`^\\s*${Constants.editClientBlacklistButton}\\s*$`, 'i') });
+        this.inactiveButton = this.dialog.getByRole('button', { name: new RegExp(`^\\s*${Constants.editClientInactiveButton}\\s*$`, 'i') });
+        this.returneeButton = this.dialog.getByRole('button', { name: new RegExp(`^\\s*${Constants.editClientReturneeButton}\\s*$`, 'i') });
 
         this.underwritingHeader = this.dialog.locator('h3.title', { hasText: new RegExp(`^\\s*${Constants.editClientSectionUnderwriting}\\s*$`) });
         // The Underwriting heading and its Add new button share the same
@@ -314,6 +327,60 @@ export class EditCompanyModalPage extends BasePage {
         await expect(this.statusChip).toContainText(Constants.editClientStatusDeclined, { timeout: 10000 });
     }
 
+    /** Clicks Blacklist and waits for the chip to flip to "Blacklist". */
+    async blacklist(): Promise<void> {
+        await this.clickElement(this.blacklistButton);
+        await expect(this.statusChip).toContainText(Constants.editClientStatusBlacklist, { timeout: 10000 });
+    }
+
+    /** Clicks Inactive and waits for the chip to flip to "Inactive". */
+    async inactive(): Promise<void> {
+        await this.clickElement(this.inactiveButton);
+        await expect(this.statusChip).toContainText(Constants.editClientStatusInactive, { timeout: 10000 });
+    }
+
+    /**
+     * Clicks Returnee on an Inactive client. The app raises a native
+     * window.confirm with "Are you sure that you want to return this client
+     * to pending status?" — capture the message, accept the dialog, then
+     * wait for the status chip to flip to "Pending". Returns the captured
+     * confirm-dialog message so the caller can assert the exact wording.
+     */
+    async returneeAndAcceptConfirm(): Promise<string> {
+        let capturedMessage = '';
+        const handler = async (dialog: { message(): string; accept(): Promise<void> }) => {
+            capturedMessage = dialog.message();
+            try { await dialog.accept(); } catch { /* ignore */ }
+        };
+        this.page.once('dialog', handler);
+        await this.clickElement(this.returneeButton);
+        await expect(this.statusChip).toContainText(Constants.editClientStatusPending, { timeout: 10000 });
+        return capturedMessage;
+    }
+
+    /**
+     * Asserts that exactly the listed status-action buttons are currently
+     * visible in the Company status section, and that every other status
+     * button is hidden. Use this after a status change to verify which
+     * transitions the UI now offers.
+     */
+    async expectVisibleStatusButtons(visible: string[]): Promise<void> {
+        const buttonsByName: Record<string, Locator> = {
+            [Constants.editClientApproveButton]: this.approveButton,
+            [Constants.editClientDeclineButton]: this.declineButton,
+            [Constants.editClientBlacklistButton]: this.blacklistButton,
+            [Constants.editClientInactiveButton]: this.inactiveButton,
+            [Constants.editClientReturneeButton]: this.returneeButton,
+        };
+        for (const [name, locator] of Object.entries(buttonsByName)) {
+            if (visible.includes(name)) {
+                await expect(locator, `${name} button should be visible`).toBeVisible();
+            } else {
+                await expect(locator, `${name} button should be hidden`).toBeHidden();
+            }
+        }
+    }
+
     /** Click the Underwriting section's Add new button. Underwriting modal opens on top. */
     async openAddUnderwritingModal(): Promise<void> {
         await this.underwritingAddNewButton.waitFor({ state: 'visible', timeout: 10000 });
@@ -440,6 +507,29 @@ export class EditCompanyModalPage extends BasePage {
         await this.submitEditPresident();
     }
 
+    /**
+     * Click an action icon (.mdi-minus / .mdi-delete) on the president card and
+     * wait for its confirm dialog to open. The Vuetify icon button occasionally
+     * swallows the click: the card re-renders as its data hydrates and a
+     * force-click that lands mid-render has no wired-up handler, so it silently
+     * no-ops and the dialog never opens. Under 4-worker CPU contention the JS
+     * event loop is busier and that window widens — the root of the flake.
+     *
+     * A bigger single timeout can't help (the click was lost, not slow), so we
+     * poll: re-issue the click each interval until the dialog is visible,
+     * bounded by the timeout. Idempotent — once the dialog is up we stop
+     * clicking.
+     */
+    private async openPresidentConfirmDialog(fullName: string, iconClass: string, dialog: Locator): Promise<void> {
+        const icon = this.getPresidentCard(fullName).first().locator(iconClass);
+        await icon.waitFor({ state: 'visible', timeout: 10000 });
+        await expect.poll(async () => {
+            if (await dialog.isVisible().catch(() => false)) return true;
+            await icon.click({ force: true }).catch(() => { });
+            return dialog.isVisible().catch(() => false);
+        }, { timeout: 15000, intervals: [300, 500, 800, 1000, 1000] }).toBe(true);
+    }
+
     // ===== UNPAIR (minus icon) =====
 
     /**
@@ -448,8 +538,7 @@ export class EditCompanyModalPage extends BasePage {
      * modal is interactive again.
      */
     async unpairPresident(fullName: string): Promise<void> {
-        await this.getPresidentCard(fullName).first().locator('.mdi-minus').click({ force: true });
-        await this.unpairPresidentDialog.waitFor({ state: 'visible', timeout: 5000 });
+        await this.openPresidentConfirmDialog(fullName, '.mdi-minus', this.unpairPresidentDialog);
         await this.clickElement(this.unpairConfirmButton);
         await this.unpairPresidentDialog.waitFor({ state: 'hidden', timeout: 10000 });
     }
@@ -462,8 +551,7 @@ export class EditCompanyModalPage extends BasePage {
      * Unpair, which only removes the link to this company).
      */
     async deletePresident(fullName: string): Promise<void> {
-        await this.getPresidentCard(fullName).first().locator('.mdi-delete').click({ force: true });
-        await this.deletePresidentDialog.waitFor({ state: 'visible', timeout: 5000 });
+        await this.openPresidentConfirmDialog(fullName, '.mdi-delete', this.deletePresidentDialog);
         await this.clickElement(this.deleteConfirmButton);
         await this.deletePresidentDialog.waitFor({ state: 'hidden', timeout: 10000 });
     }

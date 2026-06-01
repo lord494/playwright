@@ -28,17 +28,34 @@ test('Korisnik moze da pretrazuje klijente preko Search clients polja', async ({
 });
 
 test('Korisnik moze da prebaci tabelu na Active klijente', async ({ leasingClientsOverview }) => {
+    // The Active radio expands to a family of statuses (Active, Active Debtor,
+    // Active Lawsuit, Active Repo, Active No Communication, Approved).
+    // selectActive() polls the column until it settles, so every visible status
+    // must match one of the Active keyword stems.
     await leasingClientsOverview.selectActive();
     const statuses = await leasingClientsOverview.getClientStatusValues();
-    expect(statuses).toContain(Constants.leasingClientsStatusActive);
-    expect(statuses).toContain(Constants.leasingClientsStatusApproved);
+    expect(statuses.length).toBeGreaterThan(0);
+    for (const status of statuses) {
+        expect(
+            Constants.leasingClientsActiveStatusKeywords.some(k => status.includes(k)),
+            `Status "${status}" is not within the Active group`,
+        ).toBe(true);
+    }
 });
 
 test('Korisnik moze da prebaci tabelu na Inactive klijente', async ({ leasingClientsOverview }) => {
+    // The Inactive radio expands to a family of statuses (Inactive + its
+    // Debtor/Settled/Lawsuit/Repo/No-Communication variants, plus Decline,
+    // Pending and Other).
     await leasingClientsOverview.selectInactive();
     const statuses = await leasingClientsOverview.getClientStatusValues();
-    expect(statuses).toContain(Constants.leasingClientsStatusInactive);
-    expect(statuses).toContain(Constants.leasingClientsStatusPending);
+    expect(statuses.length).toBeGreaterThan(0);
+    for (const status of statuses) {
+        expect(
+            Constants.leasingClientsInactiveStatusKeywords.some(k => status.includes(k)),
+            `Status "${status}" is not within the Inactive group`,
+        ).toBe(true);
+    }
 });
 
 test('Korisnik moze da vrati tabelu na All status', async ({ leasingClientsOverview }) => {
@@ -118,12 +135,17 @@ test('Korisnik moze da promijeni broj redova po stranici', async ({ leasingClien
 });
 
 test('Korisnik moze da pređe na sljedecu pa da se vrati na prethodnu stranicu', async ({ leasingClientsOverview }) => {
-    const initial = await leasingClientsOverview.getPaginationText();
+    // Assert on the page RANGE ("1-15"), not the full footer string. The full
+    // string carries the global "of <total>" count, which other workers mutate
+    // by creating/deleting clients — comparing it makes this navigation test
+    // flaky under 4 workers. The range alone proves next→prev returned us to
+    // the original page.
+    const initial = await leasingClientsOverview.getPaginationRange();
     await leasingClientsOverview.goToNextPage();
-    const next = await leasingClientsOverview.getPaginationText();
+    const next = await leasingClientsOverview.getPaginationRange();
     expect(next).not.toBe(initial);
     await leasingClientsOverview.goToPrevPage();
-    const back = await leasingClientsOverview.getPaginationText();
+    const back = await leasingClientsOverview.getPaginationRange();
     expect(back).toBe(initial);
 });
 

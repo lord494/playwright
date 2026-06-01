@@ -141,10 +141,12 @@ export class LeasingClientsOverviewPage extends BasePage {
 
     async selectActive(): Promise<void> {
         await this.changeStatusRadio(this.activeRadio);
+        await this.waitForStatusColumnWithin(Constants.leasingClientsActiveStatusKeywords);
     }
 
     async selectInactive(): Promise<void> {
         await this.changeStatusRadio(this.inactiveRadio);
+        await this.waitForStatusColumnWithin(Constants.leasingClientsInactiveStatusKeywords);
     }
 
     private async changeStatusRadio(radio: Locator): Promise<void> {
@@ -153,6 +155,21 @@ export class LeasingClientsOverviewPage extends BasePage {
         await this.page.locator('.v-data-table__progress').waitFor({ state: 'hidden', timeout: 5000 }).catch(() => { });
         await expect(radio).toBeChecked();
         await expect(this.paginationText).toContainText(/\d+\s*-\s*\d+\s+of\s+\d+/, { timeout: 10000 });
+    }
+
+    /**
+     * Polls the Client status column until it's non-empty AND every visible
+     * value contains one of the `keywords` stems (e.g. "Active" matches both
+     * "Active" and "Active Debtor"). The networkidle / progressbar /
+     * pagination signals in `changeStatusRadio` fire before the rows actually
+     * re-render with the filtered data, so without this poll a status read can
+     * still see the previous (unfiltered) rows — the root cause of the flake.
+     */
+    private async waitForStatusColumnWithin(keywords: string[]): Promise<void> {
+        await expect.poll(async () => {
+            const statuses = await this.getClientStatusValues();
+            return statuses.length > 0 && statuses.every(s => keywords.some(k => s.includes(k)));
+        }, { timeout: 10000, intervals: [200, 400, 800] }).toBeTruthy();
     }
 
     async toggleLeasingSales(): Promise<void> {
@@ -331,6 +348,20 @@ export class LeasingClientsOverviewPage extends BasePage {
         return m ? parseInt(m[1], 10) : 0;
     }
 
+    /**
+     * Returns just the current page range portion of the footer (e.g. "1-15"
+     * from "1-15 of 170"), WITHOUT the trailing "of <total>". The total is a
+     * global count of all leasing clients and drifts whenever a concurrent
+     * worker creates/deletes a client, so it must not be part of a navigation
+     * assertion. The range alone reflects which page we're on and is stable
+     * under parallel execution.
+     */
+    async getPaginationRange(): Promise<string> {
+        const text = await this.getPaginationText();
+        const m = text.match(/(\d+\s*-\s*\d+)/);
+        return m ? m[1] : '';
+    }
+
     getRowByName(name: string): Locator {
         return this.page.locator('tr', { has: this.page.getByText(name, { exact: true }) });
     }
@@ -397,6 +428,34 @@ export class LeasingClientsOverviewPage extends BasePage {
     }
 
     /**
+     * Deterministic search: clears the search input (whatever was previously
+     * filtered), sets it to exactly `text`, asserts the input now holds that
+     * exact value, waits for the table API call to finish, and waits for a
+     * main data row that contains `text`. Returns the matched row locator.
+     *
+     * Prefer this over `searchClients` / `searchClientsForExpandableRow`
+     * whenever a previous search has already populated the input — the older
+     * helpers use `.type()` which APPENDS to the existing value, producing a
+     * concatenated query and a false-positive result.
+     */
+    async clearSearchAndExpectRow(text: string): Promise<Locator> {
+        await this.searchClientsInput.click();
+        await this.searchClientsInput.fill('');
+        await this.searchClientsInput.fill(text);
+        await expect(this.searchClientsInput).toHaveValue(text);
+        // Wait for the leasing-clients table refresh. We tolerate cache-only
+        // responses (304) and a timeout: not every keystroke triggers a
+        // network call when the result set is fully cached.
+        await this.page.waitForResponse(
+            r => r.url().includes('/ms-leasing') && (r.status() === 200 || r.status() === 304),
+            { timeout: 5000 },
+        ).catch(() => { /* fine — fall through to row visibility check */ });
+        const row = this.getMainRowContaining(text);
+        await row.waitFor({ state: 'visible', timeout: 10000 });
+        return row;
+    }
+
+    /**
      * Returns the Name of the first row whose Client type cell reads
      * "Owner Operator" (rendered as just "Owner" on staging 2026-05-18).
      *
@@ -409,6 +468,14 @@ export class LeasingClientsOverviewPage extends BasePage {
      * Company-type rows).
      */
     async getFirstOwnerOperatorName(): Promise<string> {
+        // Skip ephemeral, worker-owned test entities (PWNewCo* / PWOwn*, both
+        // PW-prefixed). Returning one of those is the root of the 4-worker
+        // flake: a concurrent worker's afterEach deletes the owner between us
+        // reading its name and the president autocomplete searching for it, so
+        // the option never renders. Only a STABLE staging owner — which no test
+        // creates or deletes — is safe to attach as an existing president.
+        const isTestEntity = (name: string) => name.startsWith(Constants.leasingTestEntityPrefix);
+
         const scanCurrentPage = async (): Promise<string | null> => {
             const rows = this.page.locator('tbody tr:not(.v-data-table__expanded-content)');
             const count = await rows.count();
@@ -416,7 +483,7 @@ export class LeasingClientsOverviewPage extends BasePage {
                 const tds = await rows.nth(i).locator('td').allTextContents();
                 const trimmed = tds.map(s => s.trim());
                 const isOwner = trimmed.some(c => /^Owner(\s*Operator)?$/i.test(c));
-                if (isOwner && trimmed[0]) return trimmed[0];
+                if (isOwner && trimmed[0] && !isTestEntity(trimmed[0])) return trimmed[0];
             }
             return null;
         };
@@ -431,7 +498,7 @@ export class LeasingClientsOverviewPage extends BasePage {
         await this.page.goto(Constants.leasingClientsUrl, { waitUntil: 'networkidle' });
 
         if (filtered) return filtered;
-        throw new Error('No Owner Operator row found on /leasing/clients (page 1 scan and Client type filter both empty)');
+        throw new Error('No stable (non-test) Owner Operator row found on /leasing/clients (page 1 scan and Client type filter both empty)');
     }
 
     /** Click the eye icon in the row for the given company name; navigates to /leasing/client/{id}. */

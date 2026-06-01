@@ -22,6 +22,9 @@ export class EditOwnerOperatorModalPage extends BasePage {
     readonly statusChip: Locator;
     readonly approveButton: Locator;
     readonly declineButton: Locator;
+    readonly blacklistButton: Locator;
+    readonly inactiveButton: Locator;
+    readonly returneeButton: Locator;
 
     // ===== Underwriting =====
     readonly underwritingHeader: Locator;
@@ -31,13 +34,20 @@ export class EditOwnerOperatorModalPage extends BasePage {
     // ===== Billing info =====
     readonly billingInfoHeader: Locator;
 
-    // ===== Editable Owner information (First/Last/Middle name rendered disabled on Edit) =====
+    // ===== Editable Owner information =====
+    readonly firstNameInput: Locator;
+    readonly middleNameInput: Locator;
+    readonly lastNameInput: Locator;
     readonly addressInput: Locator;
     readonly cityInput: Locator;
     readonly stateInput: Locator;
     readonly zipInput: Locator;
+    readonly ssnInput: Locator;
     readonly riskLevelWrapper: Locator;
     readonly areTheyMuslimCheckbox: Locator;
+
+    // ===== Validation =====
+    readonly validationMessages: Locator;
 
     // ===== Cooperation =====
     readonly leasingAndSalesCheckbox: Locator;
@@ -83,6 +93,12 @@ export class EditOwnerOperatorModalPage extends BasePage {
         this.statusChip = this.statusHeader.locator('xpath=following-sibling::*[1]');
         this.approveButton = this.dialog.getByRole('button', { name: Constants.editClientApproveButton, exact: true });
         this.declineButton = this.dialog.getByRole('button', { name: Constants.editClientDeclineButton, exact: true });
+        // Blacklist / Inactive / Returnee render uppercase in the DOM
+        // ("BLACKLIST" / "INACTIVE") while Approve / Decline are title-case.
+        // Match case-insensitively so the locator survives either casing.
+        this.blacklistButton = this.dialog.getByRole('button', { name: new RegExp(`^\\s*${Constants.editClientBlacklistButton}\\s*$`, 'i') });
+        this.inactiveButton = this.dialog.getByRole('button', { name: new RegExp(`^\\s*${Constants.editClientInactiveButton}\\s*$`, 'i') });
+        this.returneeButton = this.dialog.getByRole('button', { name: new RegExp(`^\\s*${Constants.editClientReturneeButton}\\s*$`, 'i') });
 
         this.underwritingHeader = this.dialog.locator('h3.title', { hasText: new RegExp(`^\\s*${Constants.editClientSectionUnderwriting}\\s*$`) });
         const underwritingHeaderRow = this.underwritingHeader.locator('xpath=parent::div');
@@ -94,14 +110,23 @@ export class EditOwnerOperatorModalPage extends BasePage {
 
         // ===== Editable Owner information =====
         // Owner info lives in `form[data-vv-scope="owner"]` — scope to that so
-        // Address/City/State/ZIP don't clash with same-named contact fields.
+        // Address/City/State/ZIP/SSN/First/Last/Middle name don't clash with
+        // same-named contact fields (and the New * modal does the same thing).
         const ownerForm = this.dialog.locator('form[data-vv-scope="owner"]');
+        this.firstNameInput = ownerForm.locator('input[name="firstName"]');
+        this.middleNameInput = this.fieldByLabel(ownerForm, Constants.newOwnerOperatorLabelMiddleName);
+        this.lastNameInput = ownerForm.locator('input[name="lastName"]');
         this.addressInput = this.fieldByLabel(ownerForm, Constants.newOwnerOperatorLabelAddress);
         this.cityInput = this.fieldByLabel(ownerForm, Constants.newOwnerOperatorLabelCity);
         this.stateInput = this.fieldByLabel(ownerForm, Constants.newOwnerOperatorLabelState);
         this.zipInput = this.fieldByLabel(ownerForm, Constants.newOwnerOperatorLabelZIP);
+        this.ssnInput = ownerForm.locator('input[name="ownerSsn"]');
         this.riskLevelWrapper = this.inputWrapperByLabel(ownerForm, Constants.newOwnerOperatorLabelRiskLevel);
         this.areTheyMuslimCheckbox = this.dialog.getByRole('checkbox', { name: Constants.newOwnerOperatorLabelAreTheyMuslim });
+
+        // Client-side vee-validate messages render under each invalid field
+        // and are aggregated via `.v-messages__message` inside the dialog.
+        this.validationMessages = this.dialog.locator('.v-messages__message');
 
         // ===== Cooperation =====
         this.leasingAndSalesCheckbox = this.dialog.getByRole('checkbox', { name: Constants.newOwnerOperatorLabelLeasingAndSales });
@@ -219,6 +244,92 @@ export class EditOwnerOperatorModalPage extends BasePage {
     async decline(): Promise<void> {
         await this.clickElement(this.declineButton);
         await expect(this.statusChip).toContainText(Constants.editClientStatusDeclined, { timeout: 10000 });
+    }
+
+    /** Clicks Blacklist and waits for the chip to flip to "Blacklist". */
+    async blacklist(): Promise<void> {
+        await this.clickElement(this.blacklistButton);
+        await expect(this.statusChip).toContainText(Constants.editClientStatusBlacklist, { timeout: 10000 });
+    }
+
+    /** Clicks Inactive and waits for the chip to flip to "Inactive". */
+    async inactive(): Promise<void> {
+        await this.clickElement(this.inactiveButton);
+        await expect(this.statusChip).toContainText(Constants.editClientStatusInactive, { timeout: 10000 });
+    }
+
+    /**
+     * Clicks Returnee on an Inactive owner. The app raises a native
+     * window.confirm; this method captures the message, accepts the dialog,
+     * and waits for the chip to flip back to Pending. Returns the captured
+     * message for caller-side assertions on the exact wording.
+     */
+    async returneeAndAcceptConfirm(): Promise<string> {
+        let capturedMessage = '';
+        const handler = async (dialog: { message(): string; accept(): Promise<void> }) => {
+            capturedMessage = dialog.message();
+            try { await dialog.accept(); } catch { /* ignore */ }
+        };
+        this.page.once('dialog', handler);
+        await this.clickElement(this.returneeButton);
+        await expect(this.statusChip).toContainText(Constants.editClientStatusPending, { timeout: 10000 });
+        return capturedMessage;
+    }
+
+    /**
+     * Asserts that exactly the listed status-action buttons are currently
+     * visible in the Owner operator status section, and every other status
+     * button is hidden.
+     */
+    async expectVisibleStatusButtons(visible: string[]): Promise<void> {
+        const buttonsByName: Record<string, Locator> = {
+            [Constants.editClientApproveButton]: this.approveButton,
+            [Constants.editClientDeclineButton]: this.declineButton,
+            [Constants.editClientBlacklistButton]: this.blacklistButton,
+            [Constants.editClientInactiveButton]: this.inactiveButton,
+            [Constants.editClientReturneeButton]: this.returneeButton,
+        };
+        for (const [name, locator] of Object.entries(buttonsByName)) {
+            if (visible.includes(name)) {
+                await expect(locator, `${name} button should be visible`).toBeVisible();
+            } else {
+                await expect(locator, `${name} button should be hidden`).toBeHidden();
+            }
+        }
+    }
+
+    // ===== Editable name + SSN fields =====
+
+    /** Clear + retype first/middle/last name. Pass only the fields you want to change. */
+    async editName(data: { firstName?: string; middleName?: string; lastName?: string }): Promise<void> {
+        if (data.firstName !== undefined) await this.fillInputFieldEdit(this.firstNameInput, data.firstName);
+        if (data.middleName !== undefined) await this.fillInputFieldEdit(this.middleNameInput, data.middleName);
+        if (data.lastName !== undefined) await this.fillInputFieldEdit(this.lastNameInput, data.lastName);
+    }
+
+    /** Clear + retype SSN. Used by SSN length-validation tests. */
+    async editSsn(text: string): Promise<void> {
+        await this.fillInputFieldEdit(this.ssnInput, text);
+    }
+
+    // ===== Validation =====
+
+    async getValidationMessages(): Promise<string[]> {
+        const texts = await this.validationMessages.allTextContents();
+        return texts.map(t => t.trim()).filter(Boolean);
+    }
+
+    /**
+     * Polls the dialog's `.v-messages__message` collection until at least one
+     * entry's text matches the given pattern. Use for client-side
+     * vee-validate messages that appear after Save / blur.
+     */
+    async expectValidationMessage(pattern: string | RegExp): Promise<void> {
+        const re = pattern instanceof RegExp ? pattern : new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+        await expect.poll(
+            async () => (await this.getValidationMessages()).some(m => re.test(m)),
+            { timeout: 5000, intervals: [100, 250, 500] },
+        ).toBe(true);
     }
 
     async openAddUnderwritingModal(): Promise<void> {

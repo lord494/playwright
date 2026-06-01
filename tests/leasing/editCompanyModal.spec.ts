@@ -420,6 +420,102 @@ test.describe('Edit Company modal', () => {
         await editCompanyModal.expectContactCardHidden(contactName);
     });
 
+    test('Korisnik moze da promeni status kompanije iz Pending u Blacklist i vidi dostupne Inactive/Approve/Decline opcije', async ({ openNewCompanyModal, leasingClientsOverview, editCompanyModal }) => {
+        const name = uniqueCompanyName();
+        createdCompanyName = name;
+        await openNewCompanyModal.createCompany({ info: { name } });
+
+        await leasingClientsOverview.searchClients(name);
+        await leasingClientsOverview.openEditClientModalForRow(name);
+
+        await expect(editCompanyModal.statusChip).toContainText(Constants.editClientStatusPending);
+        await editCompanyModal.blacklist();
+        await expect(editCompanyModal.statusChip).toContainText(Constants.editClientStatusBlacklist);
+
+        // After Blacklist the available transitions are Inactive, Approve, Decline.
+        await editCompanyModal.expectVisibleStatusButtons([
+            Constants.editClientInactiveButton,
+            Constants.editClientApproveButton,
+            Constants.editClientDeclineButton,
+        ]);
+
+        // Persist and verify the Client status column flipped in the table.
+        // The search filter is still applied after the modal closes, so the
+        // row is reachable without re-searching.
+        await editCompanyModal.saveAndExpectClosed();
+        const row = leasingClientsOverview.getRowByName(name);
+        await expect(row).toBeVisible();
+        await expect(row).toContainText(Constants.editClientStatusBlacklist);
+    });
+
+    test('Korisnik moze da promeni status kompanije iz Pending u Inactive i vidi dostupne Blacklist/Returnee opcije', async ({ openNewCompanyModal, leasingClientsOverview, editCompanyModal }) => {
+        const name = uniqueCompanyName();
+        createdCompanyName = name;
+        await openNewCompanyModal.createCompany({ info: { name } });
+
+        await leasingClientsOverview.searchClients(name);
+        await leasingClientsOverview.openEditClientModalForRow(name);
+
+        await expect(editCompanyModal.statusChip).toContainText(Constants.editClientStatusPending);
+        await editCompanyModal.inactive();
+        await expect(editCompanyModal.statusChip).toContainText(Constants.editClientStatusInactive);
+
+        // After Inactive the only available transitions are Blacklist + Returnee.
+        await editCompanyModal.expectVisibleStatusButtons([
+            Constants.editClientBlacklistButton,
+            Constants.editClientReturneeButton,
+        ]);
+
+        // Verify the Client status column shows Inactive in the table.
+        await editCompanyModal.saveAndExpectClosed();
+        const row = leasingClientsOverview.getRowByName(name);
+        await expect(row).toBeVisible();
+        await expect(row).toContainText(Constants.editClientStatusInactive);
+    });
+
+    test('Korisnik moze da vrati Approved kompaniju u Pending preko Inactive -> Returnee i sve status opcije ponovo postaju dostupne', async ({ openNewCompanyModal, leasingClientsOverview, editCompanyModal }) => {
+        const name = uniqueCompanyName();
+        createdCompanyName = name;
+        await openNewCompanyModal.createCompany({ info: { name } });
+
+        // Start: flip to Approved and persist so we begin the flow from a
+        // saved Approved state (matches the spec scenario). Confirm the
+        // Client status column flipped to Approved before reopening.
+        await leasingClientsOverview.searchClients(name);
+        await leasingClientsOverview.openEditClientModalForRow(name);
+        await editCompanyModal.approve();
+        await editCompanyModal.saveAndExpectClosed();
+        const rowAfterApprove = leasingClientsOverview.getRowByName(name);
+        await expect(rowAfterApprove).toContainText(Constants.editClientStatusApproved);
+
+        // Reopen and move Approved -> Inactive; Returnee becomes available.
+        // No re-search — the previous filter is still applied.
+        await leasingClientsOverview.openEditClientModalForRow(name);
+        await expect(editCompanyModal.statusChip).toContainText(Constants.editClientStatusApproved);
+        await editCompanyModal.inactive();
+        await expect(editCompanyModal.statusChip).toContainText(Constants.editClientStatusInactive);
+        await expect(editCompanyModal.returneeButton).toBeVisible();
+
+        // Click Returnee, accept the native confirm, and verify the message.
+        const confirmMessage = await editCompanyModal.returneeAndAcceptConfirm();
+        expect(confirmMessage).toBe(Constants.editClientReturneeConfirmText);
+
+        // Back to Pending — all status transitions are available again.
+        await expect(editCompanyModal.statusChip).toContainText(Constants.editClientStatusPending);
+        await editCompanyModal.expectVisibleStatusButtons([
+            Constants.editClientApproveButton,
+            Constants.editClientDeclineButton,
+            Constants.editClientBlacklistButton,
+            Constants.editClientInactiveButton,
+        ]);
+
+        // Persist + verify the Client status column flipped back to Pending.
+        await editCompanyModal.saveAndExpectClosed();
+        const row = leasingClientsOverview.getRowByName(name);
+        await expect(row).toBeVisible();
+        await expect(row).toContainText(Constants.editClientStatusPending);
+    });
+
     test('Korisnik moze da zatvori Edit company modal preko Cancel dugmeta', async ({ openNewCompanyModal, leasingClientsOverview, editCompanyModal }) => {
         const name = uniqueCompanyName();
         createdCompanyName = name;
