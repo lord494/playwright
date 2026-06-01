@@ -176,6 +176,11 @@ export class RecrutimentPage extends BasePage {
         }
     }
 
+    /** Asserts the employees table currently shows no rows (empty result). */
+    async expectNoEmployees(): Promise<void> {
+        await expect(this.phoneColumn).toHaveCount(0);
+    }
+
     /** Asserts the first employee row matches the expected create/edit values. */
     async expectFirstEmployeeRow(data: EmployeeRowExpectation): Promise<void> {
         await expect(this.cdlColumn.first()).toContainText(data.cdl);

@@ -195,6 +195,22 @@ test('Search button je omoguceno kada unesemo 9 cifara', async ({ recruitmentOve
     await expect(recruitmentOverviewSetup.searchButton).toBeEnabled();
 });
 
+test('Search polje za broj telefona ignorise nenumericke karaktere', async ({ recruitmentOverviewSetup }) => {
+    // The phone-search input is numeric-only: typing letters/symbols is stripped,
+    // so the input value stays empty (verified against staging).
+    await recruitmentOverviewSetup.searchPhoneNumberField.click();
+    await recruitmentOverviewSetup.searchPhoneNumberField.type('abcdef');
+    await expect(recruitmentOverviewSetup.searchPhoneNumberField.locator('input')).toHaveValue('');
+});
+
+test('Move akcija je onemogucena dok nije selektovan nijedan red', async ({ recruitmentOverviewSetup }) => {
+    await recruitmentOverviewSetup.recruiterTab.click();
+    await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.recruiterPetarPetrovicOption);
+    await recruitmentOverviewSetup.waitForEmployees();
+    await recruitmentOverviewSetup.progressBar.waitFor({ state: 'hidden', timeout: 8000 }).catch(() => { });
+    await expect(recruitmentOverviewSetup.moveButton).toBeDisabled();
+});
+
 
 
 //////////////////////////////////////////// KORISTI SE POVREMENO ZA BRISANJE BAZE /////////////////////////////////////////////////

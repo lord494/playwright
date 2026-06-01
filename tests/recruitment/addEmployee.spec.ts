@@ -213,6 +213,72 @@ test("Save button je disabled dok se ne popune sva obavezna polja", async ({ add
     await expect(addEmployeeSetup.saveButton).not.toBeDisabled();
 });
 
+// Per-field required-field matrix: name, phone, country and status are ALL
+// required (verified against staging — Save enables only when all four are
+// present). Each case fills three of the four and asserts Save stays disabled,
+// pinpointing that no single required field was silently dropped.
+const requiredFieldCases: { missing: string; fill: (p: import('../../page/recruitment/addNewEmployee.page').AddNewEmployeePage, phone: string) => Promise<void> }[] = [
+    {
+        missing: 'Name',
+        fill: async (p, phone) => {
+            await p.enterPhone(phone);
+            await p.enterCountry(Constants.state);
+            await p.selectStatus(p.unemployedStatus);
+        },
+    },
+    {
+        missing: 'Phone',
+        fill: async (p) => {
+            await p.enterName(Constants.driverName);
+            await p.enterCountry(Constants.state);
+            await p.selectStatus(p.unemployedStatus);
+        },
+    },
+    {
+        missing: 'Country',
+        fill: async (p, phone) => {
+            await p.enterName(Constants.driverName);
+            await p.enterPhone(phone);
+            await p.selectStatus(p.unemployedStatus);
+        },
+    },
+    {
+        missing: 'Status',
+        fill: async (p, phone) => {
+            await p.enterName(Constants.driverName);
+            await p.enterPhone(phone);
+            await p.enterCountry(Constants.state);
+        },
+    },
+];
+
+for (const { missing, fill } of requiredFieldCases) {
+    test(`Save button ostaje disabled ako nije popunjeno obavezno polje ${missing}`, async ({ addEmployeeSetup }) => {
+        const randomPhone = getRandom10Number().join('');
+        await fill(addEmployeeSetup, randomPhone);
+        await expect(addEmployeeSetup.saveButton).toBeDisabled();
+    });
+}
+
+test('Korisnik moze da otkaze dodavanje employee-a klikom na Close bez snimanja', async ({ addEmployeeSetup, recruitmentOverview }) => {
+    const randomCdl = get6RandomNumber().join('');
+    const randomPhone = getRandom10Number().join('');
+    await addEmployeeSetup.fillEmployeeForm({
+        cdl: randomCdl,
+        recruiterOption: addEmployeeSetup.recruiterOption,
+        name: Constants.driverName,
+        email: Constants.testEmail,
+        phone: randomPhone,
+        country: Constants.state,
+        note: Constants.noteFirst,
+        statusOption: addEmployeeSetup.unemployedStatus,
+    });
+    await recruitmentOverview.closeButton.click();
+    await recruitmentOverview.dialogBox.waitFor({ state: 'detached', timeout: 5000 });
+    await recruitmentOverview.searchEmployeeByPhone(randomPhone);
+    await recruitmentOverview.expectNoEmployees();
+});
+
 test('Korisnik ne moze da doda novog zaposlenog ako broj telefona vec postoji', async ({ addEmployeeSetup, recruitmentOverview }) => {
     await recruitmentOverview.closeButton.click();
     const existPhone = await recruitmentOverview.phoneColumn.first().allInnerTexts();
