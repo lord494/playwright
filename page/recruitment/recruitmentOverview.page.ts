@@ -63,7 +63,7 @@ export class RecrutimentPage extends BasePage {
         this.progressBar = this.page.getByRole('table').getByRole('progressbar').locator('div').nth(1);
         this.searchRecruiterMenu = this.page.locator('.v-select__slot', { hasText: 'Search Recruiter' });
         this.recruiterOption = this.page.locator('.v-list-item__title').filter({ hasText: 'Playwright Regruter' });
-        this.stagingRecruiterOption = this.page.locator('.v-list-item__title').filter({ hasText: 'Regruter Staging' });
+        this.stagingRecruiterOption = this.page.locator('.v-list-item__title').filter({ hasText: 'Regruter Staging Test' });
         this.temporaryUserOption = this.page.locator('.v-list-item__title').filter({ hasText: 'TemporaryUser' });
         this.recruiterPetarPetrovicOption = this.page.locator('.v-list-item__title').filter({ hasText: 'Petar Petrovic' });
         this.secondRecruiterOption = this.page.locator('.v-list-item__title').filter({ hasText: 'Test Automation' });
