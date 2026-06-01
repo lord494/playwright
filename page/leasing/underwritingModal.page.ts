@@ -116,8 +116,26 @@ export class UnderwritingModalPage extends BasePage {
         await picker.waitFor({ state: 'visible', timeout: 5000 });
         // Vuetify's next-month arrow has aria-label="Next month" in default locale.
         await picker.locator('[aria-label="Next month"]').click();
-        await picker.locator('.v-btn', { hasText: new RegExp(`^${EXPIRED_DATE_DAY}$`) }).first().click();
-        await picker.waitFor({ state: 'hidden', timeout: 5000 });
+
+        // Scope the day to the date table (nav arrows live in the header, so
+        // this never matches them) and use .last(): the month-slide is a
+        // v-window transition that briefly keeps BOTH the outgoing and incoming
+        // month tables in the DOM. The incoming (next month) table is the one
+        // that survives, so .last() lands on it once the slide settles.
+        const dayButton = picker
+            .locator('.v-date-picker-table .v-btn', { hasText: new RegExp(`^${EXPIRED_DATE_DAY}$`) })
+            .last();
+
+        // During the transition a click can hit a detaching node in the
+        // outgoing table — it "succeeds" but the selection never commits and the
+        // menu stays open, which is the flaky CI timeout we saw at this step.
+        // Retry the click until the picker actually closes; a real (committed)
+        // selection is the only thing that auto-closes it, so closure is proof
+        // the next-month day registered.
+        await expect(async () => {
+            await dayButton.click({ timeout: 2000 });
+            await picker.waitFor({ state: 'hidden', timeout: 2000 });
+        }).toPass({ timeout: 10000 });
     }
 
     async selectUnitsType(unitsType: string): Promise<void> {
