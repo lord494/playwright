@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { Locator, Page, expect } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 
 export class ShopPage extends BasePage {
@@ -43,6 +43,7 @@ export class ShopPage extends BasePage {
     readonly loader: Locator;
     readonly cards: Locator;
     readonly noShopMessage: Locator;
+    readonly selectSelections: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -86,7 +87,8 @@ export class ShopPage extends BasePage {
         this.card = page.locator('.shop-card-data');
         this.loader = page.locator('.v-progress-linear__buffer');
         this.cards = page.locator('.shop-card-data');
-        this.noShopMessage = page.getByText('No shops match.');
+        this.noShopMessage = page.getByText('No shops match the applied filters.');
+        this.selectSelections = page.locator('.v-select__selection');
     }
 
     async waitForShopLoads(action: () => Promise<void>) {
@@ -114,16 +116,27 @@ export class ShopPage extends BasePage {
         }
     }
 
-    async selectFranchise(menu: Locator, franchise: Locator): Promise<void> {
-        return this.selectFromMenu(menu, franchise);
+    async selectFranchise(franchise: Locator): Promise<void> {
+        await this.franchiseMenu.waitFor({ state: 'visible', timeout: 15000 });
+        await this.waitForShopLoads(async () => {
+            await this.selectFromMenu(this.franchiseMenu, franchise);
+        });
     }
 
-    async enterPostalCode(field: Locator, postalCode: string): Promise<void> {
-        return this.fillInputField(field, postalCode);
+    async enterPostalCode(postalCode: string): Promise<void> {
+        await this.waitForShopLoads(async () => {
+            await this.fillInputField(this.postalCodeField, postalCode);
+        });
     }
 
-    async selectCity(menu: Locator, city: string, cityOption: Locator): Promise<void> {
-        return this.fillAndSelectFromMenu(menu, city, cityOption);
+    async selectCity(city: string, cityOption: Locator): Promise<void> {
+        await this.cityMenu.waitFor({ state: 'visible', timeout: 15000 });
+        await this.waitForShopLoads(async () => {
+            await this.cityMenu.click();
+            await this.cityMenu.type(city, { delay: 30 });
+            await cityOption.waitFor({ state: 'visible', timeout: 10000 });
+            await cityOption.click();
+        });
     }
 
     async enterRadius(field: Locator, radius: string): Promise<void> {
@@ -132,5 +145,39 @@ export class ShopPage extends BasePage {
 
     async selectType(menu: Locator, type: Locator): Promise<void> {
         return this.selectFromMenu(menu, type);
+    }
+    async expectEveryFranchiseCardToContain(expectedText: string): Promise<void> {
+        await expect.poll(async () => {
+            const texts = await this.shopCardFranchisePart.allTextContents();
+            return texts.length > 0 && texts.every(t => t.includes(expectedText));
+        }, {
+            timeout: 20000,
+            intervals: [200, 400, 800, 1200],
+            message: `Expected every shop card franchise to contain "${expectedText}"`,
+        }).toBeTruthy();
+    }
+
+    async expectEveryLocationCardToContain(expectedText: string): Promise<void> {
+        await expect.poll(async () => {
+            const texts = await this.shopCardLocationPart.allTextContents();
+            return texts.length > 0 && texts.every(t => t.includes(expectedText));
+        }, {
+            timeout: 20000,
+            intervals: [200, 400, 800, 1200],
+            message: `Expected every shop card location to contain "${expectedText}"`,
+        }).toBeTruthy();
+    }
+
+    async resetFilters(): Promise<void> {
+        await this.page.keyboard.press('Escape');
+        await this.xButton.click();
+        await expect(this.selectSelections).toHaveCount(0, { timeout: 10000 });
+    }
+
+    async expectFiltersCleared(): Promise<void> {
+        await expect(this.selectSelections).toHaveCount(0);
+        await expect(this.postalCodePlaceholder).toHaveValue('');
+        await expect(this.cityPlaceholder).toHaveValue('');
+        await expect(this.typePlaceholder).toHaveValue('');
     }
 }
