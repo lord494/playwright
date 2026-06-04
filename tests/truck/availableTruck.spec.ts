@@ -4,9 +4,14 @@ import { AvailableTruckPage } from '../../page/truck/availableTruck.page';
 
 test.use({ storageState: 'auth.json' });
 
-const targetText = "11996 - FREIGHTLINER / CASCADIA / 2025 *Default note*";
-const targetText2 = "55101 - FREIGHTLINER / CASCADIA / 2018";
-const targetText3 = "1010 - MACK / ANTHEM / 2021";
+// All three tests add/remove/transfer the SAME single truck (Constants.availableTruckName = 489)
+// on /available-trucks, so they cannot run in parallel against each other — one test's
+// beforeEach would delete the row another test just added. Run them serially (one worker, in
+// order) so the shared truck has a deterministic lifecycle. 489 is used ONLY by this spec, so
+// no other spec contends for it under 4 workers.
+test.describe.configure({ mode: 'serial' });
+
+const targetText = Constants.availableTruckTargetText;
 
 // test.beforeEach(async ({ page }) => {
 //     const availableTruck = new AvailableTruckPage(page);
@@ -101,31 +106,20 @@ const targetText3 = "1010 - MACK / ANTHEM / 2021";
 
 test.beforeEach(async ({ page }) => {
     const availableTruck = new AvailableTruckPage(page);
-    const targetText = "11996 - FREIGHTLINER / CASCADIA / 2025 *Default note*";
     await page.goto(Constants.availableTrukcUrl, { waitUntil: 'networkidle', timeout: 10000 });
     page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
-    const statusColumns = page.locator('.status-column');
-    const count = await statusColumns.count();
-    for (let i = 0; i < count; i++) {
-        const column = statusColumns.nth(i);
-        const text = await column.innerText();
-        const normalized = text.replace(/\s+/g, " ").trim();
-        if (normalized.includes(targetText)) {
-            await column.click({ button: 'right' });
-            await availableTruck.deleteIconInStatusMenu.click();
-            await page.waitForTimeout(1000);
-            break;
-        }
-    }
+    // Guarantee the shared truck is NOT already available, regardless of which yard a prior
+    // test left it in (the helper scrolls all yard cards before scanning, then deletes it).
+    await availableTruck.removeFromAvailable(targetText);
 });
 
 test('Korisnik moze da doda available Truck', async ({ page }) => {
     const availableTruck = new AvailableTruckPage(page);
     await availableTruck.addTruckIcon.first().click();
     await availableTruck.submitButton.waitFor({ state: 'visible', timeout: 10000 });
-    await availableTruck.selectTruck(availableTruck.selectATruckMenu, Constants.truckName, availableTruck.truckOption);
+    await availableTruck.selectTruck(availableTruck.selectATruckMenu, Constants.availableTruckName, availableTruck.truckOption);
     await availableTruck.enterAdditionalInfo(availableTruck.aditionalInfoField, Constants.noteFirst);
     await availableTruck.selectCompanyFromMenu(availableTruck.divisonMenu, availableTruck.testCompanyOption);
     await availableTruck.enterMileage(availableTruck.mileageField, Constants.millage);
@@ -152,7 +146,7 @@ test('Korisnik moze promjeni status u Out of company', async ({ page }) => {
     const availableTruck = new AvailableTruckPage(page);
     await availableTruck.addTruckIcon.first().click();
     await availableTruck.submitButton.waitFor({ state: 'visible', timeout: 10000 });
-    await availableTruck.selectTruck(availableTruck.selectATruckMenu, Constants.truckName, availableTruck.truckOption);
+    await availableTruck.selectTruck(availableTruck.selectATruckMenu, Constants.availableTruckName, availableTruck.truckOption);
     await availableTruck.enterAdditionalInfo(availableTruck.aditionalInfoField, Constants.noteFirst);
     await availableTruck.selectCompanyFromMenu(availableTruck.divisonMenu, availableTruck.testCompanyOption);
     await availableTruck.enterMileage(availableTruck.mileageField, Constants.millage);
@@ -196,7 +190,7 @@ test('Korisnik da uradi transfer kamiona iz jedne yarde u drugu', async ({ page 
     const availableTruck = new AvailableTruckPage(page);
     await availableTruck.addTruckIcon.first().click();
     await availableTruck.submitButton.waitFor({ state: 'visible', timeout: 10000 });
-    await availableTruck.selectTruck(availableTruck.selectATruckMenu, Constants.truckName, availableTruck.truckOption);
+    await availableTruck.selectTruck(availableTruck.selectATruckMenu, Constants.availableTruckName, availableTruck.truckOption);
     await availableTruck.enterAdditionalInfo(availableTruck.aditionalInfoField, Constants.noteFirst);
     await availableTruck.selectCompanyFromMenu(availableTruck.divisonMenu, availableTruck.testCompanyOption);
     await availableTruck.enterMileage(availableTruck.mileageField, Constants.millage);
@@ -212,9 +206,15 @@ test('Korisnik da uradi transfer kamiona iz jedne yarde u drugu', async ({ page 
         throw new Error(`Target text "${targetText}" not found in status columns.`);
     }
     const status = await availableTruck.statusColumn.nth(index);
-    const statusText = await availableTruck.statusColumn.nth(index).allInnerTexts();
     await status.click({ button: 'right' });
     await availableTruck.transferIconInStatusMenu.click();
-    await availableTruck.transferTruck();
-    await expect(availableTruck.yardCard.nth(2)).toContainText(statusText);
+    // Transfer to a specific, ACTIVE destination yard (noviYardicconi Test) and assert the
+    // truck now lives in that yard's card — a stable, named target instead of a positional one.
+    await availableTruck.transferTruck(Constants.availableTruckYardOption);
+    await availableTruck.addTruckModal.waitFor({ state: 'detached', timeout: 10000 }).catch(() => { });
+    await page.waitForLoadState('networkidle');
+    await expect(
+        availableTruck.yardCardByName(Constants.availableTruckYard)
+            .filter({ hasText: Constants.availableTruckOptionText })
+    ).toContainText(Constants.availableTruckOptionText, { timeout: 15000 });
 });

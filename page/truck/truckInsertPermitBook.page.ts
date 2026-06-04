@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 import path from 'path';
 
@@ -11,6 +11,7 @@ export class TruckInsertPermitBook extends BasePage {
     readonly documentTypeField: Locator;
     readonly truckType: Locator;
     readonly trailerType: Locator;
+    readonly companyType: Locator;
     readonly driverType: Locator;
     readonly savePermitButton: Locator;
     readonly okButtonInDatePicekr: Locator;
@@ -25,8 +26,11 @@ export class TruckInsertPermitBook extends BasePage {
     readonly documentReferrerMenu: Locator;
     readonly doc: Locator;
     readonly truckNumberFromMenu: Locator;
+    readonly secondTruckNumberFromMenu: Locator;
     readonly trailerNumberFromMenu: Locator;
+    readonly compnyFromMenu: Locator;
     readonly driverOption: Locator;
+    readonly previousMonthButtonInDatePicker: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -38,6 +42,7 @@ export class TruckInsertPermitBook extends BasePage {
         this.documentTypeField = this.page.locator('.v-select__slot', { hasText: 'Select document type' });
         this.truckType = this.page.getByRole('option', { name: 'Truck', exact: true });
         this.trailerType = this.page.getByRole('option', { name: 'Trailer', exact: true });
+        this.companyType = this.page.getByRole('option', { name: 'Company', exact: true });
         this.driverType = this.page.getByRole('option', { name: 'Driver', exact: true });
         this.savePermitButton = this.page.locator('.v-btn__content', { hasText: 'Save permit book' });
         this.okButtonInDatePicekr = this.page.getByRole('button', { name: 'OK', exact: true });
@@ -52,8 +57,11 @@ export class TruckInsertPermitBook extends BasePage {
         this.documentReferrerMenu = this.page.locator('.v-input__slot');
         this.doc = this.page.locator('.v-select__slot .v-label.theme--light');
         this.truckNumberFromMenu = this.page.getByRole('option', { name: '11996', exact: true });
+        this.secondTruckNumberFromMenu = this.page.getByRole('option', { name: '4721', exact: true });
         this.trailerNumberFromMenu = this.page.getByRole('option', { name: '118185', exact: true });
+        this.compnyFromMenu = this.page.getByRole('option', { name: 'testcompany', exact: true });
         this.driverOption = this.page.getByRole('option', { name: 'AppTest (bosko@superegoholding.net)', exact: true });
+        this.previousMonthButtonInDatePicker = this.page.locator('.mdi-chevron-left.theme--light');
     }
 
     async uploadDocument(): Promise<void> {
@@ -78,20 +86,28 @@ export class TruckInsertPermitBook extends BasePage {
         await this.fillAndSelectFromMenu(menu, truckNumber, option);
     }
 
+    // Deterministic date pickers ported from TrailerInsertPermitBookPage — they derive the
+    // target day from JS Date math and navigate the Vuetify date-picker by waiting for each
+    // element (no page.waitForTimeout), which is what keeps them stable under parallel load.
+
     async selectPastExpiringDate(): Promise<string> {
         await this.expiringDateField.click();
-        await this.page.waitForTimeout(1000);
         const dateText = await this.currentDate.textContent();
         const selectedDay = parseInt(dateText?.trim() || '0', 10);
-        const pastDay = selectedDay > 1 ? selectedDay - 1 : 1;
-        const pastDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${pastDay}")`);
+        const now = new Date();
+        const currentDate = new Date(now.getFullYear(), now.getMonth(), selectedDay);
+        currentDate.setDate(currentDate.getDate() - 1);
+        const pastDay = currentDate.getDate();
+        if (pastDay > selectedDay) {
+            await this.previousMonthButtonInDatePicker.click();
+        }
+        const pastDateButton = this.page.locator(
+            `.v-picker.v-card.v-picker--date .v-btn__content:has-text("${pastDay}")`
+        );
         await pastDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
         await pastDateButton.first().click();
-        await this.page.waitForTimeout(1000);
         await this.okButtonInDatePicekr.click();
-        const expectedDate = new Date();
-        expectedDate.setDate(pastDay);
-        const formattedDate = expectedDate.toLocaleDateString('en-US', {
+        const formattedDate = currentDate.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
@@ -101,20 +117,21 @@ export class TruckInsertPermitBook extends BasePage {
 
     async selectExpiringDateMoreThan30Days(): Promise<string> {
         await this.expiringDateField.click();
-        await this.page.waitForTimeout(1000);
         const dateText = await this.currentDate.textContent();
         const selectedDay = parseInt(dateText?.trim() || '0', 10);
-        const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
+        const nextMonthButton = this.page.locator(
+            '.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right'
+        );
         await nextMonthButton.click();
         await nextMonthButton.click();
-        const futureDate = new Date();
-        futureDate.setMonth(futureDate.getMonth() + 2);
-        futureDate.setDate(selectedDay);
+        const now = new Date();
+        const daysInTargetMonth = new Date(now.getFullYear(), now.getMonth() + 3, 0).getDate();
+        const safeDay = Math.min(selectedDay, daysInTargetMonth);
+        const futureDate = new Date(now.getFullYear(), now.getMonth() + 2, safeDay);
         const futureDateDay = futureDate.getDate();
         const futureDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${futureDateDay}")`);
         await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
         await futureDateButton.first().click();
-        await this.page.waitForTimeout(1000);
         await this.okButtonInDatePicekr.click();
         const formattedFutureDate = futureDate.toLocaleDateString('en-US', {
             year: 'numeric',
@@ -125,29 +142,42 @@ export class TruckInsertPermitBook extends BasePage {
     }
 
     async selectExpiringDateLessThan30Days(): Promise<string> {
+        await expect(this.expiringDateField).toBeVisible();
         await this.expiringDateField.click();
-        await this.page.waitForTimeout(1000);
-        const dateText = await this.currentDate.textContent();
-        const selectedDay = parseInt(dateText?.trim() || '0', 10);
-        const nextMonthButton = this.page.locator('.v-date-picker-header .v-icon.notranslate.mdi.mdi-chevron-right');
+
+        const datePicker = this.page.locator('.v-picker.v-card.v-picker--date');
+        await expect(datePicker).toBeVisible();
+
+        const selectedDay = new Date().getDate();
+
+        const nextMonthButton = this.page.locator(
+            '.v-date-picker-header .v-icon.mdi-chevron-right'
+        );
+        await expect(nextMonthButton).toBeVisible();
         await nextMonthButton.click();
-        await this.page.waitForTimeout(1000);
-        const futureDate = new Date();
-        futureDate.setMonth(futureDate.getMonth() + 1);
-        futureDate.setDate(selectedDay);
+
+        await expect(this.page.locator('.v-date-picker-table')).toBeVisible();
+
+        const now = new Date();
+        const daysInNextMonth = new Date(now.getFullYear(), now.getMonth() + 2, 0).getDate();
+        const safeDay = Math.min(selectedDay, daysInNextMonth);
+        const futureDate = new Date(now.getFullYear(), now.getMonth() + 1, safeDay);
         const dayToSelect = futureDate.getDate();
-        const futureDateButton = this.page.locator(`.v-picker.v-card.v-picker--date .v-btn__content:has-text("${dayToSelect}")`);
-        await futureDateButton.first().waitFor({ state: 'visible', timeout: 5000 });
-        await futureDateButton.first().click();
-        await this.page.waitForTimeout(1000);
+
+        const dayButton = this.page.locator(
+            `.v-date-picker-table .v-btn:not(.v-btn--disabled) .v-btn__content:has-text("${dayToSelect}")`
+        );
+        await expect(dayButton.first()).toBeVisible();
+        await dayButton.first().click();
+
+        await expect(this.okButtonInDatePicekr).toBeVisible();
         await this.okButtonInDatePicekr.click();
-        await this.page.waitForTimeout(1000);
+
         const formattedDate = futureDate.toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'short',
             day: 'numeric',
         });
-
         return formattedDate;
     }
 }

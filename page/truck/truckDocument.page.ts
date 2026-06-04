@@ -1,6 +1,7 @@
 import { Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 import { InsertPermitBookPage } from "../Content/uploadDocuments.page";
+import path from 'path';
 
 export class TruckDocumentPage extends BasePage {
     readonly page: Page;
@@ -38,6 +39,21 @@ export class TruckDocumentPage extends BasePage {
         this.titleInModal = this.page.locator('.v-card__title.headline');
     }
 
+    // Opens the first /trucks/all row's document modal and waits for its permit-book list to
+    // finish loading. Opening the modal triggers GET /api/permit-books; waiting for it (rather
+    // than racing a fixed eyeIcon timeout) is what keeps these tests stable under 4-worker load.
+    async openFirstTruckDocuments(): Promise<void> {
+        const docIcon = this.page.locator('.mdi-file-document-multiple').first();
+        await docIcon.waitFor({ state: 'visible', timeout: 10000 });
+        await Promise.all([
+            this.page.waitForResponse(
+                r => r.url().includes('/api/permit-books') && (r.status() === 200 || r.status() === 304),
+                { timeout: 15000 }
+            ).catch(() => { }),
+            docIcon.click(),
+        ]);
+    }
+
     async deleteAllItemsWithDeleteIcon(): Promise<void> {
         const upload = new InsertPermitBookPage(this.page);
         await upload.loader.waitFor({ state: 'hidden', timeout: 5000 });
@@ -71,13 +87,13 @@ export class TruckDocumentPage extends BasePage {
 
     async uploadNewDocument(): Promise<void> {
         await this.changeFileButton.click();
-        await this.page.setInputFiles('input[type="file"]', 'C:/Users/Korisnik/Desktop/Super Ego Holding/Screenshots/playwright.png');
+        await this.page.setInputFiles('input[type="file"]', path.resolve(__dirname, '../../helpers/sc/playwright.png'));
         await this.page.waitForLoadState('networkidle');
     }
 
     async uploadDocumentOver10MB(): Promise<void> {
         await this.changeFileButton.click();
-        await this.page.setInputFiles('input[type="file"]', 'C:/Users/Korisnik/Desktop/Super Ego Holding/Screenshots/11mb.pdf');
+        await this.page.setInputFiles('input[type="file"]', path.resolve(__dirname, '../../helpers/sc/11mb.pdf'));
         await this.page.waitForLoadState('networkidle');
     }
 

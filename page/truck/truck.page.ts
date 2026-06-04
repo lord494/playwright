@@ -198,20 +198,23 @@ export class TruckPage extends BasePage {
         await this.fillInputField(note, text);
     }
 
+    // Old/New state are two company selects with IDENTICAL option lists. When the second menu
+    // opens the first menu's matching option can still be in the DOM, so a bare option locator
+    // resolves to 2 elements (strict-mode violation). Scope to `.last()` — the freshly-opened
+    // menu is appended last in the DOM — which deterministically targets the active menu's
+    // option without the old fixed `waitForTimeout`.
     async selectOldState(oldState: Locator, optionFromMenu: Locator) {
-        await this.page.waitForTimeout(1000);
-        await oldState.waitFor({ state: 'visible', timeout: 3000 });
+        await oldState.waitFor({ state: 'visible', timeout: 5000 });
         await oldState.click();
-        await this.page.waitForTimeout(1000);
-        await optionFromMenu.click();
+        await optionFromMenu.last().waitFor({ state: 'visible', timeout: 5000 });
+        await optionFromMenu.last().click();
     }
 
     async selectNewState(newState: Locator, optionFromMenu: Locator) {
-        await this.page.waitForTimeout(1000);
-        await newState.waitFor({ state: 'visible', timeout: 3000 });
+        await newState.waitFor({ state: 'visible', timeout: 5000 });
         await newState.click();
-        await this.page.waitForTimeout(1000);
-        await optionFromMenu.click();
+        await optionFromMenu.last().waitFor({ state: 'visible', timeout: 5000 });
+        await optionFromMenu.last().click();
     }
 
     async enterOliType(oliTypeField: Locator, oil: string) {
@@ -240,5 +243,50 @@ export class TruckPage extends BasePage {
 
     async enterShopInfo(shopInfoField: Locator, info: string) {
         await this.fillInputField(shopInfoField, info);
+    }
+
+    // === Deterministic synchronization & worker-safe row helpers ===
+    // /trucks/all renders many shared rows, so positional locators (.first()/.nth()) point at
+    // rows other parallel workers add/edit/delete. These helpers let a test scope to ONE
+    // specific truck (by number) and wait on the real /api/trucks response instead of
+    // networkidle. Mirrors the equivalents on TrailersPage.
+
+    // Awaits the next /api/trucks response that `action` triggers (filter, save, delete).
+    async waitForTrucksResponse(action: () => Promise<void>): Promise<void> {
+        await Promise.all([
+            this.page.waitForResponse(
+                r => r.url().includes('/api/trucks') && (r.status() === 200 || r.status() === 304),
+                { timeout: 15000 }
+            ).catch(() => { }),
+            action(),
+        ]);
+    }
+
+    // The truck number lives in column 2 (header "Truck") on /trucks/all.
+    getRowByTruckNumber(truckNumber: string): Locator {
+        return this.page.locator('tbody tr', {
+            has: this.page.locator('td:nth-child(2)', { hasText: truckNumber })
+        });
+    }
+
+    // Filters the table to a single truck via the truck-number search input, then waits for
+    // that truck's row to render. Clears any existing value first, so it is safe to call again.
+    async searchByTruckNumber(truckNumber: string): Promise<void> {
+        await this.searchInput.waitFor({ state: 'visible', timeout: 10000 });
+        await this.searchInput.click();
+        await this.page.keyboard.press('Control+A');
+        await this.page.keyboard.press('Delete');
+        await this.waitForTrucksResponse(() => this.page.keyboard.type(truckNumber, { delay: 40 }));
+        await this.getRowByTruckNumber(truckNumber).first().waitFor({ state: 'visible', timeout: 15000 });
+    }
+
+    // Row-scoped action icons — resolve to the specific truck's row, so they keep working even
+    // if the filter momentarily shows more than one row (no reliance on .first()).
+    documentIconForRow(truckNumber: string): Locator {
+        return this.getRowByTruckNumber(truckNumber).first().locator('.mdi-file-document-multiple');
+    }
+
+    uploadIconForRow(truckNumber: string): Locator {
+        return this.getRowByTruckNumber(truckNumber).first().locator('.mdi-upload');
     }
 }

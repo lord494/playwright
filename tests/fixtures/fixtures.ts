@@ -12,6 +12,8 @@ import { DocumentPage } from '../../page/Content/documentModal.page';
 import { InsertPermitBookPage } from '../../page/Content/uploadDocuments.page';
 import { AddAndEditLoadModal } from '../../page/dispatchDashboard/addAndEditLoad.page';
 import { TruckPage } from '../../page/truck/truck.page';
+import { TruckDocumentPage } from '../../page/truck/truckDocument.page';
+import { TruckInsertPermitBook } from '../../page/truck/truckInsertPermitBook.page';
 import { TrailersPage } from '../../page/trailer/trailer.page';
 import { PermitBookPage } from '../../page/permitBook/permitBookOvervire.page';
 import { DealershipPage } from '../../page/dealership/dealership.page';
@@ -95,6 +97,12 @@ export const test = base.extend<{
     documentSetup: DocumentPage;
     uploadDocument: InsertPermitBookPage;
     truckPage: TruckPage;
+    truckOverview: TruckPage;
+    truckDocument: TruckDocumentPage;
+    truckInsertPermitOverview: TruckInsertPermitBook;
+    insertPermitTruckSetup: TruckInsertPermitBook;
+    truckDocumentSetup: TruckDocumentPage;
+    cleanUpSetupTruckDocument: Page;
     trailerPage: TrailersPage;
     permitBookPage: PermitBookPage;
     delaershipPageSetup: DealershipPage;
@@ -375,6 +383,130 @@ export const test = base.extend<{
     truckPage: async ({ loggedPage }, use) => {
         const truck = new TruckPage(loggedPage);
         await use(truck);
+    },
+
+    // Plain TruckPage (no navigation) — mirrors `trailerOverview`. Tests/fixtures that need
+    // to drive the /trucks/all table receive an instance and navigate themselves.
+    truckOverview: async ({ loggedPage }, use) => {
+        const truckOverview = new TruckPage(loggedPage);
+        await use(truckOverview);
+    },
+
+    truckDocument: async ({ loggedPage }, use) => {
+        const truckDocument = new TruckDocumentPage(loggedPage);
+        await use(truckDocument);
+    },
+
+    truckInsertPermitOverview: async ({ loggedPage }, use) => {
+        const truckInsertPermitOverview = new TruckInsertPermitBook(loggedPage);
+        await use(truckInsertPermitOverview);
+    },
+
+    // Navigates to /trucks/all and returns a TruckInsertPermitBook. Mirror of
+    // `insertPermitTrailerSetup` — the permit-book upload spec relies on it for navigation,
+    // then scopes to its own worker-specific truck row by number.
+    insertPermitTruckSetup: async ({ loggedPage }, use) => {
+        const truck = new TruckPage(loggedPage);
+        const insertPermit = new TruckInsertPermitBook(loggedPage);
+        await loggedPage.goto(Constants.truckUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await expect(truck.documentIcon.first()).toBeVisible({ timeout: 15000 });
+        await use(insertPermit);
+    },
+
+    // Mirror of `trailerDocumentSetup`. Uploads ONE expired Registration document to the first
+    // /trucks/all row so the document-operations tests (edit status, subtype, preview, QR,
+    // move, validation) always start from a known single-document state. The upload is wrapped
+    // in a retry because under 4-worker load it can fail silently, leaving the truck with no
+    // document (the old flaky `eyeIcon` timeouts).
+    truckDocumentSetup: async ({ loggedPage, truckOverview, truckInsertPermitOverview, truckDocument }, use) => {
+        const uploadRegistrationDocument = async () => {
+            await truckOverview.clickElement(truckOverview.documentIcon.first());
+            await truckDocument.deleteAllItemsWithDeleteIconForDrivers();
+            await truckOverview.clickElement(truckOverview.uploadDocumentIcon.first());
+            // Wait for the UPLOAD modal (it carries the Save permit book button) — guards
+            // against acting while the documents-list modal is still animating closed.
+            await truckInsertPermitOverview.savePermitButton.waitFor({ state: 'visible', timeout: 10000 });
+            await truckInsertPermitOverview.uploadDocument();
+            // Wait for the file to actually register (the filename chip appears) before filling
+            // the rest — otherwise the save fires on an incomplete form and persists nothing.
+            await expect(loggedPage.locator('.v-file-input__text').first()).toBeVisible({ timeout: 10000 });
+            await truckInsertPermitOverview.selectPastExpiringDate();
+            await truckInsertPermitOverview.selectSubtypeFromMenu(truckInsertPermitOverview.documentSubtypeField, truckInsertPermitOverview.registrationSubtype);
+            await loggedPage.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
+            // Wait for the save to actually persist before reloading — otherwise reload() cancels
+            // the in-flight POST and the document never appears.
+            await Promise.all([
+                loggedPage.waitForResponse(
+                    r => r.url().includes('/api/permit-books') && (r.status() === 200 || r.status() === 201),
+                    { timeout: 15000 }
+                ).catch(() => { }),
+                truckInsertPermitOverview.clickElement(truckInsertPermitOverview.savePermitButton),
+            ]);
+            await loggedPage.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached', timeout: 10000 }).catch(() => { });
+        };
+
+        // Reloads, opens the first truck's documents, and reports whether a document is present
+        // (then leaves a clean /trucks/all page so the test reopens the modal itself).
+        const firstTruckHasDocument = async (): Promise<boolean> => {
+            await loggedPage.reload();
+            await loggedPage.waitForLoadState('networkidle');
+            await truckDocument.openFirstTruckDocuments();
+            const present = await truckDocument.eyeIcon.first()
+                .waitFor({ state: 'visible', timeout: 8000 }).then(() => true).catch(() => false);
+            await loggedPage.reload();
+            await loggedPage.waitForLoadState('networkidle');
+            return present;
+        };
+
+        await loggedPage.goto(Constants.truckUrl, { waitUntil: 'networkidle' });
+        await truckOverview.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        await uploadRegistrationDocument();
+        // Guarantee the document persisted before the test runs; retry once if it silently failed.
+        if (!(await firstTruckHasDocument())) {
+            await uploadRegistrationDocument();
+            await loggedPage.reload();
+            await loggedPage.waitForLoadState('networkidle');
+        }
+        await use(truckDocument);
+    },
+
+    // Mirror of `cleanUpSetupTrailerDocument`. Clears any documents that previous runs of the
+    // move tests left on the move-target locations (the second truck, the trailer, the driver
+    // in the permit book, and the company) so those locations don't accumulate stale documents.
+    // Best-effort hygiene; only the first truck-document test depends on it.
+    cleanUpSetupTruckDocument: async ({ loggedPage, truckOverview, truckDocument }, use) => {
+        // Second truck (move-to-another-truck target)
+        await loggedPage.goto(Constants.truckUrl, { waitUntil: 'networkidle' });
+        await truckOverview.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        await loggedPage.locator('.v-text-field input').first().fill(Constants.secondTruckName);
+        await truckOverview.documentIcon.nth(9).waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+        await truckOverview.clickElement(truckOverview.documentIcon);
+        await loggedPage.waitForLoadState('networkidle');
+        await truckDocument.deleteAllItemsWithDeleteIconForDrivers();
+        // Trailer (move-to-trailer target)
+        await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
+        await truckOverview.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        await loggedPage.locator('.v-text-field input').nth(6).fill(Constants.trailerTest);
+        const trailerRow = loggedPage.locator('tr', {
+            has: loggedPage.locator('td:nth-child(2)', { hasText: Constants.trailerTest })
+        });
+        await trailerRow.locator('.mdi-file-document-multiple').click();
+        await loggedPage.waitForLoadState('networkidle');
+        await truckDocument.deleteAllItemsWithDeleteIconForDrivers();
+        // Driver (move-to-driver target) — appears in the permit book under the driver name
+        await loggedPage.goto(Constants.permitBookUrl, { waitUntil: 'networkidle' });
+        await truckDocument.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        await loggedPage.locator('.v-text-field input').first().fill(Constants.testUser);
+        await truckDocument.eyeIcon.nth(9).waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+        await truckOverview.clickElement(truckDocument.eyeIcon);
+        await loggedPage.waitForLoadState('networkidle');
+        await truckDocument.deleteAllItemsWithDeleteIconForDrivers();
+        // Company (move-to-company target)
+        await loggedPage.goto(Constants.companiesUrl, { waitUntil: 'networkidle' });
+        await truckOverview.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
+        await truckOverview.clickElement(truckOverview.documentIcon.first());
+        await truckDocument.deleteAllItemsWithDeleteIcon();
+        await use(loggedPage);
     },
 
     trailerPage: async ({ loggedPage }, use) => {
@@ -776,7 +908,10 @@ export const test = base.extend<{
         await expect(addPostTruckSetup.trailerTypeColumn.first()).toContainText('R');
         await expect(addPostTruckSetup.noteColumn.first()).toContainText(Constants.noteFirst);
         const today = new Date();
-        const formattedDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
+        // The avail column renders a zero-padded MM/DD/YYYY (e.g. "06/04/2026"), so pad the
+        // expected date — an unpadded "6/4/2026" is NOT a substring of "06/04/2026" and the
+        // assertion fails on any single-digit month or day.
+        const formattedDate = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
         await expect(addPostTruckSetup.availColumn.first()).toContainText(formattedDate);
         await use(addPostTruckSetup)
     },

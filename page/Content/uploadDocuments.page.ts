@@ -26,6 +26,7 @@ export class InsertPermitBookPage extends BasePage {
     readonly documentReferrerMenu: Locator;
     readonly doc: Locator;
     readonly truckNumberFromMenu: Locator;
+    readonly secondTruckNumberFromMenu: Locator;
     readonly trailerNumberFromMenu: Locator;
     readonly secondTrailerNumberFromMenu: Locator;
     readonly compnyFromMenu: Locator;
@@ -58,6 +59,7 @@ export class InsertPermitBookPage extends BasePage {
         this.documentReferrerMenu = page.locator('.v-input__slot');
         this.doc = page.locator('.v-select__slot .v-label.theme--light');
         this.truckNumberFromMenu = page.getByRole('option', { name: '11996', exact: true });
+        this.secondTruckNumberFromMenu = page.getByRole('option', { name: '4721', exact: true });
         this.trailerNumberFromMenu = page.getByRole('option', { name: '118185', exact: true });
         this.secondTrailerNumberFromMenu = page.getByRole('option', { name: '243648', exact: true });
         this.compnyFromMenu = page.getByRole('option', { name: 'testcompany', exact: true });

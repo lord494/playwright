@@ -1,5 +1,6 @@
 import { Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
+import { Constants } from "../../helpers/constants";
 
 export class AvailableTruckPage extends BasePage {
     readonly page: Page;
@@ -38,7 +39,9 @@ export class AvailableTruckPage extends BasePage {
         this.infoField = this.page.getByRole('textbox', { name: 'Info', exact: true });
         this.statusMenu = this.page.getByRole('textbox', { name: 'Status' });
         this.submitButton = this.page.getByRole('button', { name: 'Submit' });
-        this.truckOption = this.page.getByRole('option', { name: '11996 - FREIGHTLINER / CASCADIA / 2025', exact: true });
+        // Non-exact substring match on the truck's number+make+model+year so a trailing note
+        // suffix in the option text doesn't break it. Number is unique, so this resolves to one.
+        this.truckOption = this.page.getByRole('option', { name: Constants.availableTruckOptionText });
         this.testCompanyOption = this.page.getByRole('option', { name: 'testcompany', exact: true });
         this.statusColumn = this.page.locator('.status-column');
         this.deleteIconInStatusMenu = this.page.getByText('Delete', { exact: true });
@@ -80,9 +83,42 @@ export class AvailableTruckPage extends BasePage {
         await this.fillInputField(mileageField, mileage);
     }
 
-    async transferTruck() {
+    // Transfers the currently-selected truck to a SPECIFIC destination yard (by its option
+    // text in the transfer dropdown), instead of the old fragile positional .nth(2).
+    async transferTruck(yardOptionText: string) {
         await this.transferMenu.click();
-        await this.transferOption.nth(2).click();
+        await this.transferOption.filter({ hasText: yardOptionText }).first().click();
         await this.transferButton.click();
+    }
+
+    // The yard card (header + truck table) for a given yard name. Used to assert a truck
+    // landed in a specific yard after a transfer.
+    yardCardByName(yardName: string): Locator {
+        return this.page.locator('.v-card.v-sheet', { hasText: yardName });
+    }
+
+    // Robustly removes a truck (identified by its exact status-column text) from
+    // /available-trucks, wherever it currently sits. Yard cards lazy-render, so it scrolls the
+    // page to load them all before scanning, then deletes the row via the right-click menu.
+    // Best-effort: returns silently if the truck is not currently available.
+    // The caller must register a page `dialog` handler (the delete raises a native confirm).
+    async removeFromAvailable(targetText: string): Promise<void> {
+        for (let i = 0; i < 8; i++) {
+            await this.page.mouse.wheel(0, 3000);
+            await this.page.waitForTimeout(200);
+        }
+        const cols = this.statusColumn;
+        const count = await cols.count();
+        for (let i = 0; i < count; i++) {
+            const text = (await cols.nth(i).innerText()).replace(/\s+/g, ' ').trim();
+            if (text.includes(targetText)) {
+                await cols.nth(i).scrollIntoViewIfNeeded();
+                await cols.nth(i).click({ button: 'right' });
+                await this.deleteIconInStatusMenu.waitFor({ state: 'visible', timeout: 5000 });
+                await this.deleteIconInStatusMenu.click();
+                await this.page.waitForTimeout(1000);
+                return;
+            }
+        }
     }
 }

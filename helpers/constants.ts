@@ -44,6 +44,42 @@ export class Constants {
     static truckNumberFM = "6461";
     static truckType = 'Truck';
 
+    // Dedicated truck for the /available-trucks tests (add / out-of-company / transfer).
+    // 489 is a clean, stable in-company truck (verified addable on staging 2026-06-04) used
+    // ONLY by availableTruck.spec, so nothing else contends for it under 4 workers.
+    // optionText  = how it renders in the "Select a truck" dropdown (no note suffix).
+    // targetText  = how its row renders in the available-trucks status column AFTER adding
+    //               (the " *Default note*" suffix is the additional-info the test enters).
+    static availableTruckName = '489';
+    static availableTruckOptionText = '489 - INTERNATIONAL / LT 625 / WHITE / 2023';
+    static availableTruckTargetText = '489 - INTERNATIONAL / LT 625 / WHITE / 2023 *Default note*';
+    // Active yard used by the transfer test. availableTruckYardOption is how the yard renders
+    // in the transfer modal's destination dropdown.
+    static availableTruckYard = 'noviYardicconi Test';
+    static availableTruckYardOption = 'noviYardicconi Test yard';
+
+    // Stable trucks that live permanently on /trucks/all (never created/deleted by the
+    // suite). Each parallel worker picks one by index so the document / permit-book upload
+    // tests don't collide on the same truck's documents when running with multiple workers.
+    // Mirrors the Constants.workerTrailers pool used by the trailer permit-book tests.
+    //
+    // Chosen to be DISJOINT from every other truck the suite touches, so nothing contends
+    // under 4 workers:
+    //   - 11996 is owned exclusively by availableTruck.spec
+    //   - 226 is truckDocument.spec's first-row host; 226/227/236 are truckOverview's
+    //     positional history/oil/dot/repair rows
+    //   - 4721 is truckDocument.spec's move-to-another-truck target
+    // 235 / 241 / 250 / 253 are stable /trucks/all residents (verified on the first page,
+    // 2026-06-04) used by NONE of the above. If a number goes stale, swap it for another
+    // /trucks/all-resident truck number. Keep at least as many entries as the CI worker
+    // count (4) so no two workers share a truck via the modulo index.
+    static workerTrucks = [
+        '235',
+        '241',
+        '250',
+        '253',
+    ];
+
     // ===== TRAILERS =====
     static trailerTest = '118185';
     static availableTrailer = '78965';
