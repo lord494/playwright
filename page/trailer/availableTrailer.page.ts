@@ -86,6 +86,12 @@ export class AvailableTrailersPage extends BasePage {
     readonly addAvailableYardField: Locator;
     readonly addAvailableSaveButton: Locator;
     readonly addAvailableCancelButton: Locator;
+    // Read-only fields the modal auto-fills from the selected trailer's /trailers record.
+    readonly addAvailableTypeSelection: Locator;
+    readonly addAvailableYearInput: Locator;
+    readonly addAvailableAvailabilitySelection: Locator;
+    readonly addAvailableStatusSelection: Locator;
+    readonly addAvailablePaymentStatusSelection: Locator;
 
     // Transfer modal
     readonly transferModal: Locator;
@@ -169,6 +175,19 @@ export class AvailableTrailersPage extends BasePage {
         this.addAvailableYardField = this.addAvailableModal.getByLabel('Yard *', { exact: true });
         this.addAvailableSaveButton = this.addAvailableModal.getByRole('button', { name: 'Save', exact: true });
         this.addAvailableCancelButton = this.addAvailableModal.getByRole('button', { name: 'Cancel', exact: true });
+        // After a trailer is selected the modal auto-fills these read-only fields from that
+        // trailer's /trailers record. Type/Availability/Status/Payment Status render as a
+        // v-select selection (text); Year is held in the hidden production_year input.
+        // Verified against staging.vrlz.app DOM (2026-06-03).
+        const addModalSelectionByLabel = (label: RegExp): Locator =>
+            this.addAvailableModal.locator('.v-select__slot')
+                .filter({ has: page.locator('label', { hasText: label }) })
+                .locator('.v-select__selection--comma');
+        this.addAvailableTypeSelection = addModalSelectionByLabel(/^Type$/);
+        this.addAvailableYearInput = this.addAvailableModal.locator('input[name="production_year"]');
+        this.addAvailableAvailabilitySelection = addModalSelectionByLabel(/^Availability$/);
+        this.addAvailableStatusSelection = addModalSelectionByLabel(/^Status$/);
+        this.addAvailablePaymentStatusSelection = addModalSelectionByLabel(/^Payment Status$/);
 
         // Transfer modal — verified: title contains "Transfer trailer ... from ... to"
         this.transferModal = page.locator('.v-dialog--active').filter({ hasText: 'Transfer trailer' });
@@ -186,6 +205,19 @@ export class AvailableTrailersPage extends BasePage {
         return this.page.locator('tbody tr', {
             has: this.page.locator('td:nth-child(1)', { hasText: trailerNumber })
         });
+    }
+
+    // Table cell accessors for a given trailer's row (columns: 1=Trailer, 2=Type, 3=Year).
+    availableRowTrailerNumberCell(trailerNumber: string): Locator {
+        return this.getRowByTrailerNumber(trailerNumber).first().locator('td:nth-child(1)');
+    }
+
+    availableRowTypeCell(trailerNumber: string): Locator {
+        return this.getRowByTrailerNumber(trailerNumber).first().locator('td:nth-child(2)');
+    }
+
+    availableRowYearCell(trailerNumber: string): Locator {
+        return this.getRowByTrailerNumber(trailerNumber).first().locator('td:nth-child(3)');
     }
 
     async waitForTableLoaded(): Promise<void> {
@@ -233,12 +265,20 @@ export class AvailableTrailersPage extends BasePage {
         await this.addAvailableModal.waitFor({ state: 'visible', timeout: 10000 });
 
         // Trailer Number is a v-autocomplete — type to filter, then click the matching option.
-        await this.addAvailableTrailerNumberField.click();
-        await this.addAvailableTrailerNumberField.type(trailerNumber, { delay: 30 });
+        // The async option fetch can be slow/miss under parallel load, so re-type and re-wait
+        // a couple of times before giving up.
         const optionsMenu = this.page.locator('.v-menu__content.menuable__content__active');
-        await optionsMenu.waitFor({ state: 'visible', timeout: 10000 });
         const option = optionsMenu.locator('.v-list-item', { hasText: trailerNumber }).first();
-        await option.waitFor({ state: 'visible', timeout: 15000 });
+        let optionShown = false;
+        for (let attempt = 0; attempt < 3 && !optionShown; attempt++) {
+            await this.addAvailableTrailerNumberField.click();
+            await this.addAvailableTrailerNumberField.fill('');
+            await this.addAvailableTrailerNumberField.type(trailerNumber, { delay: 30 });
+            await optionsMenu.waitFor({ state: 'visible', timeout: 8000 }).catch(() => { });
+            optionShown = await option.isVisible().catch(() => false);
+            if (!optionShown) await this.page.waitForTimeout(1000);
+        }
+        await option.waitFor({ state: 'visible', timeout: 10000 });
         await option.click();
 
         await Promise.all([
@@ -250,6 +290,42 @@ export class AvailableTrailersPage extends BasePage {
         ]);
         await this.addAvailableModal.waitFor({ state: 'detached', timeout: 10000 });
         await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+    }
+
+    // Opens the "+" Add modal and picks the trailer from the autocomplete, leaving the modal
+    // OPEN so callers can assert the auto-filled fields and then either save or cancel.
+    async openAddModalAndSelectTrailer(trailerNumber: string): Promise<void> {
+        await this.page.locator('button.v-btn.primary.v-size--small:has(i.mdi-plus)').first().click();
+        await this.addAvailableModal.waitFor({ state: 'visible', timeout: 10000 });
+
+        await this.addAvailableTrailerNumberField.click();
+        await this.addAvailableTrailerNumberField.type(trailerNumber, { delay: 30 });
+        const optionsMenu = this.page.locator('.v-menu__content.menuable__content__active');
+        await optionsMenu.waitFor({ state: 'visible', timeout: 10000 });
+        const option = optionsMenu.locator('.v-list-item', { hasText: trailerNumber }).first();
+        await option.waitFor({ state: 'visible', timeout: 15000 });
+        await option.click();
+
+        // The dependent fields (Type/Year/Availability/Status) populate once the selection resolves.
+        await this.addAvailableTypeSelection.waitFor({ state: 'visible', timeout: 10000 });
+    }
+
+    // Confirms the Add modal (Save) — dispatches PUT /api/trailers/available/{id}.
+    async confirmAddAvailable(): Promise<void> {
+        await Promise.all([
+            this.page.waitForResponse(
+                r => r.url().includes('/api/trailers') && (r.status() === 200 || r.status() === 304),
+                { timeout: 15000 }
+            ).catch(() => { }),
+            this.addAvailableSaveButton.click()
+        ]);
+        await this.addAvailableModal.waitFor({ state: 'detached', timeout: 10000 });
+        await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+    }
+
+    async cancelAddAvailable(): Promise<void> {
+        await this.addAvailableCancelButton.click();
+        await this.addAvailableModal.waitFor({ state: 'detached', timeout: 10000 });
     }
 
     async openEditModalForRow(trailerNumber: string): Promise<void> {

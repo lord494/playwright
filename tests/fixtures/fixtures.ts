@@ -5,7 +5,7 @@ import { EditAndWriteReview } from '../../page/shop/editAndWriteReview.page';
 import { AddShopPage } from '../../page/shop/addShop.page';
 import { ContactsPage } from '../../page/contacts/contactsOverview.page';
 import { AddContactsPage } from '../../page/contacts/addContact.page';
-import { generateRandomString, get17RandomNumbers, get6RandomNumber, waitForPrebookLoads, getIconFromCell, safeDeleteAvailableTrailer } from '../../helpers/dateUtilis';
+import { generateRandomString, get17RandomNumbers, get6RandomNumber, waitForPrebookLoads, safeDeleteAvailableTrailer, generateUniqueTrailerNumber } from '../../helpers/dateUtilis';
 import { BoardsPage } from '../../page/Content/boards.page';
 import { CompaniesPage } from '../../page/Content/companies.page';
 import { DocumentPage } from '../../page/Content/documentModal.page';
@@ -145,7 +145,7 @@ export const test = base.extend<{
     trailerOverviewSetup: TrailersPage;
     trailerOverview: TrailersPage;
     addTrailer: AddTrailersPage;
-    editTrailerSetup: AddTrailersPage;
+    createdTrailer: { number: string };
     editTrailer: EditTrailersPage;
     insertPermitTrailerSetup: TrailerInsertPermitBookPage;
     cleanUpSetupTrailerDocument: Page;
@@ -843,26 +843,35 @@ export const test = base.extend<{
         await use(addTrailerSetup);
     },
 
-    editTrailerSetup: async ({ loggedPage }, use) => {
-        const trailerOverviewSetup = new TrailersPage(loggedPage);
-        const editTrailerSetup = new AddTrailersPage(loggedPage);
+    // Creates a worker-unique trailer on /trailers, then filters the table down to just
+    // that trailer so a test operates on its OWN row — never the shared first() row that
+    // other parallel workers add/edit/delete. The worker-prefixed number keeps 4 workers
+    // from colliding, and a brand-new trailer starts with no edit/company-history state.
+    // Used by editTrailer (edits the row) and trailerOverview (company-history on a clean
+    // trailer). The created trailer is removed in teardown.
+    createdTrailer: async ({ loggedPage, trailerOverview, addTrailer }, use) => {
+        const number = generateUniqueTrailerNumber();
         await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
-        await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-        await trailerOverviewSetup.clickElement(trailerOverviewSetup.addButton);
-        await loggedPage.waitForLoadState('networkidle');
-        const trailerNumber = get6RandomNumber().join('');
-        await editTrailerSetup.fillTrailerNumber(editTrailerSetup.trailerNumber, trailerNumber);
-        await editTrailerSetup.selectTrailerType(editTrailerSetup.trailertype, editTrailerSetup.dryVanType);
-        await editTrailerSetup.selectTrailerYear(editTrailerSetup.trailerYear, editTrailerSetup.year2002);
-        await editTrailerSetup.selectPickUpDate(editTrailerSetup.pickUpDate, editTrailerSetup.currentDate);
-        await editTrailerSetup.selectDealerhip(editTrailerSetup.dealership, editTrailerSetup.kemonipexDealreship);
-        await editTrailerSetup.selectTrailerMake(editTrailerSetup.trailerMake, editTrailerSetup.trailerMakeOption);
-        const randomNumberString = get17RandomNumbers().join('');
-        await editTrailerSetup.fillVinNumber(editTrailerSetup.vinNumber, randomNumberString);
-        await editTrailerSetup.clickSaveButton();
-        await editTrailerSetup.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
-        await loggedPage.waitForLoadState('networkidle');
-        await use(editTrailerSetup);
+        await trailerOverview.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+        await trailerOverview.clickElement(trailerOverview.addButton);
+        await addTrailer.fillTrailerNumber(addTrailer.trailerNumber, number);
+        await addTrailer.selectTrailerType(addTrailer.trailertype, addTrailer.dryVanType);
+        await addTrailer.selectTrailerYear(addTrailer.trailerYear, addTrailer.year2002);
+        await addTrailer.selectPickUpDate(addTrailer.pickUpDate, addTrailer.currentDate);
+        await addTrailer.selectDealerhip(addTrailer.dealership, addTrailer.kemonipexDealreship);
+        await addTrailer.selectTrailerMake(addTrailer.trailerMake, addTrailer.trailerMakeOption);
+        await addTrailer.fillVinNumber(addTrailer.vinNumber, get17RandomNumbers().join(''));
+        await addTrailer.clickSaveButton();
+        await addTrailer.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
+        // Reload so the Add-Trailer dialog's DOM is fully gone — otherwise its hidden inputs
+        // and date-picker buttons pollute page-global locators (oldState, currentDate, ...).
+        await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        // Filter down to the just-created trailer so the test's row locators are unambiguous.
+        await trailerOverview.searchByTrailerNumber(number);
+        await use({ number });
+        // Teardown: remove the trailer (safeDeleteAvailableTrailer filters /trailers by
+        // Trailer/VIN # and clicks the row delete — best-effort, never blocks teardown).
+        await safeDeleteAvailableTrailer(loggedPage, number);
     },
 
     editTrailer: async ({ loggedPage }, use) => {
@@ -932,24 +941,59 @@ export const test = base.extend<{
     },
 
     trailerDocumentSetup: async ({ loggedPage, trailerOverview, trailerInsertPermitOverview, trailerDocument }, use) => {
+        // Uploads one expired Registration document to the first /trailers row. Extracted so it
+        // can be retried — under 4-worker load the upload occasionally fails silently, leaving
+        // the trailer with no document (the old flaky `eyeIcon` timeouts).
+        const uploadRegistrationDocument = async () => {
+            await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+            await trailerDocument.deleteAllItemsWithDeleteIconForDrivers();
+            await trailerOverview.clickElement(trailerOverview.uploadIcon.first());
+            await loggedPage.waitForFunction(() => {
+                const el = document.querySelector('.v-dialog.v-dialog--active');
+                if (!el) return false;
+                const rect = el.getBoundingClientRect();
+                return rect.width === 500
+            }, { timeout: 10000 });
+            await trailerInsertPermitOverview.uploadDocument();
+            // Wait for the file to actually register (the filename chip appears) before filling
+            // the rest — otherwise the save fires on an incomplete form and persists nothing.
+            await expect(loggedPage.locator('.v-file-input__text').first()).toBeVisible({ timeout: 10000 });
+            await trailerInsertPermitOverview.selectPastExpiringDate();
+            await trailerInsertPermitOverview.selectSubtypeFromMenu(trailerInsertPermitOverview.documentSubtypeField, trailerInsertPermitOverview.registrationSubtype);
+            await loggedPage.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
+            // Wait for the save to actually persist before reloading — otherwise reload() cancels
+            // the in-flight POST and the document never appears.
+            await Promise.all([
+                loggedPage.waitForResponse(
+                    r => r.url().includes('/api/permit-books') && (r.status() === 200 || r.status() === 201),
+                    { timeout: 15000 }
+                ).catch(() => { }),
+                trailerInsertPermitOverview.clickElement(trailerInsertPermitOverview.savePermitButton),
+            ]);
+            await loggedPage.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached', timeout: 10000 }).catch(() => { });
+        };
+
+        // Reloads, opens the first trailer's documents, and reports whether a document is present
+        // (then leaves a clean /trailers page so the test reopens the modal itself).
+        const firstTrailerHasDocument = async (): Promise<boolean> => {
+            await loggedPage.reload();
+            await loggedPage.waitForLoadState('networkidle');
+            await trailerDocument.openFirstTrailerDocuments();
+            const present = await trailerDocument.eyeIcon.first()
+                .waitFor({ state: 'visible', timeout: 8000 }).then(() => true).catch(() => false);
+            await loggedPage.reload();
+            await loggedPage.waitForLoadState('networkidle');
+            return present;
+        };
+
         await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
-        await trailerOverview.clickElement(trailerOverview.documentIcon.first());
-        await trailerDocument.deleteAllItemsWithDeleteIconForDrivers();
-        await trailerOverview.clickElement(trailerOverview.uploadIcon.first());
-        await loggedPage.waitForFunction(() => {
-            const el = document.querySelector('.v-dialog.v-dialog--active');
-            if (!el) return false;
-            const rect = el.getBoundingClientRect();
-            return rect.width === 500
-        }, { timeout: 10000 });
-        await trailerInsertPermitOverview.uploadDocument();
-        await loggedPage.getByRole('textbox', { name: 'Document name' }).isEnabled({ timeout: 10000 });
-        await trailerInsertPermitOverview.selectPastExpiringDate();
-        await trailerInsertPermitOverview.selectSubtypeFromMenu(trailerInsertPermitOverview.documentSubtypeField, trailerInsertPermitOverview.registrationSubtype);
-        await loggedPage.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
-        await trailerInsertPermitOverview.clickElement(trailerInsertPermitOverview.savePermitButton);
-        await loggedPage.reload();
-        await loggedPage.waitForLoadState('networkidle');
+        await uploadRegistrationDocument();
+        // Guarantee the document persisted before the test runs; retry once if it silently failed.
+        if (!(await firstTrailerHasDocument())) {
+            await uploadRegistrationDocument();
+            await loggedPage.reload();
+            await loggedPage.waitForLoadState('networkidle');
+        }
         await use(trailerDocument);
     },
 
@@ -1057,40 +1101,75 @@ export const test = base.extend<{
         await use({ number });
     },
 
-    trailerData: async ({ loggedPage }, use) => {
-        await loggedPage.goto('/trailers', { waitUntil: 'networkidle' });
-        await loggedPage.getByRole('button', { name: 'All clear icon' }).click();
-        await loggedPage.getByRole('option', { name: 'Active', exact: true }).locator('div').first().click();
-        await loggedPage.waitForResponse(response => response.url().includes('/api/trailers') && (response.status() === 200 || response.status() === 304));
+    // Provides a worker-specific known trailer plus its real /trailers column values,
+    // for tests that need to verify those values elsewhere (e.g. the Add Available Trailer
+    // modal). Mirrors `availableTrailerData`'s candidate selection so each parallel worker
+    // reads a different trailer that has an existing available-trailer record — guaranteeing
+    // it appears in the Add autocomplete and that Save dispatches a PUT.
+    //
+    // /trailers and /available-trailers are mutually exclusive: an available trailer is not
+    // listed on /trailers. A prior test in the same worker may have left the candidate in
+    // /available-trailers, so we first move it back to /trailers (best-effort) before reading.
+    //
+    // Column indices verified against the live /trailers DOM (2026-06-03):
+    //   2=Trl #, 3=Type, 4=Truck, 5=Driver, 6=Third party, 15=Year, 16=VIN,
+    //   28=Availability, 29=Status
+    trailerData: async ({ loggedPage }, use, testInfo) => {
+        const candidates = Constants.workerCandidateAvailableTrailers;
+        const number = candidates[testInfo.workerIndex % candidates.length];
+        const avail = new AvailableTrailersPage(loggedPage);
+        const trailers = new TrailersPage(loggedPage);
 
-        // const availabilityIconClass = await loggedPage.locator('tr td:nth-child(37)').nth(10).locator('i').getAttribute('class');
-        // let availabilityIcon: string | undefined;
+        // The candidate's baseline is /available-trailers. Remove it there so it moves back
+        // onto /trailers (where its data is read and where the Add-Available autocomplete
+        // offers it). Best-effort.
+        const removeFromAvailable = async () => {
+            await loggedPage.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+            await avail.waitForTableLoaded();
+            await avail.searchTrailer(number);
+            if (await avail.getRowByTrailerNumber(number).count() > 0) {
+                await avail.deleteTrailerAccept(number).catch(() => { });
+            }
+        };
 
-        // if (availabilityIconClass?.includes('mdi-check')) {
-        //     availabilityIcon = 'mdi-check';
-        // } else if (availabilityIconClass?.includes('mdi-close-octagon-outline')) {
-        //     availabilityIcon = 'mdi-close-octagon-outline';
-        // }
+        // Move onto /trailers, retrying because the available→/trailers transition lags under
+        // parallel load (the row can take more than one search to appear).
+        let onTrailers = false;
+        for (let attempt = 0; attempt < 3 && !onTrailers; attempt++) {
+            await removeFromAvailable();
+            await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+            await trailers.searchByTrailerNumber(number).catch(() => { });
+            onTrailers = await trailers.getRowByTrailerNumber(number).first().isVisible().catch(() => false);
+        }
 
-        const towingIcon = await getIconFromCell(loggedPage, 'tr td:nth-child(37)', 10);
-        const loadedIcon = await getIconFromCell(loggedPage, 'tr td:nth-child(28)', 10);
-
-        const trailerData = {
-            number: (await loggedPage.locator('.trailer-number').nth(10).textContent())?.trim(),
-            yard: (await loggedPage.locator('tr td:nth-child(10)').nth(10).textContent())?.trim(),
-            driver: (await loggedPage.locator('tr td:nth-child(5)').nth(10).textContent())?.trim(),
-            thirdParty: (await loggedPage.locator('tr td:nth-child(6)').nth(10).textContent())?.trim(),
-            year: (await loggedPage.locator('tr td:nth-child(16)').nth(10).textContent())?.trim(),
-            truckNumber: (await loggedPage.locator('tr td:nth-child(4)').nth(10).textContent())?.trim(),
-            type: (await loggedPage.locator('tr td:nth-child(3)').nth(10).textContent())?.trim(),
-            rentOrBuy: (await loggedPage.locator('tr td:nth-child(27)').nth(10).textContent())?.trim(),
-            available: (await loggedPage.locator('tr td:nth-child(29)').nth(10).textContent())?.trim(),
-            status: (await loggedPage.locator('tr td:nth-child(30)').nth(10).textContent())?.trim(),
-            brokerage: (await loggedPage.locator('tr td:nth-child(31)').nth(10).textContent())?.trim(),
-            towingIcon,
-            loadedIcon
+        const row = trailers.getRowByTrailerNumber(number).first();
+        await row.waitFor({ state: 'visible', timeout: 15000 });
+        // Column indices verified against the live /trailers DOM:
+        //   2=Trl #, 3=Type, 4=Truck, 5=Driver, 6=Third party, 15=Year, 28=Availability, 29=Status
+        const trailerData: TrailerData = {
+            number: (await row.locator('td:nth-child(2)').textContent())?.trim(),
+            type: (await row.locator('td:nth-child(3)').textContent())?.trim(),
+            truckNumber: (await row.locator('td:nth-child(4)').textContent())?.trim(),
+            driver: (await row.locator('td:nth-child(5)').textContent())?.trim(),
+            thirdParty: (await row.locator('td:nth-child(6)').textContent())?.trim(),
+            year: (await row.locator('td:nth-child(15)').textContent())?.trim(),
+            available: (await row.locator('td:nth-child(28)').textContent())?.trim(),
+            status: (await row.locator('td:nth-child(29)').textContent())?.trim(),
         };
         await use(trailerData);
+
+        // Restore the candidate to its /available-trailers baseline so the available-trailer
+        // specs (which use availableTrailerData) find it where they expect. Best-effort —
+        // availableTrailerData also self-heals by re-adding if it is missing.
+        try {
+            await loggedPage.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+            await avail.waitForTableLoaded();
+            await avail.searchTrailer(number);
+            if (await avail.getRowByTrailerNumber(number).count() === 0) {
+                await avail.clearSearch();
+                await avail.addToAvailable(number);
+            }
+        } catch { /* availableTrailerData will re-add on next use */ }
     },
 });
 

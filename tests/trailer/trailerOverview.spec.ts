@@ -3,93 +3,48 @@ import { Constants } from '../../helpers/constants';
 import { test } from '../fixtures/fixtures';
 
 test('Korisnik moze da pretrazuje trailer po kompaniji', async ({ trailerOverviewSetup }) => {
-    await trailerOverviewSetup.selectCompanyFromMenu(trailerOverviewSetup.companyFilter, trailerOverviewSetup.testCompanyOption);
-    const targetRow = trailerOverviewSetup.page.locator('tr', {
-        has: trailerOverviewSetup.page.locator('td:nth-child(7)', { hasText: Constants.testCompany })
-    });
-    await targetRow.first().waitFor({ state: 'visible', timeout: 10000 });
-    const count = await trailerOverviewSetup.companyNameColumn.count();
-    for (let i = 0; i < count; i++) {
-        const cellText = await trailerOverviewSetup.companyNameColumn.nth(i).textContent();
-        expect(cellText?.trim()).toBe(Constants.testCompany);
-    }
+    await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerOverviewSetup.waitForTrailersResponse(() =>
+        trailerOverviewSetup.selectCompanyFromMenu(trailerOverviewSetup.companyFilter, trailerOverviewSetup.testCompanyOption));
+    // Every filtered row must belong to the searched company.
+    await trailerOverviewSetup.expectEveryCellMatches(trailerOverviewSetup.companyNameColumn, t => t === Constants.testCompany);
 });
 
 test('Korisnik moze da pretrazuje trailer po statusu', async ({ trailerOverviewSetup }) => {
-    await trailerOverviewSetup.selectStatusFromStatusMenu(trailerOverviewSetup.statusFilter, trailerOverviewSetup.stolenStatusOption);
-    await trailerOverviewSetup.page.waitForLoadState('networkidle');
-    await expect(trailerOverviewSetup.statusColumn.first()).toContainText(Constants.stolenStatus, { timeout: 5000 });
-    const count = await trailerOverviewSetup.statusColumn.count();
-    for (let i = 0; i < count; i++) {
-        const cellText = await trailerOverviewSetup.statusColumn.nth(i).textContent();
-        expect(cellText?.trim()).toBe(Constants.stolenStatus);
-    }
+    await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+    await trailerOverviewSetup.waitForTrailersResponse(() =>
+        trailerOverviewSetup.selectStatusFromStatusMenu(trailerOverviewSetup.statusFilter, trailerOverviewSetup.stolenStatusOption));
+    await trailerOverviewSetup.expectEveryCellMatches(trailerOverviewSetup.statusColumn, t => t === Constants.stolenStatus);
 });
 
 test('Korisnik moze da pretrazuje trailer po broju trailera', async ({ trailerOverviewSetup }) => {
     await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-    await trailerOverviewSetup.enterTrailerName(trailerOverviewSetup.trailerNumberFilter, Constants.trailerTest);
-    await trailerOverviewSetup.page.waitForLoadState('networkidle');
-    const targetRow = trailerOverviewSetup.page.locator('tr', {
-        has: trailerOverviewSetup.page.locator('td:nth-child(2)', { hasText: Constants.trailerTest })
-    });
-    await trailerOverviewSetup.page.waitForLoadState('networkidle');
-    await targetRow.first().waitFor({ state: 'visible', timeout: 10000 });
-    const count = await trailerOverviewSetup.trailerNameColumn.count();
-    let found = false;
-    for (let i = 0; i < count; i++) {
-        const cellText = await trailerOverviewSetup.trailerNameColumn.nth(i).textContent();
-        if (cellText?.trim() === Constants.trailerTest) {
-            found = true;
-            break;
-        }
-    }
-    expect(found).toBe(true);
+    await trailerOverviewSetup.waitForTrailersResponse(() =>
+        trailerOverviewSetup.enterTrailerName(trailerOverviewSetup.trailerNumberFilter, Constants.trailerTest));
+    // Number filter matches on number OR VIN, so assert the searched trailer is present.
+    await expect(trailerOverviewSetup.getRowByTrailerNumber(Constants.trailerTest).first()).toBeVisible({ timeout: 15000 });
 });
 
 test('Korisnik moze da pretrazuje trailer po driver name', async ({ trailerOverviewSetup }) => {
     await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-    await trailerOverviewSetup.enterDriverName(trailerOverviewSetup.driverNameFilter, Constants.driverName);
-    await trailerOverviewSetup.page.waitForLoadState('networkidle');
-    const targetRow = trailerOverviewSetup.page.locator('tr', {
-        has: trailerOverviewSetup.page.locator('td:nth-child(5)', { hasText: Constants.driverName })
-    });
-    await trailerOverviewSetup.page.waitForLoadState('networkidle');
-    await targetRow.first().waitFor({ state: 'visible', timeout: 10000 });
-    const count = await trailerOverviewSetup.driverNameColumn.count();
-    for (let i = 0; i < count; i++) {
-        const cellText = await trailerOverviewSetup.driverNameColumn.nth(i).textContent();
-        expect(cellText?.trim()).toContain(Constants.driverName);
-    }
+    await trailerOverviewSetup.waitForTrailersResponse(() =>
+        trailerOverviewSetup.enterDriverName(trailerOverviewSetup.driverNameFilter, Constants.driverName));
+    // Every filtered row's driver column must contain the searched driver name.
+    await trailerOverviewSetup.expectEveryCellMatches(trailerOverviewSetup.driverNameColumn, t => t.includes(Constants.driverName));
 });
 
 test('Korisnik moze da pretrazuje trailer po Owneru', async ({ trailerOverviewSetup }) => {
     await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-    await trailerOverviewSetup.enterOwnerrName(trailerOverviewSetup.ownerFilter, Constants.ownerTrailer);
-    await trailerOverviewSetup.page.waitForLoadState('networkidle');
-    const targetRow = trailerOverviewSetup.page.locator('tr', {
-        has: trailerOverviewSetup.page.locator('td:nth-child(8)', { hasText: Constants.ownerTrailer })
-    });
-    await trailerOverviewSetup.page.waitForLoadState('networkidle');
-    await expect(trailerOverviewSetup.ownerNameColumn.first()).toContainText(Constants.ownerTrailer, { timeout: 5000 });
-    await targetRow.first().waitFor({ state: 'visible', timeout: 10000 });
-    const count = await trailerOverviewSetup.ownerNameColumn.count();
-    for (let i = 0; i < count; i++) {
-        const cellText = await trailerOverviewSetup.ownerNameColumn.nth(i).textContent();
-        expect(cellText?.trim()).toContain(Constants.ownerTrailer);
-    }
+    await trailerOverviewSetup.waitForTrailersResponse(() =>
+        trailerOverviewSetup.enterOwnerrName(trailerOverviewSetup.ownerFilter, Constants.ownerTrailer));
+    await trailerOverviewSetup.expectEveryCellMatches(trailerOverviewSetup.ownerNameColumn, t => t.includes(Constants.ownerTrailer));
 });
 
 test('Korisnik moze da pretrazuje trailer po Dealersihp', async ({ trailerOverviewSetup }) => {
     await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-    await trailerOverviewSetup.enterDealershiprName(trailerOverviewSetup.dealerShipFilter, Constants.dealership);
-    await trailerOverviewSetup.page.waitForLoadState('networkidle');
-    await expect(trailerOverviewSetup.dealershipColumn.first()).toContainText(Constants.dealership, { timeout: 5000 });
-    const count = await trailerOverviewSetup.dealershipColumn.count();
-    for (let i = 0; i < count; i++) {
-        const cellText = await trailerOverviewSetup.dealershipColumn.nth(i).textContent();
-        expect(cellText?.trim()).toContain(Constants.dealership);
-    }
+    await trailerOverviewSetup.waitForTrailersResponse(() =>
+        trailerOverviewSetup.enterDealershiprName(trailerOverviewSetup.dealerShipFilter, Constants.dealership));
+    await trailerOverviewSetup.expectEveryCellMatches(trailerOverviewSetup.dealershipColumn, t => t.includes(Constants.dealership));
 });
 
 test('Korisnik moze da otvori trailer history modal', async ({ trailerOverviewSetup }) => {
@@ -179,43 +134,29 @@ test('Korisnik moze da otvori edit modal iz trailer history', async ({ trailerOv
     await expect(trailerOverviewSetup.activeDialogbox).toBeVisible();
 });
 
-test('Korisnik moze da doda, edituje i brise company history', async ({ trailerOverviewSetup }) => {
-    await trailerOverviewSetup.clickElement(trailerOverviewSetup.reloadIconInCompanyColumn.nth(3));
-    trailerOverviewSetup.page.on('dialog', async (dialog) => {
-        await dialog.accept();
-    });
-    const deleteSelector = '.v-list.trailer-history .mdi.mdi-delete';
-    try {
-        await trailerOverviewSetup.page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
-        while (await trailerOverviewSetup.page.locator(deleteSelector).count() > 0) {
-            const previousCount = await trailerOverviewSetup.page.locator(deleteSelector).count();
-            await trailerOverviewSetup.page.locator(deleteSelector).first().click();
-            await trailerOverviewSetup.page.waitForFunction(
-                ({ selector, prevCount }) => {
-                    return document.querySelectorAll(selector).length < prevCount;
-                },
-                { selector: deleteSelector, prevCount: previousCount }
-            );
-        }
-    } catch (e) {
-    }
-    await trailerOverviewSetup.clickElement(trailerOverviewSetup.addHistoryButtonModal);
-    await trailerOverviewSetup.enterOldState(trailerOverviewSetup.oldState, Constants.oldStateValue);
-    await trailerOverviewSetup.enterNewState(trailerOverviewSetup.newState, Constants.newStateValue);
-    await trailerOverviewSetup.dateOfChanged.click();
-    await trailerOverviewSetup.currentDate.click();
-    await trailerOverviewSetup.clickSaveButton();
-    await trailerOverviewSetup.activeDialogbox.waitFor({ state: 'detached' });
-    await expect(trailerOverviewSetup.changedCompanyTitle).toContainText('from ' + Constants.oldStateValue + ' to ' + Constants.newStateValue);
-    await trailerOverviewSetup.pencilIconInModal.click();
-    await trailerOverviewSetup.newState.click();
-    await trailerOverviewSetup.page.keyboard.press('Control+A');
-    await trailerOverviewSetup.page.keyboard.press('Backspace');
-    await trailerOverviewSetup.enterNewState(trailerOverviewSetup.newState, 'edit new state');
-    await trailerOverviewSetup.clickSaveButton();
-    await expect(trailerOverviewSetup.changedCompanyTitle).toContainText('from ' + Constants.oldStateValue + ' to ' + 'edit new state');
-    await trailerOverviewSetup.page.click(deleteSelector);
-    await expect(trailerOverviewSetup.page.locator('text=No field history ...')).toBeVisible();
+test('Korisnik moze da doda, edituje i brise company history', async ({ createdTrailer, trailerOverview }) => {
+    // Use a freshly-created, worker-unique trailer: it has ZERO company-history entries, so
+    // the add/edit/delete assertions match exactly this run's entry. The previous version
+    // used nth(3) of a shared trailer whose history accumulated across runs (deletes are
+    // client-side) and shifted as other workers added trailers — both made it flaky.
+    await trailerOverview.openCompanyHistoryForRow(createdTrailer.number);
+    await trailerOverview.clickElement(trailerOverview.addHistoryButtonModal);
+    await trailerOverview.enterOldState(trailerOverview.oldState, Constants.oldStateValue);
+    await trailerOverview.enterNewState(trailerOverview.newState, Constants.newStateValue);
+    await trailerOverview.dateOfChanged.click();
+    await trailerOverview.currentDate.click();
+    await trailerOverview.clickSaveButton();
+    await trailerOverview.activeDialogbox.waitFor({ state: 'detached' });
+    await expect(trailerOverview.changedCompanyTitle.first()).toContainText('from ' + Constants.oldStateValue + ' to ' + Constants.newStateValue);
+    await trailerOverview.pencilIconInModal.first().click();
+    await trailerOverview.newState.click();
+    await trailerOverview.page.keyboard.press('Control+A');
+    await trailerOverview.page.keyboard.press('Backspace');
+    await trailerOverview.enterNewState(trailerOverview.newState, 'edit new state');
+    await trailerOverview.clickSaveButton();
+    await expect(trailerOverview.changedCompanyTitle.first()).toContainText('from ' + Constants.oldStateValue + ' to ' + 'edit new state');
+    await trailerOverview.page.locator('.v-list.trailer-history .mdi.mdi-delete').first().click();
+    await expect(trailerOverview.page.locator('text=No field history ...')).toBeVisible();
 });
 
 test('Korisnik moze da doda, edituje i brise repair history', async ({ trailerOverviewSetup }) => {

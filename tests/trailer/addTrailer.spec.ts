@@ -1,4 +1,5 @@
 import { expect } from '@playwright/test';
+import { Constants } from '../../helpers/constants';
 import { get17RandomNumbers, get6RandomNumber } from '../../helpers/dateUtilis';
 import { test } from '../fixtures/fixtures';
 
@@ -39,11 +40,12 @@ test('Korisnik moze da doda trailer', async ({ trailerOverviewSetup, addTrailer 
 });
 
 test('Trailer number polje mora biti unique', async ({ trailerOverviewSetup, addTrailer }) => {
-    await trailerOverviewSetup.page.waitForLoadState('networkidle');
-    const name = await trailerOverviewSetup.trailerNameColumn.first().textContent();
+    // Use a stable, known trailer as the duplicate so the test never reads an empty/transient
+    // first-row value under parallel load.
+    await trailerOverviewSetup.searchByTrailerNumber(Constants.trailerTest);
     await trailerOverviewSetup.clickElement(trailerOverviewSetup.addButton);
     await trailerOverviewSetup.page.waitForLoadState('networkidle');
-    await addTrailer.fillTrailerNumber(addTrailer.trailerNumber, (name ?? '').replace(/\s/g, ''));
+    await addTrailer.fillTrailerNumber(addTrailer.trailerNumber, Constants.trailerTest);
     await addTrailer.selectTrailerType(addTrailer.trailertype, addTrailer.dryVanType);
     await addTrailer.selectTrailerYear(addTrailer.trailerYear, addTrailer.year2002);
     await addTrailer.selectPickUpDate(addTrailer.pickUpDate, addTrailer.currentDate);
@@ -52,12 +54,13 @@ test('Trailer number polje mora biti unique', async ({ trailerOverviewSetup, add
     const randomNumberString = get17RandomNumbers().join('');
     await addTrailer.fillVinNumber(addTrailer.vinNumber, randomNumberString);
     await addTrailer.clickSaveButton();
-    await expect(trailerOverviewSetup.page.getByText('This field must be unique')).toBeVisible();
+    await expect(trailerOverviewSetup.page.getByText('This field must be unique')).toBeVisible({ timeout: 15000 });
 });
 
 test('Vin number polje mora biti unique', async ({ trailerOverviewSetup, addTrailer }) => {
-    await trailerOverviewSetup.page.waitForLoadState('networkidle');
-    const vin = await trailerOverviewSetup.vinNumberColumn.first().textContent();
+    // Read the VIN of a stable, known trailer (avoids empty/transient first-row reads under load).
+    await trailerOverviewSetup.searchByTrailerNumber(Constants.trailerTest);
+    const vin = (await trailerOverviewSetup.getRowByTrailerNumber(Constants.trailerTest).first().locator('td:nth-child(16)').textContent())?.trim();
     await trailerOverviewSetup.clickElement(trailerOverviewSetup.addButton);
     await trailerOverviewSetup.page.waitForLoadState('networkidle');
     const trailerNumber = get6RandomNumber().join('');
@@ -69,5 +72,5 @@ test('Vin number polje mora biti unique', async ({ trailerOverviewSetup, addTrai
     await addTrailer.selectTrailerMake(addTrailer.trailerMake, addTrailer.trailerMakeOption);
     await addTrailer.fillVinNumber(addTrailer.vinNumber, (vin ?? '').replace(/\s/g, ''));
     await addTrailer.clickSaveButton();
-    await expect(trailerOverviewSetup.page.getByText('This field must be unique')).toBeVisible();
+    await expect(trailerOverviewSetup.page.getByText('This field must be unique')).toBeVisible({ timeout: 15000 });
 });

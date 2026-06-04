@@ -39,6 +39,21 @@ export class TrailerDocumentPage extends BasePage {
         this.titleInModal = page.locator('.v-card__title.headline')
     }
 
+    // Opens the first /trailers row's document modal and waits for its permit-book list to
+    // finish loading. Opening the modal triggers GET /api/permit-books; waiting for it (rather
+    // than racing a fixed eyeIcon timeout) is what keeps these tests stable under 4-worker load.
+    async openFirstTrailerDocuments(): Promise<void> {
+        const docIcon = this.page.locator('.mdi-file-document-multiple').first();
+        await docIcon.waitFor({ state: 'visible', timeout: 10000 });
+        await Promise.all([
+            this.page.waitForResponse(
+                r => r.url().includes('/api/permit-books') && (r.status() === 200 || r.status() === 304),
+                { timeout: 15000 }
+            ).catch(() => { }),
+            docIcon.click(),
+        ]);
+    }
+
     async deleteAllItemsWithDeleteIcon(): Promise<void> {
         const upload = new InsertPermitBookPage(this.page);
         await upload.loader.waitFor({ state: 'hidden', timeout: 5000 });

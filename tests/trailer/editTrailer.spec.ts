@@ -2,8 +2,12 @@ import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { test } from '../fixtures/fixtures';
 
-test('Korisnik moze da edituje trailer - In company', async ({ editTrailerSetup, editTrailer, trailerOverview }) => {
-    await trailerOverview.clickElement(trailerOverview.pencilIcon.first());
+// `createdTrailer` creates a worker-unique trailer and filters the /trailers table down to
+// it, so every test here edits/asserts/deletes its OWN row. This removes the cross-worker
+// contention that existed when the tests edited and deleted the shared first() trailer.
+
+test('Korisnik moze da edituje trailer - In company', async ({ createdTrailer, editTrailer, trailerOverview }) => {
+    await trailerOverview.openEditModalForRow(createdTrailer.number);
     await editTrailer.check(editTrailer.inCompanyCheckbox);
     await editTrailer.selectDriver(editTrailer.driverMenu, Constants.driverName, editTrailer.driverOption);
     await editTrailer.page.waitForLoadState('networkidle', { timeout: 10000 });
@@ -19,24 +23,26 @@ test('Korisnik moze da edituje trailer - In company', async ({ editTrailerSetup,
     await editTrailer.selectAvailability(editTrailer.availabilityMenu, editTrailer.availabilityOption);
     await editTrailer.clickSaveButton();
     await editTrailer.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
-    await expect(trailerOverview.driverNameColumn.first()).toContainText(Constants.driverName);
-    await expect(trailerOverview.truckColumn.first()).toContainText(Constants.truckName);
-    await expect(trailerOverview.rentOrBuyColumn.first()).toContainText(Constants.rent);
-    await expect(trailerOverview.companyNameColumn.first()).toContainText(Constants.rocketCompany);
-    await expect(trailerOverview.driverPhoneColumn.first()).toContainText(Constants.phoneNumberOfUserApp);
-    await expect(trailerOverview.plateColumn.first()).toContainText(Constants.plateNumber);
-    await expect(trailerOverview.ownerNameColumn.first()).toContainText(Constants.ownerTrailer);
-    await expect(trailerOverview.statusColumn.first()).toContainText(Constants.stolenStatus);
-    await expect(trailerOverview.availabilityColumn.first()).toContainText(Constants.available);
-    trailerOverview.page.on('dialog', async (dialog) => {
-        await dialog.accept();
-    });
-    await editTrailer.clickElement(trailerOverview.deleteIcon.first());
-    await trailerOverview.page.waitForLoadState('networkidle', { timeout: 10000 });
+    // Reload /trailers and re-filter to this trailer: the edit save can drop the column filter,
+    // and the trailer sorts off the first page, so assert on the row located by NUMBER (not the
+    // global .first(), which would read whatever row happens to be first).
+    await trailerOverview.page.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+    await trailerOverview.searchByTrailerNumber(createdTrailer.number);
+    const num = createdTrailer.number;
+    await expect(trailerOverview.cellInRow(num, 5)).toContainText(Constants.driverName);
+    await expect(trailerOverview.cellInRow(num, 4)).toContainText(Constants.truckName);
+    await expect(trailerOverview.cellInRow(num, 26)).toContainText(Constants.rent);
+    await expect(trailerOverview.cellInRow(num, 7)).toContainText(Constants.rocketCompany);
+    await expect(trailerOverview.cellInRow(num, 11)).toContainText(Constants.phoneNumberOfUserApp);
+    await expect(trailerOverview.cellInRow(num, 17)).toContainText(Constants.plateNumber);
+    await expect(trailerOverview.cellInRow(num, 8)).toContainText(Constants.ownerTrailer);
+    await expect(trailerOverview.cellInRow(num, 29)).toContainText(Constants.stolenStatus);
+    await expect(trailerOverview.cellInRow(num, 28)).toContainText(Constants.available);
+    await trailerOverview.deleteRowByTrailerNumber(num);
 });
 
-test('Korisnik moze da edituje trailer - Out of company', async ({ editTrailerSetup, editTrailer, trailerOverview }) => {
-    await trailerOverview.clickElement(trailerOverview.pencilIcon.first());
+test('Korisnik moze da edituje trailer - Out of company', async ({ createdTrailer, editTrailer, trailerOverview }) => {
+    await trailerOverview.openEditModalForRow(createdTrailer.number);
     await editTrailer.check(editTrailer.outOfCompanyCheckbox);
     await editTrailer.selectThirdParty(editTrailer.thirdPartyMenu, editTrailer.thirdPartyOption);
     await editTrailer.selectRentOrBuy(editTrailer.rentBuyMenu, editTrailer.rentOption);
@@ -49,15 +55,15 @@ test('Korisnik moze da edituje trailer - Out of company', async ({ editTrailerSe
     await editTrailer.selectAvailability(editTrailer.availabilityMenu, editTrailer.availabilityOption);
     await editTrailer.clickSaveButton();
     await editTrailer.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
-    await expect(trailerOverview.thirdPartyColumn.first()).toContainText(Constants.owner);
-    await expect(trailerOverview.rentOrBuyColumn.first()).toContainText(Constants.rent);
-    await expect(trailerOverview.plateColumn.first()).toContainText(Constants.plateNumber);
-    await expect(trailerOverview.ownerNameColumn.first()).toContainText(Constants.ownerTrailer);
-    await expect(trailerOverview.statusColumn.first()).toContainText(Constants.stolenStatus);
-    await expect(trailerOverview.availabilityColumn.first()).toContainText(Constants.available);
-    trailerOverview.page.on('dialog', async (dialog) => {
-        await dialog.accept();
-    });
-    await editTrailer.clickElement(trailerOverview.deleteIcon.first());
-    await editTrailer.page.waitForLoadState('networkidle', { timeout: 10000 });
+    // Reload + re-filter, then assert on the row located by NUMBER (see In-company test).
+    await trailerOverview.page.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
+    await trailerOverview.searchByTrailerNumber(createdTrailer.number);
+    const num = createdTrailer.number;
+    await expect(trailerOverview.cellInRow(num, 6)).toContainText(Constants.owner);
+    await expect(trailerOverview.cellInRow(num, 26)).toContainText(Constants.rent);
+    await expect(trailerOverview.cellInRow(num, 17)).toContainText(Constants.plateNumber);
+    await expect(trailerOverview.cellInRow(num, 8)).toContainText(Constants.ownerTrailer);
+    await expect(trailerOverview.cellInRow(num, 29)).toContainText(Constants.stolenStatus);
+    await expect(trailerOverview.cellInRow(num, 28)).toContainText(Constants.available);
+    await trailerOverview.deleteRowByTrailerNumber(num);
 });

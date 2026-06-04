@@ -133,6 +133,17 @@ export class Constants {
         '002920',
         '002907',
     ];
+    // Stable trailers that live permanently on /trailers (NOT in the available-trailer
+    // candidate pool, and never created/deleted by the suite). Each parallel worker picks
+    // one by index so document / permit-book tests don't collide on the same trailer's
+    // documents when running with multiple workers. Verified present on staging /trailers
+    // (2026-06-03). If any goes stale, swap it for another /trailers-resident number.
+    static workerTrailers = [
+        '002889',
+        '002895',
+        '002897',
+        '002899',
+    ];
     static dealership = 'testOwn';
     static oldStateValue = 'old state';
     static newStateValue = 'new state';

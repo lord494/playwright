@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { Locator, Page, expect } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 
 export class TrailersPage extends BasePage {
@@ -134,8 +134,11 @@ export class TrailersPage extends BasePage {
         this.currentDate = page.locator('.v-btn.v-date-picker-table__current').first();
         this.okButton = page.getByRole('button', { name: 'OK', exact: true });
         this.editTrailerButtonInTrailerHistory = page.getByRole('button', { name: 'Edit Trailer', exact: true });
-        this.oldState = page.locator('.v-card__text .v-input__slot').first();
-        this.newState = page.locator('.v-card__text .v-input__slot').nth(1);
+        // Scoped to the active add/edit-history dialog. Page-global `.v-card__text` also
+        // matches inputs left behind (hidden) by the Add-Trailer dialog, so scoping to
+        // `.v-dialog--active` keeps these pointing at the visible history form.
+        this.oldState = page.locator('.v-dialog--active .v-card__text .v-input__slot').first();
+        this.newState = page.locator('.v-dialog--active .v-card__text .v-input__slot').nth(1);
         this.dateOfChanged = page.locator('.v-input', { hasText: 'Date of Change' }).locator('.v-input__control');
         this.activeDialogbox = page.locator('.v-dialog--active');
         this.changedCompanyTitle = page.locator('.TrailerFieldHistory__change');
@@ -286,5 +289,101 @@ export class TrailersPage extends BasePage {
 
     async enterNoteInInfoAndNoteModal(note: string) {
         await this.fillInputField(this.commentInput, note);
+    }
+
+    // === Deterministic synchronization & worker-safe row helpers ===
+    // /trailers is sorted ascending by number and only renders ~7 rows per page, so
+    // positional locators (.first()/.nth()) point at SHARED rows that other parallel
+    // workers add/edit/delete. These helpers let a test scope to ONE specific trailer
+    // (by number) and wait on the real /api/trailers response instead of networkidle.
+    // Verified against staging.vrlz.app DOM (2026-06-03).
+
+    // Awaits the next /api/trailers response that `action` triggers (filter, save, delete).
+    async waitForTrailersResponse(action: () => Promise<void>): Promise<void> {
+        await Promise.all([
+            this.page.waitForResponse(
+                r => r.url().includes('/api/trailers') && (r.status() === 200 || r.status() === 304),
+                { timeout: 15000 }
+            ).catch(() => { }),
+            action(),
+        ]);
+    }
+
+    getRowByTrailerNumber(trailerNumber: string): Locator {
+        return this.page.locator('tbody tr', {
+            has: this.page.locator('td:nth-child(2)', { hasText: trailerNumber })
+        });
+    }
+
+    // Filters the table to a single trailer via the "Trailer/VIN #" column filter.
+    // The input re-renders on focus, so we click the locator and type via the keyboard.
+    // Clears any existing value first, so it is safe to call again (e.g. to re-apply the
+    // filter after a save that reset it).
+    async searchByTrailerNumber(trailerNumber: string): Promise<void> {
+        const filter = this.page.getByLabel('Trailer/VIN #', { exact: true });
+        await filter.waitFor({ state: 'visible', timeout: 10000 });
+        await filter.click();
+        await this.page.keyboard.press('Control+A');
+        await this.page.keyboard.press('Delete');
+        await this.waitForTrailersResponse(() => this.page.keyboard.type(trailerNumber, { delay: 40 }));
+        await this.getRowByTrailerNumber(trailerNumber).first().waitFor({ state: 'visible', timeout: 15000 });
+    }
+
+    async openEditModalForRow(trailerNumber: string): Promise<void> {
+        const row = this.getRowByTrailerNumber(trailerNumber).first();
+        await row.waitFor({ state: 'visible', timeout: 10000 });
+        await row.locator('.mdi.mdi-pencil').click();
+        await this.activeDialogbox.waitFor({ state: 'visible', timeout: 10000 });
+    }
+
+    // Deletes a specific trailer row (native browser confirm) and waits for it to detach.
+    async deleteRowByTrailerNumber(trailerNumber: string): Promise<void> {
+        const row = this.getRowByTrailerNumber(trailerNumber).first();
+        await row.waitFor({ state: 'visible', timeout: 10000 });
+        this.page.once('dialog', async (d) => { await d.accept(); });
+        await this.waitForTrailersResponse(() => row.locator('.mdi.mdi-delete').click());
+        await this.getRowByTrailerNumber(trailerNumber).first().waitFor({ state: 'detached', timeout: 10000 }).catch(() => { });
+    }
+
+    // Returns a specific column cell within a specific trailer's row, located by trailer
+    // number — robust regardless of how many rows the filter currently shows or their order.
+    cellInRow(trailerNumber: string, columnIndex: number): Locator {
+        return this.getRowByTrailerNumber(trailerNumber).first().locator(`td:nth-child(${columnIndex})`);
+    }
+
+    // Row-scoped action icons — resolve to the specific trailer's row, so they keep working
+    // even if the filter momentarily shows more than one row (no reliance on .first()).
+    documentIconForRow(trailerNumber: string): Locator {
+        return this.getRowByTrailerNumber(trailerNumber).first().locator('.mdi-file-document-multiple');
+    }
+
+    uploadIconForRow(trailerNumber: string): Locator {
+        return this.getRowByTrailerNumber(trailerNumber).first().locator('.mdi-upload');
+    }
+
+    async openCompanyHistoryForRow(trailerNumber: string): Promise<void> {
+        const row = this.getRowByTrailerNumber(trailerNumber).first();
+        await row.waitFor({ state: 'visible', timeout: 10000 });
+        await row.locator('td:nth-child(7) .v-icon--link.mdi-history').click();
+        await this.historyModal.waitFor({ state: 'visible', timeout: 10000 });
+    }
+
+    // Polls until EVERY rendered cell of `column` satisfies `predicate`. Re-reads the whole
+    // column each attempt, so a filter that is still settling (or a row being re-rendered by
+    // another worker's change) simply retries instead of asserting against a stale snapshot.
+    async expectEveryCellMatches(
+        column: Locator,
+        predicate: (text: string) => boolean,
+        timeout = 15000,
+    ): Promise<void> {
+        await expect.poll(async () => {
+            const count = await column.count();
+            if (count === 0) return false;
+            for (let i = 0; i < count; i++) {
+                const text = (await column.nth(i).textContent())?.trim() ?? '';
+                if (!predicate(text)) return false;
+            }
+            return true;
+        }, { timeout }).toBe(true);
     }
 }

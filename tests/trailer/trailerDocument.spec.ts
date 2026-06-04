@@ -5,7 +5,7 @@ import { test } from '../fixtures/fixtures';
 test.setTimeout(180000);
 
 test('Dokument moze da edituje status dokumenta u LessThan30', async ({ cleanUpSetupTrailerDocument, trailerDocumentSetup, trailerInsertPermitOverview, trailerOverview }) => {
-    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.openFirstTrailerDocuments();
     await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
     await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
@@ -19,7 +19,7 @@ test('Dokument moze da edituje status dokumenta u LessThan30', async ({ cleanUpS
 });
 
 test('Dokument moze da edituje status dokumenta u valid', async ({ trailerDocumentSetup, trailerInsertPermitOverview, trailerOverview }) => {
-    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.openFirstTrailerDocuments();
     await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
     await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
@@ -31,7 +31,7 @@ test('Dokument moze da edituje status dokumenta u valid', async ({ trailerDocume
 });
 
 test('Korisnik moze da doda novi dokument', async ({ trailerDocumentSetup, trailerInsertPermitOverview, trailerOverview }) => {
-    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.openFirstTrailerDocuments();
     await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
     await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
@@ -44,7 +44,7 @@ test('Korisnik moze da doda novi dokument', async ({ trailerDocumentSetup, trail
 });
 
 test('Korisnik ne moze da doda dokument veci od 10mb', async ({ trailerDocumentSetup, trailerInsertPermitOverview, trailerOverview }) => {
-    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.openFirstTrailerDocuments();
     await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
     await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
@@ -53,7 +53,7 @@ test('Korisnik ne moze da doda dokument veci od 10mb', async ({ trailerDocumentS
 });
 
 test('Korisnik moze da promjeni subtype', async ({ trailerDocumentSetup, trailerInsertPermitOverview, trailerOverview }) => {
-    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.openFirstTrailerDocuments();
     await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
     await trailerInsertPermitOverview.selectSubtypeFromMenu(trailerInsertPermitOverview.documentSubtypeField, trailerInsertPermitOverview.othersSubtype);
@@ -63,7 +63,7 @@ test('Korisnik moze da promjeni subtype', async ({ trailerDocumentSetup, trailer
 });
 
 test('Korisnik moze da otovori dokument na eye ikonicu', async ({ trailerDocumentSetup, trailerOverview }) => {
-    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.openFirstTrailerDocuments();
     await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await trailerDocumentSetup.clickElement(trailerDocumentSetup.eyeIcon);
     await expect(trailerDocumentSetup.titleInModal).toBeVisible();
@@ -71,7 +71,7 @@ test('Korisnik moze da otovori dokument na eye ikonicu', async ({ trailerDocumen
 });
 
 test('Korisnik moze da otovori QR code modal', async ({ trailerDocumentSetup, trailerOverview }) => {
-    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.openFirstTrailerDocuments();
     await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await trailerDocumentSetup.clickElement(trailerDocumentSetup.qrCode);
     await expect(trailerDocumentSetup.titleInModal).toBeVisible();
@@ -79,7 +79,7 @@ test('Korisnik moze da otovori QR code modal', async ({ trailerDocumentSetup, tr
 });
 
 test('Korisnik moze da prebaci dokument vozaca', async ({ trailerDocumentSetup, trailerInsertPermitOverview, trailerOverview }) => {
-    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.openFirstTrailerDocuments();
     await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
     await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
@@ -110,7 +110,7 @@ test('Korisnik moze da prebaci dokument vozaca', async ({ trailerDocumentSetup, 
 });
 
 test('Dokument moze da se prebaci na Truck', async ({ trailerDocumentSetup, insertPermitBookOverview, trailerOverview }) => {
-    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.openFirstTrailerDocuments();
     await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
     await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
@@ -119,7 +119,15 @@ test('Dokument moze da se prebaci na Truck', async ({ trailerDocumentSetup, inse
     await insertPermitBookOverview.doc.last().waitFor({ state: 'visible', timeout: 10000 });
     await insertPermitBookOverview.enterTruckNumber(insertPermitBookOverview.documentReferrerMenu.last(), Constants.truckName, insertPermitBookOverview.truckNumberFromMenu);
     await insertPermitBookOverview.page.waitForLoadState('networkidle');
-    await insertPermitBookOverview.savePermitButton.click();
+    // Wait for the move to persist before navigating to /truck — otherwise the goto cancels
+    // the in-flight save and the document never lands on the truck.
+    await Promise.all([
+        insertPermitBookOverview.page.waitForResponse(
+            r => r.url().includes('/api/permit-books') && (r.status() === 200 || r.status() === 201),
+            { timeout: 15000 }
+        ).catch(() => { }),
+        insertPermitBookOverview.savePermitButton.click(),
+    ]);
     await insertPermitBookOverview.page.waitForLoadState('networkidle');
     await insertPermitBookOverview.page.goto(Constants.truckUrl, { waitUntil: 'networkidle' });
     await trailerOverview.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
@@ -161,7 +169,7 @@ test('Dokument moze da se prebaci na Company', async ({ trailerDocumentSetup, in
 });
 
 test('Korisnik moze da prebaci dokument na drugi trailer', async ({ trailerDocumentSetup, insertPermitBookOverview, trailerOverview }) => {
-    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.openFirstTrailerDocuments();
     await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
     await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 10000 });
     await insertPermitBookOverview.enterSecondTruckNumber(insertPermitBookOverview.documentReferrerMenu.last(), Constants.secondTrailerName, insertPermitBookOverview.secondTrailerNumberFromMenu);
@@ -185,7 +193,7 @@ test('Korisnik moze da prebaci dokument na drugi trailer', async ({ trailerDocum
 });
 
 test('Document subtype polje je obavezno kada korisnik mijenja type', async ({ trailerDocumentSetup, insertPermitBookOverview, trailerOverview }) => {
-    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.openFirstTrailerDocuments();
     await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible' });
     await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
     await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
@@ -195,7 +203,7 @@ test('Document subtype polje je obavezno kada korisnik mijenja type', async ({ t
 });
 
 test('Document referrer polje je obavezno kada korisnik mijenja type', async ({ trailerDocumentSetup, insertPermitBookOverview, trailerOverview }) => {
-    await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+    await trailerDocumentSetup.openFirstTrailerDocuments();
     await trailerDocumentSetup.eyeIcon.first().waitFor({ state: 'visible' });
     await trailerDocumentSetup.clickElement(trailerDocumentSetup.pencilIcon);
     await trailerDocumentSetup.changeFileButton.waitFor({ state: 'visible', timeout: 5000 });
