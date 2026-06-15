@@ -54,4 +54,3 @@ test('Korisnik moze da doda post Load', async ({ addPostLoadSetup, postLoad }) =
     await expect(postLoad.dedicatedColumn).toHaveClass(/mdi-alpha-d-box/);
     await expect(postLoad.trailerTypeColumn).toContainText(Constants.firstTrailerType);
 });
-
