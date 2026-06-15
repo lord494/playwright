@@ -1,66 +1,87 @@
-// import { test, expect } from '@playwright/test';
-// import { createApiContext } from '../api.context';
+import { test, expect } from '../../fixtures/api.fixture';
+import { Constants } from '../../../helpers/constants';
+import { getDashboardDateRange, getLoadDay, uniqueLoadDayOffset } from '../../../helpers/dateUtilis';
 
-// test('Dodavanje load-a', async () => {
-//     const apiContext = await createApiContext();
-//     const newLoad = {
-//         board_id: '67fe6c653cf2fd24d23a0b07',
-//         dateFrom: '2025-12-02',
-//         dateTo: '2025-12-02',
-//         day_key: '02-12-2025',
-//         driver_id: '5fecbc257e8a6a0ed85abf45',
-//         is_critical: true,
-//         is_dedicated: true,
-//         loadType: {
-//             color: '#B71C1CFF',
-//             is_active: true,
-//             type: 'EMPTY, NEED LOAD',
-//             id: '5fa6beffd4d2384bac5f13c6'
-//         },
-//         miles: '',
-//         name: {
-//             lat: 44.2884,
-//             lng: -83.4849,
-//             name: 'East Tawas, MI',
-//         },
-//         origin: '',
-//         price: ''
-//     };
-//     const postResponse = await apiContext.post('/api/loads', { data: newLoad });
-//     expect(postResponse.status()).toBe(200);
-// });
+// API CRUD coverage for Dashboard "Loads". On the UI a load is created/edited by
+// right-clicking a cell; the underlying calls are POST /api/loads (create),
+// PUT /api/loads (edit), DELETE /api/loads/{id}/{board} (delete) and the listing
+// is POST /api/drivers/dashboard. Loads are keyed per driver+day, so each test
+// targets a unique far-future day and cleans up after itself (4-worker safe).
 
-// test('Dodavanje load-a 2', async () => {
-//     const apiContext = await createApiContext();
-//     const newLoad = {
-//         name: {
-//             "lat": 40.1745,
-//             "lng": -80.2325,
-//             "name": "East Washington, PA"
-//         },
-//         origin: "",
-//         price: "",
-//         miles: "",
-//         day_key: "12-02-2025",
-//         day: "2025-12-02T00:00:00.000Z",
-//         driver_id: "6748a622e90d522ad253cca6",
-//         loadType: {
-//             is_active: true,
-//             _id: "5fecbc257e8a6a0ed85abf45",
-//             type: "DEFAULT",
-//             color: "#FFEBEB00",
-//             __v: 0
-//         },
-//         comments: [],
-//         board_id: "67fe6c653cf2fd24d23a0b07",
-//         absenceType: "",
-//         dateFrom: "2025-12-02",
-//         dateTo: "2025-12-02",
-//         is_dedicated: false,
-//         is_critical: false
-//     };
-//     const postResponse = await apiContext.post('/api/loads', { data: newLoad });
-//     expect(postResponse.status()).toBe(200);
-//     const body = await postResponse.json();
-//     console.log('Post response: ', body);
+test.only('Korisnik moze da dobije listu load-ova sa dashboard-a', async ({ loadService }) => {
+    const { startDate, endDate } = getDashboardDateRange();
+    const { body } = await loadService.getDashboard({ byName: Constants.driverName, startDate, endDate });
+
+    expect(body.status).toBe('OK');
+    expect(Array.isArray(body.dispatchers)).toBe(true);
+    const driver = await loadService.findDriver(Constants.driverName, { startDate, endDate });
+    expect(driver._id).toBeDefined();
+    expect(driver.board._id).toBeDefined();
+});
+
+test('Korisnik moze da kreira novi load', async ({ loadService }) => {
+    const day = getLoadDay(1); // TEMP: near day (today+1) so the load is visible in the default dashboard view
+    const range = getDashboardDateRange(day.date);
+    const driver = await loadService.findDriver(Constants.driverName, range);
+    const defaultType = await loadService.getLoadType(Constants.defaultLoad);
+
+    // TEMP: cleanup is off, so remove any load left on this day by a previous run.
+    const stale = await loadService.getLoadByDay(Constants.driverName, day.dayKey, range);
+    if (stale) await loadService.deleteLoad(stale._id, driver.board._id);
+
+    const { load } = await loadService.createLoad({ driver, loadType: defaultType, day });
+
+    expect(load._id).toBeDefined();
+    expect(load.name).toBe(Constants.deliveryCity);
+    expect(load.loadType.type).toBe(Constants.defaultLoad);
+    expect(load.driver_id).toBe(driver._id);
+    expect(load.day_key).toBe(day.dayKey);
+
+    // Confirm it is actually retrievable through the dashboard listing.
+    const fetched = await loadService.getLoadByDay(Constants.driverName, day.dayKey, range);
+    expect(fetched?._id).toBe(load._id);
+
+    // TEMP: concrete proof in the terminal that a load was created on the app.
+    // (Reload the dashboard, search "btest", open the date below to see it.)
+    console.log(`[CREATE] load created on app -> driver: ${Constants.driverName} | date: ${load.day_key} | type: ${load.loadType.type} | city: ${load.name} | _id: ${load._id}`);
+});
+
+test('Korisnik moze da edituje postojeci load', async ({ loadService }) => {
+    const day = getLoadDay(2); // TEMP: near day (today+2) so the load is visible in the default dashboard view
+    const range = getDashboardDateRange(day.date);
+    const driver = await loadService.findDriver(Constants.driverName, range);
+    const defaultType = await loadService.getLoadType(Constants.defaultLoad);
+    const emptyType = await loadService.getLoadType(Constants.emptyNeedLoad);
+
+    // TEMP: cleanup is off, so remove any load left on this day by a previous run.
+    const stale = await loadService.getLoadByDay(Constants.driverName, day.dayKey, range);
+    if (stale) await loadService.deleteLoad(stale._id, driver.board._id);
+
+    const { load, boardId } = await loadService.createLoad({ driver, loadType: defaultType, day });
+    expect(load.loadType.type).toBe(Constants.defaultLoad);
+
+    const { load: updated } = await loadService.updateLoad(load, boardId, { loadType: emptyType });
+
+    expect(updated._id).toBe(load._id);
+    expect(updated.loadType.type).toBe(Constants.emptyNeedLoad);
+
+    // Confirm the change persisted in the dashboard listing.
+    const fetched = await loadService.getLoadByDay(Constants.driverName, day.dayKey, range);
+    expect(fetched?.loadType.type).toBe(Constants.emptyNeedLoad);
+});
+
+// test('Korisnik moze da obrise load', async ({ loadService }) => {
+//     const day = getLoadDay(uniqueLoadDayOffset());
+//     const range = getDashboardDateRange(day.date);
+//     const driver = await loadService.findDriver(Constants.driverName, range);
+//     const defaultType = await loadService.getLoadType(Constants.defaultLoad);
+
+//     const { load, boardId } = await loadService.createLoad({ driver, loadType: defaultType, day });
+
+//     const response = await loadService.deleteLoad(load._id, boardId);
+//     expect(response.status()).toBe(200);
+
+//     // Confirm the load is gone from the dashboard listing.
+//     const fetched = await loadService.getLoadByDay(Constants.driverName, day.dayKey, range);
+//     expect(fetched).toBeUndefined();
 // });

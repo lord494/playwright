@@ -278,6 +278,20 @@ export class Constants {
     static blockedStatusColor = 'rgb(255, 0, 0)';
     static defaultCallTypeColor = 'rgb(13, 104, 161, 0)';
 
+    // ===== DASHBOARD LOADS (API) =====
+    // Top-level board the Dashboard queries; the btest driver lives on a sub-board
+    // (B1) whose id is read per-driver from the dashboard response, never hardcoded.
+    static dashboardBoardId = '67fe6c653cf2fd24d23a0b07';
+    // Fixed geocoded delivery city used as load input. `name` matches Constants.deliveryCity.
+    static deliveryCityGeo = { lat: 40.1745, lng: -80.2325, name: 'East Washington, PA' };
+
+    // ===== PREBOOK LOADS (API) =====
+    // Existing company on staging used as the prebook load broker company.
+    static prebookApiCompany = 'ACEM TRUCKING GROUP LLC';
+    // Geocoded origin/destination cities used as prebook load input.
+    static prebookOriginGeo = { lat: 44.9432, lng: -90.3169, name: 'Abbotsford, WI' };
+    static prebookDestinationGeo = { lat: 45.4646, lng: -98.468, name: 'Aberdeen, SD' };
+
     // ===== URLS =====
     static dashboardUrl = '/dashboard';
     static user = 'USER';
@@ -386,6 +400,14 @@ export class Constants {
 
     static leasingClientsClientTypeCompany = 'Company';
     static leasingClientsPresidentValue = 'Petar Petrović';
+
+    // Name prefix for companies created via the API tests. Keeps the `PW` test
+    // entity prefix (see leasingTestEntityPrefix) so 4-worker cleanup helpers and
+    // manual triage can spot them. Literal, not interpolated, because static field
+    // initializers run top-to-bottom and leasingTestEntityPrefix is declared below.
+    static leasingApiCompanyNamePrefix = 'PWApiCo';
+    // Status a freshly created company starts in (server default on POST /ms-leasing/company).
+    static leasingCompanyDefaultStatus = 'PENDING';
 
     // ===== NEW COMPANY MODAL (Leasing Clients) =====
     static newCompanyModalTitle = 'New company';

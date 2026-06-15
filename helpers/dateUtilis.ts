@@ -408,6 +408,45 @@ export async function safeDeleteLeasingClient(page: Page, identifier: string): P
     ]);
 }
 
+// ===== Dashboard load helpers =====
+// A load is identified server-side by driver + day. These build the date fields a
+// load create/list call needs from a single JS Date, in the exact formats the API
+// expects (verified against /api/loads on staging).
+export type LoadDay = { date: Date; dayKey: string; dayIso: string; dayField: string };
+
+export function getLoadDay(offsetDays = 0): LoadDay {
+    const date = new Date();
+    date.setDate(date.getDate() + offsetDays);
+    const dd = String(date.getDate()).padStart(2, '0');
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const yyyy = date.getFullYear();
+    return {
+        date,
+        dayKey: `${dd}-${mm}-${yyyy}`,        // DD-MM-YYYY (driver.loads key)
+        dayIso: `${yyyy}-${mm}-${dd}`,        // YYYY-MM-DD (dateFrom / dateTo)
+        dayField: `${yyyy}-${mm}-${dd}T00:00:01.000Z`, // `day` field
+    };
+}
+
+// The dashboard POST needs a startDate/endDate window. Build one that brackets the
+// given day so a load on that day is returned. Times are UTC; the app treats local
+// midnight (Europe/Belgrade) as the previous day 22:00Z.
+export function getDashboardDateRange(around: Date = new Date()): { startDate: string; endDate: string } {
+    const y = around.getFullYear(), m = around.getMonth(), d = around.getDate();
+    return {
+        startDate: new Date(Date.UTC(y, m, d - 1, 22, 0, 0, 0)).toISOString(),
+        endDate: new Date(Date.UTC(y, m, d + 1, 21, 59, 59, 999)).toISOString(),
+    };
+}
+
+// Loads are keyed per driver+day, so concurrent workers (4 in CI) and reruns must
+// pick distinct days to stay independent. Returns a far-future offset banded by
+// worker index — well past any real scheduled load, with cleanup as a backstop.
+export function uniqueLoadDayOffset(): number {
+    const workerIndex = parseInt(process.env.TEST_WORKER_INDEX ?? '0', 10);
+    return 60 + workerIndex * 40 + Math.floor(Math.random() * 30);
+}
+
 export function generateUniqueTrailerNumber(): string {
     const workerIndex = process.env.TEST_WORKER_INDEX ?? '0';
     return `${workerIndex}${Date.now().toString().slice(-7)}`;
