@@ -58,7 +58,7 @@ export class AddEditPostLoadPage extends BasePage {
         this.saveButton = page.getByRole('button', { name: 'Save' });
         this.originOption = page.getByRole('option', { name: 'East Washington, PA', exact: true });
         this.destinationOption = page.getByRole('option', { name: 'East Los Angeles, CA', exact: true });
-        this.companyOption = page.getByRole('option', { name: '11 Test kompanija', exact: true });
+        this.companyOption = page.getByRole('option', { name: 'Barilla City', exact: true });
         this.addEditDialogbox = page.locator('.v-dialog.v-dialog--active');
         this.todayDate = page.locator('.v-date-picker-table__current.v-btn--rounded');
         this.miamiOption = page.getByRole('option', { name: 'Miami, FL', exact: true });

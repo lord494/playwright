@@ -199,7 +199,7 @@ export class Constants {
     static year2022 = '2022';
     static cumminsTruckEngine = 'Cummins';
     static automaticTransmission = 'Automatic';
-    static testKompanija011 = '11 Test kompanija';
+    static testKompanija011 = 'Barilla City';
     static weight = '24000';
     static suggestedRate = '700';
     static freighttincCompany = '99 FREIGHT INC';

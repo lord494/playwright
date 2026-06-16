@@ -8,7 +8,7 @@ import { getDashboardDateRange, getLoadDay, uniqueLoadDayOffset } from '../../..
 // is POST /api/drivers/dashboard. Loads are keyed per driver+day, so each test
 // targets a unique far-future day and cleans up after itself (4-worker safe).
 
-test.only('Korisnik moze da dobije listu load-ova sa dashboard-a', async ({ loadService }) => {
+test('Korisnik moze da dobije listu load-ova sa dashboard-a', async ({ loadService }) => {
     const { startDate, endDate } = getDashboardDateRange();
     const { body } = await loadService.getDashboard({ byName: Constants.driverName, startDate, endDate });
 
