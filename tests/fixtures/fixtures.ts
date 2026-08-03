@@ -1,4 +1,5 @@
-import { test as base, Page, BrowserContext, expect } from '@playwright/test';
+import { test as base, expect } from './diagnostics.fixtures';
+import type { Page, BrowserContext } from '@playwright/test';
 import { ShopPage } from '../../page/shop/shopOvervirew.page';
 import { Constants } from '../../helpers/constants';
 import { EditAndWriteReview } from '../../page/shop/editAndWriteReview.page';
@@ -183,11 +184,8 @@ export const test = base.extend<{
     editOwnerOperatorModal: EditOwnerOperatorModalPage;
     underwritingModal: UnderwritingModalPage;
 }>({
-    loggedPage: async ({ browser }, use) => {
-        const context: BrowserContext = await browser.newContext({ storageState: 'auth.json' });
-        const page = await context.newPage();
+    loggedPage: async ({ page }, use) => {
         await use(page);
-        await context.close();
     },
 
     shopPage: async ({ loggedPage }, use) => {

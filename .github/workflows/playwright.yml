@@ -319,67 +319,360 @@
 
 #           echo "No failed Playwright tests detected."
 
+
+
+# Ovaj ispod radi ali zbog nekih promjena cu zakomentarisati
+
+# name: Run Changed Playwright Tests
+
+# on:
+#   push:
+#     branches: [ main ]
+
+# jobs:
+#   run-playwright-tests:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v3
+#         with:
+#           fetch-depth: 0
+
+#       - name: Login to Docker Hub
+#         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+#       - name: Build Docker image
+#         run: docker build -t ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest .
+
+#       - name: Push Docker image
+#         run: docker push ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest
+
+#       - name: Detect changed folders and map to test dirs
+#         run: |
+#           echo "Detecting changes..."
+
+#           CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+#           echo "Changed files:"
+#           echo "$CHANGED_FILES"
+
+#           TEST_DIRS_SET=()
+
+#           for file in $CHANGED_FILES; do
+#             if [[ "$file" == page/*/* ]]; then
+#               feature=$(echo "$file" | cut -d/ -f2)
+#               test_path="tests/$feature"
+#               if [ -d "$test_path" ]; then
+#                 TEST_DIRS_SET+=("$test_path")
+#               fi
+#             fi
+
+#             if [[ "$file" == tests/*/* ]]; then
+#               feature=$(echo "$file" | cut -d/ -f2)
+#               test_path="tests/$feature"
+#               if [ -d "$test_path" ]; then
+#                 TEST_DIRS_SET+=("$test_path")
+#               fi
+#             fi
+#           done
+
+#           UNIQUE_TEST_DIRS=$(printf "%s\n" "${TEST_DIRS_SET[@]}" | sort -u | tr '\n' ' ')
+#           echo "TEST_DIRS=$UNIQUE_TEST_DIRS" >> $GITHUB_ENV
+#           echo "Will run tests in: $UNIQUE_TEST_DIRS"
+
+#       - name: Run matched Playwright tests in Docker
+#         if: env.TEST_DIRS != ''
+#         run: |
+#           echo "Running Playwright tests for changed areas: $TEST_DIRS"
+
+#           mkdir -p playwright-report
+#           mkdir -p test-results
+
+#           set +e
+
+#           docker run --rm \
+#             -e CI=true \
+#             -e PLAYWRIGHT_HTML_OPEN=never \
+#             -v ${{ github.workspace }}/playwright-report:/app/playwright-report \
+#             -v ${{ github.workspace }}/test-results:/app/test-results \
+#             ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest \
+#             sh -c "cd /app && npx playwright test $TEST_DIRS --trace=retain-on-failure --reporter=line,html" \
+#             2>&1 | tee playwright-output.log
+
+#           TEST_EXIT_CODE=${PIPESTATUS[0]}
+
+#           echo "$TEST_EXIT_CODE" > playwright-exit-code.txt
+
+#           echo "Playwright exit code: $TEST_EXIT_CODE"
+#           echo "Saved Playwright output:"
+#           cat playwright-output.log
+
+#           echo "Checking generated folders:"
+#           ls -la
+#           ls -la playwright-report || true
+#           ls -la test-results || true
+
+#           exit 0
+
+#       - name: Ask Claude to analyze failed Playwright tests
+#         if: always()
+#         env:
+#           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+#         run: |
+#           set +e
+#           echo "Claude step started."
+
+#           if [ ! -f playwright-exit-code.txt ]; then
+#             echo "No playwright-exit-code.txt found. Probably no tests were executed."
+#             exit 0
+#           fi
+
+#           TEST_EXIT_CODE=$(cat playwright-exit-code.txt)
+#           echo "Detected Playwright exit code: $TEST_EXIT_CODE"
+
+#           if [ "$TEST_EXIT_CODE" = "0" ]; then
+#             echo "Playwright tests passed. Claude analysis is not needed."
+#             exit 0
+#           fi
+
+#           echo "# Claude Analysis" > claude-analysis.md
+
+#           if [ ! -f playwright-output.log ]; then
+#             echo "playwright-output.log was not found." >> claude-analysis.md
+#             exit 0
+#           fi
+
+#           # Build JSON request safely with jq:
+#           #   --rawfile reads the log file directly into a variable (no bash quoting issues)
+#           #   --arg passes the prompt as a literal string
+#           jq -n \
+#             --rawfile output playwright-output.log \
+#             --arg model "claude-sonnet-4-5" \
+#             --arg prompt "Analyze this failed Playwright test output. Be specific. Do not give a generic template. If there is an assertion error, explain expected vs received. Tell me if it is a test issue or application bug. Suggest a concrete Playwright fix if possible." \
+#             '{
+#               model: $model,
+#               max_tokens: 1500,
+#               messages: [
+#                 {
+#                   role: "user",
+#                   content: ($prompt + "\n\nHere is the output:\n\n" + $output)
+#                 }
+#               ]
+#             }' > claude-request.json
+
+#           if [ ! -s claude-request.json ]; then
+#             echo "Failed to build Claude request JSON." >> claude-analysis.md
+#             exit 0
+#           fi
+
+#           echo "Sending request to Claude..."
+
+#           HTTP_CODE=$(curl -sS -o claude-raw-response.json -w "%{http_code}" \
+#             https://api.anthropic.com/v1/messages \
+#             --header "x-api-key: $ANTHROPIC_API_KEY" \
+#             --header "anthropic-version: 2023-06-01" \
+#             --header "content-type: application/json" \
+#             --data @claude-request.json)
+
+#           echo "Claude API HTTP status: $HTTP_CODE"
+
+#           if [ "$HTTP_CODE" != "200" ]; then
+#             echo "Claude API returned status $HTTP_CODE." >> claude-analysis.md
+#             echo "" >> claude-analysis.md
+#             echo "Raw response:" >> claude-analysis.md
+#             echo '```json' >> claude-analysis.md
+#             cat claude-raw-response.json >> claude-analysis.md 2>/dev/null || echo "(no body)" >> claude-analysis.md
+#             echo '```' >> claude-analysis.md
+#             exit 0
+#           fi
+
+#           jq -r '.content[0].text // .error.message // "Claude returned no readable response."' \
+#             claude-raw-response.json >> claude-analysis.md
+
+#           echo "Claude analysis written to claude-analysis.md"
+#           exit 0
+
+#       - name: Upload Claude Analysis
+#         if: always()
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: claude-analysis
+#           path: |
+#             claude-analysis.md
+#             claude-raw-response.json
+#             claude-request.json
+#             playwright-output.log
+#             playwright-exit-code.txt
+#           if-no-files-found: ignore
+
+#       - name: Prepare Playwright HTML Report folder structure
+#         if: always()
+#         run: |
+#           if [ -d playwright-report ] && [ "$(ls -A playwright-report 2>/dev/null)" ]; then
+#             mkdir -p upload-tmp
+#             cp -r playwright-report upload-tmp/playwright-report
+#             echo "Prepared upload-tmp/playwright-report:"
+#             ls -la upload-tmp/playwright-report
+#           else
+#             echo "playwright-report folder is empty or missing — skipping wrapping."
+#           fi
+
+#       - name: Upload Playwright HTML Report
+#         if: always()
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: playwright-report
+#           path: upload-tmp/
+#           if-no-files-found: warn
+
+#       - name: Upload Playwright Test Results
+#         if: always()
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: playwright-test-results
+#           path: test-results
+#           if-no-files-found: ignore
+
+#       - name: Fail workflow if Playwright tests failed
+#         if: always()
+#         run: |
+#           if [ -f playwright-exit-code.txt ]; then
+#             TEST_EXIT_CODE=$(cat playwright-exit-code.txt)
+
+#             if [ "$TEST_EXIT_CODE" != "0" ]; then
+#               echo "Playwright tests failed with exit code $TEST_EXIT_CODE"
+#               exit 1
+#             fi
+#           fi
+
+#           echo "No failed Playwright tests detected."
+
 name: Run Changed Playwright Tests
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
   run-playwright-tests:
     runs-on: ubuntu-latest
 
     steps:
+      # ---------------------------------------------------------
+      # 1. Preuzimanje repository koda
+      # ---------------------------------------------------------
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # ---------------------------------------------------------
+      # 2. Docker Hub login
+      # ---------------------------------------------------------
       - name: Login to Docker Hub
-        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
+      # ---------------------------------------------------------
+      # 3. Build Docker image
+      # ---------------------------------------------------------
       - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest .
-
-      - name: Push Docker image
-        run: docker push ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest
-
-      - name: Detect changed folders and map to test dirs
         run: |
-          echo "Detecting changes..."
+          docker build \
+            -t ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest \
+            .
 
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }})
+      # ---------------------------------------------------------
+      # 4. Push Docker image
+      # ---------------------------------------------------------
+      - name: Push Docker image
+        run: |
+          docker push \
+            ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest
+
+      # ---------------------------------------------------------
+      # 5. Pronalaženje test foldera koji treba da se pokrenu
+      # ---------------------------------------------------------
+      - name: Detect changed folders and map to test dirs
+        id: detect-tests
+        shell: bash
+        run: |
+          echo "Detecting changed files..."
+
+          CHANGED_FILES=$(git diff \
+            --name-only \
+            "${{ github.event.before }}" \
+            "${{ github.sha }}")
+
           echo "Changed files:"
           echo "$CHANGED_FILES"
 
           TEST_DIRS_SET=()
+          RUN_ALL_TESTS=false
 
           for file in $CHANGED_FILES; do
+
+            # Promjena Page Object fajla:
+            # page/trailer/... -> tests/trailer
             if [[ "$file" == page/*/* ]]; then
               feature=$(echo "$file" | cut -d/ -f2)
               test_path="tests/$feature"
+
               if [ -d "$test_path" ]; then
                 TEST_DIRS_SET+=("$test_path")
               fi
             fi
 
+            # Promjena samog testa:
+            # tests/trailer/... -> tests/trailer
             if [[ "$file" == tests/*/* ]]; then
               feature=$(echo "$file" | cut -d/ -f2)
               test_path="tests/$feature"
+
               if [ -d "$test_path" ]; then
                 TEST_DIRS_SET+=("$test_path")
               fi
             fi
+
+            # Promjena zajedničkih fixture-a, helpera ili configa
+            # može uticati na sve testove.
+            if [[ "$file" == fixtures/* ]] ||
+               [[ "$file" == helpers/* ]] ||
+               [[ "$file" == "playwright.config.ts" ]] ||
+               [[ "$file" == "globalSetup.ts" ]]; then
+              RUN_ALL_TESTS=true
+            fi
           done
 
-          UNIQUE_TEST_DIRS=$(printf "%s\n" "${TEST_DIRS_SET[@]}" | sort -u | tr '\n' ' ')
-          echo "TEST_DIRS=$UNIQUE_TEST_DIRS" >> $GITHUB_ENV
-          echo "Will run tests in: $UNIQUE_TEST_DIRS"
+          if [ "$RUN_ALL_TESTS" = true ]; then
+            TEST_DIRS="tests"
+          else
+            TEST_DIRS=$(printf "%s\n" "${TEST_DIRS_SET[@]}" |
+              sort -u |
+              tr '\n' ' ' |
+              xargs)
+          fi
 
+          echo "TEST_DIRS=$TEST_DIRS" >> "$GITHUB_ENV"
+          echo "Selected test directories: $TEST_DIRS"
+
+      # ---------------------------------------------------------
+      # 6. Pokretanje Playwright testova u Dockeru
+      #
+      # Važno:
+      # - ne koristimo --reporter jer reporteri dolaze iz configa
+      # - čuvamo exit code
+      # - workflow nastavlja da bi napravio analizu i artefakte
+      # ---------------------------------------------------------
       - name: Run matched Playwright tests in Docker
+        id: playwright-tests
         if: env.TEST_DIRS != ''
+        shell: bash
         run: |
-          echo "Running Playwright tests for changed areas: $TEST_DIRS"
+          echo "Running tests for: $TEST_DIRS"
 
           mkdir -p playwright-report
           mkdir -p test-results
@@ -389,156 +682,332 @@ jobs:
           docker run --rm \
             -e CI=true \
             -e PLAYWRIGHT_HTML_OPEN=never \
-            -v ${{ github.workspace }}/playwright-report:/app/playwright-report \
-            -v ${{ github.workspace }}/test-results:/app/test-results \
-            ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest \
-            sh -c "cd /app && npx playwright test $TEST_DIRS --trace=retain-on-failure --reporter=line,html" \
-            2>&1 | tee playwright-output.log
+            -e TEST_DIRS="$TEST_DIRS" \
+            -v "${{ github.workspace }}/playwright-report:/app/playwright-report" \
+            -v "${{ github.workspace }}/test-results:/app/test-results" \
+            "${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest" \
+            sh -lc '
+              set +e
+
+              echo "Running Playwright tests: $TEST_DIRS"
+
+              npx playwright test $TEST_DIRS
+              TEST_EXIT_CODE=$?
+
+              echo "Playwright exit code inside container: $TEST_EXIT_CODE"
+
+              if [ -f test-results/results.json ]; then
+                echo "Building structured failure context..."
+
+                npm run build:failure-context
+
+                CONTEXT_EXIT_CODE=$?
+
+                if [ "$CONTEXT_EXIT_CODE" != "0" ]; then
+                  echo "Failure-context generation failed."
+                fi
+              else
+                echo "test-results/results.json was not generated."
+              fi
+
+              exit "$TEST_EXIT_CODE"
+            ' 2>&1 | tee playwright-output.log
 
           TEST_EXIT_CODE=${PIPESTATUS[0]}
 
           echo "$TEST_EXIT_CODE" > playwright-exit-code.txt
 
           echo "Playwright exit code: $TEST_EXIT_CODE"
-          echo "Saved Playwright output:"
-          cat playwright-output.log
 
-          echo "Checking generated folders:"
-          ls -la
-          ls -la playwright-report || true
-          ls -la test-results || true
+          echo "Generated test-results files:"
+          find test-results -maxdepth 4 -type f -print || true
 
+          echo "Generated Playwright report files:"
+          find playwright-report -maxdepth 3 -type f -print || true
+
+          # Ne obaramo workflow još uvijek.
+          # Prvo moraju da se naprave analiza i artefakti.
           exit 0
 
+      # ---------------------------------------------------------
+      # 7. Situacija kada nije pronađen nijedan test folder
+      # ---------------------------------------------------------
+      - name: Record skipped test execution
+        if: env.TEST_DIRS == ''
+        shell: bash
+        run: |
+          echo "No matching test directories were found."
+          echo "0" > playwright-exit-code.txt
+
+      # ---------------------------------------------------------
+      # 8. Objedinjavanje svih browser-diagnostics.json fajlova
+      #
+      # Jedan test može imati:
+      # - prvi failed pokušaj
+      # - failed retry
+      #
+      # Svaki pokušaj može imati svoj diagnostics JSON.
+      # ---------------------------------------------------------
+      - name: Build diagnostics bundle
+        if: always()
+        shell: bash
+        run: |
+          DIAGNOSTICS_FILES=$(find test-results \
+            -type f \
+            -name "browser-diagnostics.json" \
+            2>/dev/null || true)
+
+          if [ -z "$DIAGNOSTICS_FILES" ]; then
+            echo "[]" > test-results/diagnostics-bundle.json
+            echo "No browser diagnostics files were found."
+            exit 0
+          fi
+
+          echo "$DIAGNOSTICS_FILES" |
+            sort |
+            xargs jq -s '.' \
+            > test-results/diagnostics-bundle.json
+
+          echo "Diagnostics bundle created:"
+          jq length test-results/diagnostics-bundle.json
+
+      # ---------------------------------------------------------
+      # 9. Claude analiza samo kada su testovi pali
+      # ---------------------------------------------------------
       - name: Ask Claude to analyze failed Playwright tests
         if: always()
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_MODEL: claude-sonnet-4-6
+        shell: bash
         run: |
           set +e
-          echo "Claude step started."
+
+          echo "Claude analysis step started."
 
           if [ ! -f playwright-exit-code.txt ]; then
-            echo "No playwright-exit-code.txt found. Probably no tests were executed."
+            echo "playwright-exit-code.txt does not exist."
             exit 0
           fi
 
           TEST_EXIT_CODE=$(cat playwright-exit-code.txt)
+
           echo "Detected Playwright exit code: $TEST_EXIT_CODE"
 
           if [ "$TEST_EXIT_CODE" = "0" ]; then
-            echo "Playwright tests passed. Claude analysis is not needed."
+            echo "Tests passed. Claude analysis is not required."
             exit 0
           fi
 
-          echo "# Claude Analysis" > claude-analysis.md
+          echo "# Playwright CI Failure Analysis" > claude-analysis.md
+
+          if [ ! -f test-results/failure-context.json ]; then
+            echo "" >> claude-analysis.md
+            echo "failure-context.json was not generated." \
+              >> claude-analysis.md
+            exit 0
+          fi
+
+          if [ ! -f test-results/diagnostics-bundle.json ]; then
+            echo "[]" > test-results/diagnostics-bundle.json
+          fi
 
           if [ ! -f playwright-output.log ]; then
-            echo "playwright-output.log was not found." >> claude-analysis.md
-            exit 0
+            touch playwright-output.log
           fi
 
-          # Build JSON request safely with jq:
-          #   --rawfile reads the log file directly into a variable (no bash quoting issues)
-          #   --arg passes the prompt as a literal string
           jq -n \
-            --rawfile output playwright-output.log \
-            --arg model "claude-sonnet-4-5" \
-            --arg prompt "Analyze this failed Playwright test output. Be specific. Do not give a generic template. If there is an assertion error, explain expected vs received. Tell me if it is a test issue or application bug. Suggest a concrete Playwright fix if possible." \
+            --rawfile failureContext test-results/failure-context.json \
+            --rawfile diagnostics test-results/diagnostics-bundle.json \
+            --rawfile terminalOutput playwright-output.log \
+            --arg model "$CLAUDE_MODEL" \
             '{
               model: $model,
-              max_tokens: 1500,
+              max_tokens: 4000,
               messages: [
                 {
                   role: "user",
-                  content: ($prompt + "\n\nHere is the output:\n\n" + $output)
+                  content: (
+                    "Analyze this failed Playwright CI run.\n\n" +
+
+                    "Your analysis must be based only on the supplied evidence. " +
+                    "Do not classify a failure as an application bug only because " +
+                    "a test timed out, a locator was missing, or a page was closed.\n\n" +
+
+                    "Group tests that appear to share the same root cause.\n\n" +
+
+                    "Use exactly one classification for each failure group:\n" +
+                    "- Confirmed application bug\n" +
+                    "- Likely application bug\n" +
+                    "- Confirmed automation issue\n" +
+                    "- Likely automation issue\n" +
+                    "- Test-data issue\n" +
+                    "- Environment/CI issue\n" +
+                    "- Dependency/service issue\n" +
+                    "- Inconclusive\n\n" +
+
+                    "Use exactly one confidence level:\n" +
+                    "- High\n" +
+                    "- Medium\n" +
+                    "- Low\n\n" +
+
+                    "For every failure group include:\n" +
+                    "1. Affected tests\n" +
+                    "2. Immediate failure\n" +
+                    "3. Confirmed evidence\n" +
+                    "4. Most likely root cause\n" +
+                    "5. Classification\n" +
+                    "6. Confidence\n" +
+                    "7. Severity\n" +
+                    "8. Recommended next actions\n" +
+                    "9. Changes that should not be made\n" +
+                    "10. Relevant artifacts\n\n" +
+
+                    "Clearly separate confirmed facts from hypotheses.\n" +
+                    "Do not recommend fixed waits or increasing timeouts unless " +
+                    "the evidence specifically supports that action.\n\n" +
+
+                    "End the report with:\n" +
+                    "- Overall run summary\n" +
+                    "- Release risk\n" +
+                    "- Suggested owner for each failure group\n" +
+                    "- Prioritized next actions\n\n" +
+
+                    "STRUCTURED FAILURE CONTEXT:\n" +
+                    $failureContext +
+
+                    "\n\nBROWSER AND NETWORK DIAGNOSTICS:\n" +
+                    $diagnostics +
+
+                    "\n\nPLAYWRIGHT TERMINAL OUTPUT:\n" +
+                    $terminalOutput
+                  )
                 }
               ]
             }' > claude-request.json
 
           if [ ! -s claude-request.json ]; then
-            echo "Failed to build Claude request JSON." >> claude-analysis.md
+            echo "" >> claude-analysis.md
+            echo "Claude request JSON could not be created." \
+              >> claude-analysis.md
             exit 0
           fi
 
-          echo "Sending request to Claude..."
+          echo "Sending request to Claude model: $CLAUDE_MODEL"
 
-          HTTP_CODE=$(curl -sS -o claude-raw-response.json -w "%{http_code}" \
+          HTTP_CODE=$(curl \
+            --silent \
+            --show-error \
+            --output claude-raw-response.json \
+            --write-out "%{http_code}" \
             https://api.anthropic.com/v1/messages \
             --header "x-api-key: $ANTHROPIC_API_KEY" \
             --header "anthropic-version: 2023-06-01" \
             --header "content-type: application/json" \
             --data @claude-request.json)
 
-          echo "Claude API HTTP status: $HTTP_CODE"
+          echo "Claude API status: $HTTP_CODE"
 
           if [ "$HTTP_CODE" != "200" ]; then
-            echo "Claude API returned status $HTTP_CODE." >> claude-analysis.md
             echo "" >> claude-analysis.md
-            echo "Raw response:" >> claude-analysis.md
+            echo "Claude API returned HTTP status $HTTP_CODE." \
+              >> claude-analysis.md
+            echo "" >> claude-analysis.md
             echo '```json' >> claude-analysis.md
-            cat claude-raw-response.json >> claude-analysis.md 2>/dev/null || echo "(no body)" >> claude-analysis.md
+            cat claude-raw-response.json \
+              >> claude-analysis.md 2>/dev/null || true
             echo '```' >> claude-analysis.md
             exit 0
           fi
 
-          jq -r '.content[0].text // .error.message // "Claude returned no readable response."' \
-            claude-raw-response.json >> claude-analysis.md
+          jq -r \
+            '.content[0].text // .error.message // "Claude returned no readable analysis."' \
+            claude-raw-response.json \
+            >> claude-analysis.md
 
-          echo "Claude analysis written to claude-analysis.md"
-          exit 0
+          echo "Claude analysis created successfully."
 
-      - name: Upload Claude Analysis
+      # ---------------------------------------------------------
+      # 10. Claude report prikazan direktno u GitHub job summary
+      # ---------------------------------------------------------
+      - name: Add Claude analysis to job summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f claude-analysis.md ]; then
+            cat claude-analysis.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## Claude analysis was not generated" \
+              >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # ---------------------------------------------------------
+      # 11. Upload Claude analize
+      # ---------------------------------------------------------
+      - name: Upload Claude analysis
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: claude-analysis
+          name: claude-analysis-${{ github.run_id }}
           path: |
             claude-analysis.md
             claude-raw-response.json
             claude-request.json
             playwright-output.log
             playwright-exit-code.txt
-          if-no-files-found: ignore
-
-      - name: Prepare Playwright HTML Report folder structure
-        if: always()
-        run: |
-          if [ -d playwright-report ] && [ "$(ls -A playwright-report 2>/dev/null)" ]; then
-            mkdir -p upload-tmp
-            cp -r playwright-report upload-tmp/playwright-report
-            echo "Prepared upload-tmp/playwright-report:"
-            ls -la upload-tmp/playwright-report
-          else
-            echo "playwright-report folder is empty or missing — skipping wrapping."
-          fi
-
-      - name: Upload Playwright HTML Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: playwright-report
-          path: upload-tmp/
           if-no-files-found: warn
+          retention-days: 14
 
-      - name: Upload Playwright Test Results
+      # ---------------------------------------------------------
+      # 12. Upload HTML reporta
+      # ---------------------------------------------------------
+      - name: Upload Playwright HTML report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: playwright-test-results
-          path: test-results
-          if-no-files-found: ignore
+          name: playwright-report-${{ github.run_id }}
+          path: playwright-report/
+          if-no-files-found: warn
+          retention-days: 14
 
+      # ---------------------------------------------------------
+      # 13. Upload svih test rezultata
+      #
+      # Ovdje ulaze:
+      # - results.json
+      # - failure-context.json
+      # - browser-diagnostics.json
+      # - diagnostics-bundle.json
+      # - screenshots
+      # - trace.zip
+      # - video
+      # ---------------------------------------------------------
+      - name: Upload Playwright test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-test-results-${{ github.run_id }}
+          path: test-results/
+          if-no-files-found: warn
+          retention-days: 14
+
+      # ---------------------------------------------------------
+      # 14. Tek sada obori workflow ako su testovi pali
+      # ---------------------------------------------------------
       - name: Fail workflow if Playwright tests failed
         if: always()
+        shell: bash
         run: |
-          if [ -f playwright-exit-code.txt ]; then
-            TEST_EXIT_CODE=$(cat playwright-exit-code.txt)
+          if [ ! -f playwright-exit-code.txt ]; then
+            echo "Playwright exit-code file was not generated."
+            exit 1
+          fi
 
-            if [ "$TEST_EXIT_CODE" != "0" ]; then
-              echo "Playwright tests failed with exit code $TEST_EXIT_CODE"
-              exit 1
-            fi
+          TEST_EXIT_CODE=$(cat playwright-exit-code.txt)
+
+          if [ "$TEST_EXIT_CODE" != "0" ]; then
+            echo "Playwright tests failed with exit code $TEST_EXIT_CODE."
+            exit 1
           fi
 
           echo "No failed Playwright tests detected."

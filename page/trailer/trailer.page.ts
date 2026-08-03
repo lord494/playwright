@@ -322,11 +322,20 @@ export class TrailersPage extends BasePage {
     async searchByTrailerNumber(trailerNumber: string): Promise<void> {
         const filter = this.page.getByLabel('Trailer/VIN #', { exact: true });
         await filter.waitFor({ state: 'visible', timeout: 10000 });
-        await filter.click();
-        await this.page.keyboard.press('Control+A');
-        await this.page.keyboard.press('Delete');
-        await this.waitForTrailersResponse(() => this.page.keyboard.type(trailerNumber, { delay: 40 }));
-        await this.getRowByTrailerNumber(trailerNumber).first().waitFor({ state: 'visible', timeout: 15000 });
+        // The debounced search input re-renders on focus/refetch. Under parallel load a
+        // re-render between focusing and typing drops focus, so the query is never applied
+        // and the target trailer stays off the (paginated, ascending) first page, timing out
+        // the row wait. Retry the whole click → clear → type → confirm-row cycle as a unit:
+        // re-clicking re-focuses, and Ctrl+A/Delete clears any partial left by an interrupted
+        // type. Typing via `page.keyboard` (not a locator) survives the input re-rendering
+        // mid-type — a locator-bound `pressSequentially` would throw on the detached node.
+        await expect(async () => {
+            await filter.click();
+            await this.page.keyboard.press('Control+A');
+            await this.page.keyboard.press('Delete');
+            await this.page.keyboard.type(trailerNumber, { delay: 40 });
+            await expect(this.getRowByTrailerNumber(trailerNumber).first()).toBeVisible({ timeout: 8000 });
+        }).toPass({ timeout: 30000 });
     }
 
     async openEditModalForRow(trailerNumber: string): Promise<void> {
