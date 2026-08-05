@@ -696,10 +696,30 @@ jobs:
 
               echo "Playwright exit code inside container: $TEST_EXIT_CODE"
 
-              if [ -f test-results/results.json ]; then
+                if [ -f test-results/results.json ]; then
                 echo "Building structured failure context..."
 
                 npm run build:failure-context
+                CONTEXT_EXIT_CODE=$?
+
+                if [ "$CONTEXT_EXIT_CODE" != "0" ]; then
+                echo "Failure-context generation failed."
+                fi
+
+                if [ "$TEST_EXIT_CODE" != "0" ] &&
+                [ -f test-results/failure-context.json ]; then
+
+                echo "Building structured fix context..."
+
+                npm run build:fix-context
+                FIX_CONTEXT_EXIT_CODE=$?
+
+                if [ "$FIX_CONTEXT_EXIT_CODE" != "0" ]; then
+                  echo "Fix-context generation failed."
+                fi
+              fi
+            else
+              echo "test-results/results.json was not generated."    
 
                 CONTEXT_EXIT_CODE=$?
 
@@ -808,17 +828,12 @@ jobs:
             exit 0
           fi
 
-          if [ ! -f test-results/diagnostics-bundle.json ]; then
-            echo "[]" > test-results/diagnostics-bundle.json
-          fi
-
           if [ ! -f playwright-output.log ]; then
             touch playwright-output.log
           fi
 
           jq -n \
             --rawfile failureContext test-results/failure-context.json \
-            --rawfile diagnostics test-results/diagnostics-bundle.json \
             --rawfile terminalOutput playwright-output.log \
             --arg model "$CLAUDE_MODEL" \
             '{
@@ -876,8 +891,8 @@ jobs:
                     "STRUCTURED FAILURE CONTEXT:\n" +
                     $failureContext +
 
-                    "\n\nBROWSER AND NETWORK DIAGNOSTICS:\n" +
-                    $diagnostics +
+                    "\n\nThe structured failure context already contains browser and " +
+                    "network diagnostics under browserDiagnostics for each attempt.\n\n" +
 
                     "\n\nPLAYWRIGHT TERMINAL OUTPUT:\n" +
                     $terminalOutput
@@ -920,6 +935,29 @@ jobs:
             exit 0
           fi
 
+           At the end of the analysis include exactly this section:
+
+            ## Fix Suggestion Status
+
+            Status: Generate suggestion
+            or
+            Status: Do not generate suggestion
+
+            Reason: <brief evidence-based explanation>
+
+            Use "Generate suggestion" only when:
+            - the failure is a confirmed or highly likely automation issue;
+            - confidence is High;
+            - the available evidence and source code support a concrete fix.
+
+            Use "Do not generate suggestion" for:
+            - application bugs;
+            - test-data issues;
+            - environment or CI issues;
+            - dependency failures;
+            - inconclusive failures;
+            - low or medium confidence.         
+
           jq -r \
             '.content[0].text // .error.message // "Claude returned no readable analysis."' \
             claude-raw-response.json \
@@ -941,6 +979,123 @@ jobs:
               >> "$GITHUB_STEP_SUMMARY"
           fi
 
+
+      - name: Ask Claude for Playwright fix suggestion
+        if: always()
+        env:
+            ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+            CLAUDE_MODEL: claude-sonnet-4-6
+        shell: bash
+        run: |
+            set +e
+
+            echo "Claude fix suggestion step started."
+
+            if [ ! -f claude-analysis.md ]; then
+              echo "Claude analysis does not exist."
+              exit 0
+            fi
+
+            if [ ! -f test-results/fix-context.json ]; then
+              echo "fix-context.json does not exist."
+              exit 0
+            fi
+
+            if ! grep -q "Status: Generate suggestion" \
+              claude-analysis.md; then
+
+              echo "Claude analysis did not approve a fix suggestion."
+              exit 0
+            fi
+
+            jq -n \
+              --rawfile analysis claude-analysis.md \
+              --rawfile fixContext test-results/fix-context.json \
+              --arg model "$CLAUDE_MODEL" \
+              '{
+                model: $model,
+                max_tokens: 2500,
+                messages: [
+                  {
+                    role: "user",
+                    content: (
+                      "Create a Playwright automation fix suggestion.\n\n" +
+
+                      "Do not modify repository files.\n" +
+                      "Do not create a commit or pull request.\n\n" +
+
+                      "Only suggest a change that addresses the identified " +
+                      "automation root cause.\n\n" +
+
+                      "Never suggest:\n" +
+                      "- waitForTimeout\n" +
+                      "- arbitrary timeout increases\n" +
+                      "- additional retries\n" +
+                      "- removing or weakening assertions\n" +
+                      "- ignoring failures\n\n" +
+
+                      "Return Markdown with exactly these sections:\n\n" +
+
+                      "# Playwright Fix Suggestion\n\n" +
+
+                      "## Target\n" +
+                      "- Test\n" +
+                      "- File\n" +
+                      "- Failure type\n\n" +
+
+                      "## Why This Is an Automation Issue\n\n" +
+
+                      "## Suggested Change\n" +
+                      "Include the smallest relevant TypeScript code snippet.\n\n" +
+
+                      "## Expected Result\n\n" +
+
+                      "## Manual Verification\n" +
+                      "Explain how QA should verify the suggestion.\n\n" +
+
+                      "Do not claim the fix is confirmed because it has not " +
+                      "been applied or executed.\n\n" +
+
+                      "CLAUDE FAILURE ANALYSIS:\n" +
+                      $analysis +
+
+                      "\n\nFIX CONTEXT AND SOURCE CODE:\n" +
+                      $fixContext
+                    )
+                  }
+                ]
+              }' > claude-suggestion-request.json
+
+            HTTP_CODE=$(curl \
+              --silent \
+              --show-error \
+              --output claude-suggestion-response.json \
+              --write-out "%{http_code}" \
+              https://api.anthropic.com/v1/messages \
+              --header "x-api-key: $ANTHROPIC_API_KEY" \
+              --header "anthropic-version: 2023-06-01" \
+              --header "content-type: application/json" \
+              --data @claude-suggestion-request.json)
+
+            echo "Claude suggestion API status: $HTTP_CODE"
+
+            if [ "$HTTP_CODE" != "200" ]; then
+              echo "Claude suggestion request failed."
+              exit 0
+            fi
+
+            jq -r \
+              '.content[0].text // empty' \
+              claude-suggestion-response.json \
+              > claude-suggestion.md
+
+            if [ -s claude-suggestion.md ]; then
+              echo "Claude suggestion created successfully."
+            else
+              rm -f claude-suggestion.md
+              echo "Claude returned no suggestion."
+            fi    
+
       # ---------------------------------------------------------
       # 11. Upload Claude analize
       # ---------------------------------------------------------
@@ -953,6 +1108,9 @@ jobs:
             claude-analysis.md
             claude-raw-response.json
             claude-request.json
+            claude-suggestion.md
+            claude-suggestion-request.json
+            claude-suggestion-response.json
             playwright-output.log
             playwright-exit-code.txt
           if-no-files-found: warn

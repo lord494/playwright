@@ -122,6 +122,36 @@ interface CleanAttachment {
     relativePath: string | null;
 }
 
+interface BrowserDiagnosticError {
+    message?: string;
+    stack?: string;
+}
+
+interface BrowserHttpError {
+    method: string;
+    url: string;
+    status: number;
+}
+
+interface BrowserDiagnostics {
+    generatedAt?: string;
+    testTitle?: string;
+    testFile?: string;
+    retry?: number;
+    status?: string | null;
+    expectedStatus?: string;
+    finalUrl?: string | null;
+    project?: string;
+    workerIndex?: number;
+
+    error?: BrowserDiagnosticError | null;
+
+    consoleErrors?: string[];
+    pageErrors?: string[];
+    failedRequests?: string[];
+    httpErrors?: BrowserHttpError[];
+}
+
 interface CleanAttempt {
     attempt: number;
     retry: number;
@@ -139,6 +169,7 @@ interface CleanAttempt {
         column: number | null;
     };
     attachments: CleanAttachment[];
+    browserDiagnostics: BrowserDiagnostics | null;
 }
 
 interface CleanFailure {
@@ -439,6 +470,7 @@ function cleanAttempt(
         stack,
         location: cleanLocation(location),
         attachments: cleanAttachments(result.attachments),
+        browserDiagnostics: null,
     };
 }
 
@@ -449,6 +481,52 @@ function cleanAttempt(
  * - specs direktno
  * - dodatne nested suites
  */
+
+async function readBrowserDiagnostics(
+    attempt: CleanAttempt,
+): Promise<BrowserDiagnostics | null> {
+    const diagnosticsAttachment = attempt.attachments.find(
+        attachment => attachment.name === 'browser-diagnostics',
+    );
+
+    if (!diagnosticsAttachment?.path) {
+        return null;
+    }
+
+    const diagnosticsPath = diagnosticsAttachment.path;
+
+    try {
+        const content = await fs.readFile(diagnosticsPath, 'utf8');
+
+        return JSON.parse(content) as BrowserDiagnostics;
+    } catch (error) {
+        const message =
+            error instanceof Error
+                ? error.message
+                : String(error);
+
+        console.warn(
+            `Could not read browser diagnostics: ${diagnosticsPath}`,
+        );
+
+        console.warn(message);
+
+        return null;
+    }
+}
+
+
+async function enrichFailuresWithDiagnostics(
+    failures: CleanFailure[],
+): Promise<void> {
+    for (const failure of failures) {
+        for (const attempt of failure.attempts) {
+            attempt.browserDiagnostics =
+                await readBrowserDiagnostics(attempt);
+        }
+    }
+}
+
 function collectFailuresFromSuite(
     suite: PlaywrightSuite,
     failures: CleanFailure[],
@@ -589,6 +667,8 @@ async function buildFailureContext(): Promise<void> {
     for (const suite of report.suites ?? []) {
         collectFailuresFromSuite(suite, failures);
     }
+
+    await enrichFailuresWithDiagnostics(failures);
 
     const stats = report.stats ?? {};
 

@@ -5,7 +5,8 @@
   "scripts": {
     "test": "playwright test",
     "test:parallel": "cross-env WORKERS=4 playwright test --workers=4",
-    "build:failure-context": "tsx scripts/build-failure-context.ts"
+    "build:failure-context": "tsx scripts/build-failure-context.ts",
+    "build:fix-context": "tsx scripts/build-fix-context.ts"
   },
   "keywords": [],
   "author": "",
