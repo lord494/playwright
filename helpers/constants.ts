@@ -220,6 +220,11 @@ export class Constants {
     static blockedStatus = 'Blocked';
     static exDriversStatus = 'EX DRIVERS';
     static holdStatus = 'Hold';
+    // SAP column renders a plain YES/NO (<strong> inside td:nth-child(6)) and the
+    // add/edit modal SAP checkbox maps to the `sap: true|false` API field.
+    static sapColumnName = 'SAP';
+    static sapYes = 'YES';
+    static sapNo = 'NO';
     static newYorkPostalCode = '07032';
     static chicagoPostalCode = '60007';
     static miamiPostalCode = '33178';

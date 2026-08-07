@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 import { Constants } from "../../helpers/constants";
 import { get6RandomNumber, getRandom10Number } from "../../helpers/dateUtilis";
@@ -18,6 +18,11 @@ export type EmployeeFormData = {
     country: string;
     note: string;
     statusOption: Locator;
+    /**
+     * Desired state of the SAP checkbox. Optional — when omitted the checkbox is left
+     * as-is (a fresh Add modal comes up unchecked, i.e. SAP = NO).
+     */
+    sap?: boolean;
 };
 
 export class AddNewEmployeePage extends BasePage {
@@ -30,6 +35,8 @@ export class AddNewEmployeePage extends BasePage {
     readonly countryField: Locator;
     readonly noteField: Locator;
     readonly stausMenu: Locator;
+    readonly sapCheckbox: Locator;
+    readonly sapCheckboxInput: Locator;
     readonly saveButton: Locator;
     readonly recruiterOption: Locator;
     readonly recruiterPetarPetrovicOption: Locator;
@@ -55,6 +62,10 @@ export class AddNewEmployeePage extends BasePage {
         this.countryField = this.page.getByRole('textbox', { name: 'Country*' });
         this.noteField = this.page.getByRole('textbox', { name: 'Note' });
         this.stausMenu = this.page.getByRole('textbox', { name: 'Status' });
+        // Scoped through `.v-dialog--active` because the /recruitment filter row carries a
+        // SAP checkbox with the same label — unscoped, the locator would match both.
+        this.sapCheckbox = this.page.locator('.v-dialog--active label').filter({ hasText: 'SAP' });
+        this.sapCheckboxInput = this.page.locator('.v-dialog--active .v-input--checkbox').filter({ hasText: 'SAP' }).locator('input[type="checkbox"]');
         this.saveButton = this.page.getByRole('button', { name: 'Save' });
         this.recruiterOption = this.page.locator('.v-list-item__title').filter({ hasText: Constants.plawrightRecruiter });
         this.recruiterPetarPetrovicOption = this.page.locator('.v-list-item__title').filter({ hasText: Constants.recruiterPetarPetrovic });
@@ -102,6 +113,20 @@ export class AddNewEmployeePage extends BasePage {
         return this.selectFromMenu(this.stausMenu, status);
     }
 
+    /**
+     * Sets the SAP checkbox to `enabled` (it maps to the `sap` boolean the API stores and
+     * the YES/NO the SAP column renders). Idempotent — safe on both the Add modal (comes
+     * up unchecked) and the Edit modal (comes up with the saved value).
+     */
+    async setSap(enabled: boolean): Promise<void> {
+        if (enabled) {
+            await this.check(this.sapCheckbox);
+        } else {
+            await this.uncheck(this.sapCheckbox);
+        }
+        await expect(this.sapCheckboxInput).toBeChecked({ checked: enabled });
+    }
+
     /** Fills every field of a fresh Add Employee modal (does NOT click Save). */
     async fillEmployeeForm(data: EmployeeFormData): Promise<void> {
         await this.enterCdl(data.cdl);
@@ -112,6 +137,9 @@ export class AddNewEmployeePage extends BasePage {
         await this.enterCountry(data.country);
         await this.enterNote(data.note);
         await this.selectStatus(data.statusOption);
+        if (data.sap !== undefined) {
+            await this.setSap(data.sap);
+        }
     }
 
     /**
@@ -127,6 +155,9 @@ export class AddNewEmployeePage extends BasePage {
         await this.fillInputFieldEdit(this.countryField, data.country);
         await this.fillInputFieldEdit(this.noteField, data.note);
         await this.selectStatus(data.statusOption);
+        if (data.sap !== undefined) {
+            await this.setSap(data.sap);
+        }
     }
 
     async addHoldNumbers(): Promise<void> {

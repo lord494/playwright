@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
-import { get6RandomNumber, get8RandomNumber, get9RandomNumber, getRandom10Number } from '../../helpers/dateUtilis';
+import { get6RandomNumber, get8RandomNumber, get9RandomNumber, getRandom10Number, safeDeleteEmployeeByPhone } from '../../helpers/dateUtilis';
 import { test } from '../fixtures/fixtures';
 
 test('Korisnik moze da filtrira zaposlene da se prikazu samo unemployed statusi', async ({ recruitmentOverviewSetup }) => {
@@ -201,6 +201,69 @@ test('Search polje za broj telefona ignorise nenumericke karaktere', async ({ re
     await recruitmentOverviewSetup.searchPhoneNumberField.click();
     await recruitmentOverviewSetup.searchPhoneNumberField.type('abcdef');
     await expect(recruitmentOverviewSetup.searchPhoneNumberField.locator('input')).toHaveValue('');
+});
+
+/**
+ * SAP kolona (td:nth-child(6), renderuje YES / NO) i SAP filter checkbox u redu sa
+ * filterima statusa. Filter je server-side:
+ *   oznacen (default) -> nema `sap` parametra -> lista i SAP i non-SAP zaposlene
+ *   neoznacen         -> `sap=false`          -> lista SAMO non-SAP zaposlene
+ * Testovi za SAP checkbox u add/edit formi su u addEmployee.spec.ts.
+ */
+test.describe('SAP kolona i SAP filter', () => {
+    // Test koji dodaje SAP zaposlenog + pretraga + cleanup u afterEach ne staju u
+    // podrazumevanih 30s (afterEach deli budzet sa testom).
+    test.describe.configure({ timeout: 60_000 });
+
+    let createdPhone: string | null = null;
+
+    test.afterEach(async ({ loggedPage }) => {
+        if (createdPhone) {
+            await safeDeleteEmployeeByPhone(loggedPage, createdPhone);
+            createdPhone = null;
+        }
+    });
+
+    test('Tabela zaposlenih prikazuje SAP kolonu sa YES ili NO vrednostima', async ({ recruitmentOverviewSetup }) => {
+        await expect(recruitmentOverviewSetup.sapHeader).toBeVisible();
+        await recruitmentOverviewSetup.expectAllSapCellsAre(Constants.sapYes, Constants.sapNo);
+    });
+
+    test('SAP filter je podrazumevano oznacen', async ({ recruitmentOverviewSetup }) => {
+        await expect(recruitmentOverviewSetup.sapFilterInput).toBeChecked();
+    });
+
+    test('Korisnik moze da iskljuci SAP filter da se prikazu samo non-SAP zaposleni', async ({ recruitmentOverviewSetup }) => {
+        await recruitmentOverviewSetup.excludeSapEmployees();
+        await recruitmentOverviewSetup.expectAllSapCellsAre(Constants.sapNo);
+    });
+
+    test('SAP zaposleni se ne prikazuje kada je SAP filter iskljucen i vraca se kada se ukljuci', async ({ recruitmentOverviewSetup, addNewEmployee }) => {
+        const randomCdl = get6RandomNumber().join('');
+        const randomPhone = getRandom10Number().join('');
+        createdPhone = randomPhone;
+        await recruitmentOverviewSetup.addNewEmployeeButton.click();
+        await addNewEmployee.fillEmployeeForm({
+            cdl: randomCdl,
+            recruiterOption: addNewEmployee.recruiterOption,
+            name: Constants.driverName,
+            email: Constants.testEmail,
+            phone: randomPhone,
+            country: Constants.state,
+            note: Constants.noteFirst,
+            statusOption: addNewEmployee.unemployedStatus,
+            sap: true,
+        });
+        await addNewEmployee.saveButton.click();
+        await recruitmentOverviewSetup.dialogBox.waitFor({ state: 'detached', timeout: 5000 });
+        await recruitmentOverviewSetup.searchEmployeeByPhone(randomPhone);
+        await recruitmentOverviewSetup.expectFirstSapCellIs(Constants.sapYes);
+        // Filter se primenjuje i na aktivnu pretragu — SAP=YES red ispada iz rezultata.
+        await recruitmentOverviewSetup.excludeSapEmployees();
+        await recruitmentOverviewSetup.expectNoEmployees();
+        await recruitmentOverviewSetup.includeSapEmployees();
+        await recruitmentOverviewSetup.expectFirstSapCellIs(Constants.sapYes);
+    });
 });
 
 test('Move akcija je onemogucena dok nije selektovan nijedan red', async ({ recruitmentOverviewSetup }) => {

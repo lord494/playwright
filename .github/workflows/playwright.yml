@@ -560,7 +560,7 @@ jobs:
 
     steps:
       # ---------------------------------------------------------
-      # 1. Preuzimanje repository koda
+      # 1. Checkout repository
       # ---------------------------------------------------------
       - name: Checkout code
         uses: actions/checkout@v4
@@ -594,7 +594,7 @@ jobs:
             ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest
 
       # ---------------------------------------------------------
-      # 5. Pronalaženje test foldera koji treba da se pokrenu
+      # 5. Detect which test areas should run
       # ---------------------------------------------------------
       - name: Detect changed folders and map to test dirs
         id: detect-tests
@@ -615,7 +615,6 @@ jobs:
 
           for file in $CHANGED_FILES; do
 
-            # Promjena Page Object fajla:
             # page/trailer/... -> tests/trailer
             if [[ "$file" == page/*/* ]]; then
               feature=$(echo "$file" | cut -d/ -f2)
@@ -626,7 +625,6 @@ jobs:
               fi
             fi
 
-            # Promjena samog testa:
             # tests/trailer/... -> tests/trailer
             if [[ "$file" == tests/*/* ]]; then
               feature=$(echo "$file" | cut -d/ -f2)
@@ -637,12 +635,16 @@ jobs:
               fi
             fi
 
-            # Promjena zajedničkih fixture-a, helpera ili configa
-            # može uticati na sve testove.
-            if [[ "$file" == fixtures/* ]] ||
+            # Shared files can affect many/all tests.
+            if [[ "$file" == tests/fixtures/* ]] ||
                [[ "$file" == helpers/* ]] ||
+               [[ "$file" == scripts/* ]] ||
                [[ "$file" == "playwright.config.ts" ]] ||
-               [[ "$file" == "globalSetup.ts" ]]; then
+               [[ "$file" == "globalSetup.ts" ]] ||
+               [[ "$file" == "package.json" ]] ||
+               [[ "$file" == "package-lock.json" ]] ||
+               [[ "$file" == "Dockerfile" ]] ||
+               [[ "$file" == ".github/workflows/playwright.yml" ]]; then
               RUN_ALL_TESTS=true
             fi
           done
@@ -660,12 +662,13 @@ jobs:
           echo "Selected test directories: $TEST_DIRS"
 
       # ---------------------------------------------------------
-      # 6. Pokretanje Playwright testova u Dockeru
+      # 6. Run Playwright inside Docker.
       #
-      # Važno:
-      # - ne koristimo --reporter jer reporteri dolaze iz configa
-      # - čuvamo exit code
-      # - workflow nastavlja da bi napravio analizu i artefakte
+      # Important:
+      # - reporters come from playwright.config.ts
+      # - Playwright failure does not stop this step immediately
+      # - failure-context and fix-context are generated in container
+      # - real Playwright exit code is saved for the final step
       # ---------------------------------------------------------
       - name: Run matched Playwright tests in Docker
         id: playwright-tests
@@ -696,35 +699,27 @@ jobs:
 
               echo "Playwright exit code inside container: $TEST_EXIT_CODE"
 
-                if [ -f test-results/results.json ]; then
+              if [ -f test-results/results.json ]; then
                 echo "Building structured failure context..."
 
                 npm run build:failure-context
                 CONTEXT_EXIT_CODE=$?
 
                 if [ "$CONTEXT_EXIT_CODE" != "0" ]; then
-                echo "Failure-context generation failed."
+                  echo "Failure-context generation failed."
                 fi
 
                 if [ "$TEST_EXIT_CODE" != "0" ] &&
-                [ -f test-results/failure-context.json ]; then
+                   [ -f test-results/failure-context.json ]; then
 
-                echo "Building structured fix context..."
+                  echo "Building fix suggestion context..."
 
-                npm run build:fix-context
-                FIX_CONTEXT_EXIT_CODE=$?
+                  npm run build:fix-context
+                  FIX_CONTEXT_EXIT_CODE=$?
 
-                if [ "$FIX_CONTEXT_EXIT_CODE" != "0" ]; then
-                  echo "Fix-context generation failed."
-                fi
-              fi
-            else
-              echo "test-results/results.json was not generated."    
-
-                CONTEXT_EXIT_CODE=$?
-
-                if [ "$CONTEXT_EXIT_CODE" != "0" ]; then
-                  echo "Failure-context generation failed."
+                  if [ "$FIX_CONTEXT_EXIT_CODE" != "0" ]; then
+                    echo "Fix-context generation failed."
+                  fi
                 fi
               else
                 echo "test-results/results.json was not generated."
@@ -740,17 +735,16 @@ jobs:
           echo "Playwright exit code: $TEST_EXIT_CODE"
 
           echo "Generated test-results files:"
-          find test-results -maxdepth 4 -type f -print || true
+          find test-results -maxdepth 5 -type f -print || true
 
           echo "Generated Playwright report files:"
           find playwright-report -maxdepth 3 -type f -print || true
 
-          # Ne obaramo workflow još uvijek.
-          # Prvo moraju da se naprave analiza i artefakti.
+          # Keep workflow alive so analysis, suggestion and artifacts can run.
           exit 0
 
       # ---------------------------------------------------------
-      # 7. Situacija kada nije pronađen nijedan test folder
+      # 7. No matching tests
       # ---------------------------------------------------------
       - name: Record skipped test execution
         if: env.TEST_DIRS == ''
@@ -760,39 +754,7 @@ jobs:
           echo "0" > playwright-exit-code.txt
 
       # ---------------------------------------------------------
-      # 8. Objedinjavanje svih browser-diagnostics.json fajlova
-      #
-      # Jedan test može imati:
-      # - prvi failed pokušaj
-      # - failed retry
-      #
-      # Svaki pokušaj može imati svoj diagnostics JSON.
-      # ---------------------------------------------------------
-      - name: Build diagnostics bundle
-        if: always()
-        shell: bash
-        run: |
-          DIAGNOSTICS_FILES=$(find test-results \
-            -type f \
-            -name "browser-diagnostics.json" \
-            2>/dev/null || true)
-
-          if [ -z "$DIAGNOSTICS_FILES" ]; then
-            echo "[]" > test-results/diagnostics-bundle.json
-            echo "No browser diagnostics files were found."
-            exit 0
-          fi
-
-          echo "$DIAGNOSTICS_FILES" |
-            sort |
-            xargs jq -s '.' \
-            > test-results/diagnostics-bundle.json
-
-          echo "Diagnostics bundle created:"
-          jq length test-results/diagnostics-bundle.json
-
-      # ---------------------------------------------------------
-      # 9. Claude analiza samo kada su testovi pali
+      # 8. Claude failure analysis
       # ---------------------------------------------------------
       - name: Ask Claude to analyze failed Playwright tests
         if: always()
@@ -811,7 +773,6 @@ jobs:
           fi
 
           TEST_EXIT_CODE=$(cat playwright-exit-code.txt)
-
           echo "Detected Playwright exit code: $TEST_EXIT_CODE"
 
           if [ "$TEST_EXIT_CODE" = "0" ]; then
@@ -823,8 +784,7 @@ jobs:
 
           if [ ! -f test-results/failure-context.json ]; then
             echo "" >> claude-analysis.md
-            echo "failure-context.json was not generated." \
-              >> claude-analysis.md
+            echo "failure-context.json was not generated." >> claude-analysis.md
             exit 0
           fi
 
@@ -848,6 +808,9 @@ jobs:
                     "Your analysis must be based only on the supplied evidence. " +
                     "Do not classify a failure as an application bug only because " +
                     "a test timed out, a locator was missing, or a page was closed.\n\n" +
+
+                    "The structured failure context already contains browser and " +
+                    "network diagnostics under browserDiagnostics for each attempt.\n\n" +
 
                     "Group tests that appear to share the same root cause.\n\n" +
 
@@ -879,10 +842,29 @@ jobs:
                     "10. Relevant artifacts\n\n" +
 
                     "Clearly separate confirmed facts from hypotheses.\n" +
-                    "Do not recommend fixed waits or increasing timeouts unless " +
-                    "the evidence specifically supports that action.\n\n" +
+                    "Do not recommend fixed waits or arbitrary timeout increases.\n\n" +
 
-                    "End the report with:\n" +
+                    "At the very end of the analysis include exactly this section:\n\n" +
+                    "## Fix Suggestion Status\n\n" +
+                    "Status: Generate suggestion\n" +
+                    "or\n" +
+                    "Status: Do not generate suggestion\n\n" +
+                    "Reason: <brief evidence-based explanation>\n\n" +
+
+                    "Use \"Generate suggestion\" only when:\n" +
+                    "- the failure is a confirmed or highly likely automation issue;\n" +
+                    "- confidence is High;\n" +
+                    "- the available evidence supports a concrete automation fix.\n\n" +
+
+                    "Use \"Do not generate suggestion\" for:\n" +
+                    "- application bugs;\n" +
+                    "- test-data issues;\n" +
+                    "- environment or CI issues;\n" +
+                    "- dependency failures;\n" +
+                    "- inconclusive failures;\n" +
+                    "- low or medium confidence.\n\n" +
+
+                    "Before the Fix Suggestion Status section, end the main report with:\n" +
                     "- Overall run summary\n" +
                     "- Release risk\n" +
                     "- Suggested owner for each failure group\n" +
@@ -890,9 +872,6 @@ jobs:
 
                     "STRUCTURED FAILURE CONTEXT:\n" +
                     $failureContext +
-
-                    "\n\nThe structured failure context already contains browser and " +
-                    "network diagnostics under browserDiagnostics for each attempt.\n\n" +
 
                     "\n\nPLAYWRIGHT TERMINAL OUTPUT:\n" +
                     $terminalOutput
@@ -903,8 +882,7 @@ jobs:
 
           if [ ! -s claude-request.json ]; then
             echo "" >> claude-analysis.md
-            echo "Claude request JSON could not be created." \
-              >> claude-analysis.md
+            echo "Claude request JSON could not be created." >> claude-analysis.md
             exit 0
           fi
 
@@ -925,38 +903,13 @@ jobs:
 
           if [ "$HTTP_CODE" != "200" ]; then
             echo "" >> claude-analysis.md
-            echo "Claude API returned HTTP status $HTTP_CODE." \
-              >> claude-analysis.md
+            echo "Claude API returned HTTP status $HTTP_CODE." >> claude-analysis.md
             echo "" >> claude-analysis.md
             echo '```json' >> claude-analysis.md
-            cat claude-raw-response.json \
-              >> claude-analysis.md 2>/dev/null || true
+            cat claude-raw-response.json >> claude-analysis.md 2>/dev/null || true
             echo '```' >> claude-analysis.md
             exit 0
           fi
-
-           At the end of the analysis include exactly this section:
-
-            ## Fix Suggestion Status
-
-            Status: Generate suggestion
-            or
-            Status: Do not generate suggestion
-
-            Reason: <brief evidence-based explanation>
-
-            Use "Generate suggestion" only when:
-            - the failure is a confirmed or highly likely automation issue;
-            - confidence is High;
-            - the available evidence and source code support a concrete fix.
-
-            Use "Do not generate suggestion" for:
-            - application bugs;
-            - test-data issues;
-            - environment or CI issues;
-            - dependency failures;
-            - inconclusive failures;
-            - low or medium confidence.         
 
           jq -r \
             '.content[0].text // .error.message // "Claude returned no readable analysis."' \
@@ -966,140 +919,156 @@ jobs:
           echo "Claude analysis created successfully."
 
       # ---------------------------------------------------------
-      # 10. Claude report prikazan direktno u GitHub job summary
+      # 9. Claude fix suggestion
+      #
+      # Runs only when:
+      # - analysis exists
+      # - fix-context exists
+      # - analysis explicitly says Generate suggestion
       # ---------------------------------------------------------
-      - name: Add Claude analysis to job summary
+      - name: Ask Claude for Playwright fix suggestion
+        if: always()
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CLAUDE_MODEL: claude-sonnet-4-6
+        shell: bash
+        run: |
+          set +e
+
+          echo "Claude fix suggestion step started."
+
+          if [ ! -f claude-analysis.md ]; then
+            echo "Claude analysis does not exist."
+            exit 0
+          fi
+
+          if [ ! -f test-results/fix-context.json ]; then
+            echo "fix-context.json does not exist."
+            exit 0
+          fi
+
+          if ! grep -Fq "Status: Generate suggestion" claude-analysis.md; then
+            echo "Claude analysis did not approve a fix suggestion."
+            exit 0
+          fi
+
+          jq -n \
+            --rawfile analysis claude-analysis.md \
+            --rawfile fixContext test-results/fix-context.json \
+            --arg model "$CLAUDE_MODEL" \
+            '{
+              model: $model,
+              max_tokens: 2500,
+              messages: [
+                {
+                  role: "user",
+                  content: (
+                    "Create a Playwright automation fix suggestion.\n\n" +
+
+                    "Do not modify repository files.\n" +
+                    "Do not create a commit or pull request.\n\n" +
+
+                    "Only suggest a change that addresses the identified " +
+                    "automation root cause.\n\n" +
+
+                    "Never suggest:\n" +
+                    "- waitForTimeout\n" +
+                    "- arbitrary timeout increases\n" +
+                    "- additional retries\n" +
+                    "- removing or weakening assertions\n" +
+                    "- ignoring failures\n\n" +
+
+                    "Return Markdown with exactly these sections:\n\n" +
+
+                    "# Playwright Fix Suggestion\n\n" +
+
+                    "## Target\n" +
+                    "- Test\n" +
+                    "- File\n" +
+                    "- Failure type\n\n" +
+
+                    "## Why This Is an Automation Issue\n\n" +
+
+                    "## Suggested Change\n" +
+                    "Include the smallest relevant TypeScript code snippet.\n\n" +
+
+                    "## Expected Result\n\n" +
+
+                    "## Manual Verification\n" +
+                    "Explain how QA should verify the suggestion.\n\n" +
+
+                    "Do not claim the fix is confirmed because it has not " +
+                    "been applied or executed.\n\n" +
+
+                    "CLAUDE FAILURE ANALYSIS:\n" +
+                    $analysis +
+
+                    "\n\nFIX CONTEXT AND SOURCE CODE:\n" +
+                    $fixContext
+                  )
+                }
+              ]
+            }' > claude-suggestion-request.json
+
+          if [ ! -s claude-suggestion-request.json ]; then
+            echo "Claude suggestion request JSON could not be created."
+            exit 0
+          fi
+
+          HTTP_CODE=$(curl \
+            --silent \
+            --show-error \
+            --output claude-suggestion-response.json \
+            --write-out "%{http_code}" \
+            https://api.anthropic.com/v1/messages \
+            --header "x-api-key: $ANTHROPIC_API_KEY" \
+            --header "anthropic-version: 2023-06-01" \
+            --header "content-type: application/json" \
+            --data @claude-suggestion-request.json)
+
+          echo "Claude suggestion API status: $HTTP_CODE"
+
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "Claude suggestion request failed."
+            exit 0
+          fi
+
+          jq -r \
+            '.content[0].text // empty' \
+            claude-suggestion-response.json \
+            > claude-suggestion.md
+
+          if [ -s claude-suggestion.md ]; then
+            echo "Claude suggestion created successfully."
+          else
+            rm -f claude-suggestion.md
+            echo "Claude returned no suggestion."
+          fi
+
+      # ---------------------------------------------------------
+      # 10. GitHub job summary
+      # ---------------------------------------------------------
+      - name: Add Claude analysis and suggestion to job summary
         if: always()
         shell: bash
         run: |
           if [ -f claude-analysis.md ]; then
             cat claude-analysis.md >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "## Claude analysis was not generated" \
-              >> "$GITHUB_STEP_SUMMARY"
+            echo "## Claude analysis was not generated" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-
-      - name: Ask Claude for Playwright fix suggestion
-        if: always()
-        env:
-            ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-            CLAUDE_MODEL: claude-sonnet-4-6
-        shell: bash
-        run: |
-            set +e
-
-            echo "Claude fix suggestion step started."
-
-            if [ ! -f claude-analysis.md ]; then
-              echo "Claude analysis does not exist."
-              exit 0
-            fi
-
-            if [ ! -f test-results/fix-context.json ]; then
-              echo "fix-context.json does not exist."
-              exit 0
-            fi
-
-            if ! grep -q "Status: Generate suggestion" \
-              claude-analysis.md; then
-
-              echo "Claude analysis did not approve a fix suggestion."
-              exit 0
-            fi
-
-            jq -n \
-              --rawfile analysis claude-analysis.md \
-              --rawfile fixContext test-results/fix-context.json \
-              --arg model "$CLAUDE_MODEL" \
-              '{
-                model: $model,
-                max_tokens: 2500,
-                messages: [
-                  {
-                    role: "user",
-                    content: (
-                      "Create a Playwright automation fix suggestion.\n\n" +
-
-                      "Do not modify repository files.\n" +
-                      "Do not create a commit or pull request.\n\n" +
-
-                      "Only suggest a change that addresses the identified " +
-                      "automation root cause.\n\n" +
-
-                      "Never suggest:\n" +
-                      "- waitForTimeout\n" +
-                      "- arbitrary timeout increases\n" +
-                      "- additional retries\n" +
-                      "- removing or weakening assertions\n" +
-                      "- ignoring failures\n\n" +
-
-                      "Return Markdown with exactly these sections:\n\n" +
-
-                      "# Playwright Fix Suggestion\n\n" +
-
-                      "## Target\n" +
-                      "- Test\n" +
-                      "- File\n" +
-                      "- Failure type\n\n" +
-
-                      "## Why This Is an Automation Issue\n\n" +
-
-                      "## Suggested Change\n" +
-                      "Include the smallest relevant TypeScript code snippet.\n\n" +
-
-                      "## Expected Result\n\n" +
-
-                      "## Manual Verification\n" +
-                      "Explain how QA should verify the suggestion.\n\n" +
-
-                      "Do not claim the fix is confirmed because it has not " +
-                      "been applied or executed.\n\n" +
-
-                      "CLAUDE FAILURE ANALYSIS:\n" +
-                      $analysis +
-
-                      "\n\nFIX CONTEXT AND SOURCE CODE:\n" +
-                      $fixContext
-                    )
-                  }
-                ]
-              }' > claude-suggestion-request.json
-
-            HTTP_CODE=$(curl \
-              --silent \
-              --show-error \
-              --output claude-suggestion-response.json \
-              --write-out "%{http_code}" \
-              https://api.anthropic.com/v1/messages \
-              --header "x-api-key: $ANTHROPIC_API_KEY" \
-              --header "anthropic-version: 2023-06-01" \
-              --header "content-type: application/json" \
-              --data @claude-suggestion-request.json)
-
-            echo "Claude suggestion API status: $HTTP_CODE"
-
-            if [ "$HTTP_CODE" != "200" ]; then
-              echo "Claude suggestion request failed."
-              exit 0
-            fi
-
-            jq -r \
-              '.content[0].text // empty' \
-              claude-suggestion-response.json \
-              > claude-suggestion.md
-
-            if [ -s claude-suggestion.md ]; then
-              echo "Claude suggestion created successfully."
-            else
-              rm -f claude-suggestion.md
-              echo "Claude returned no suggestion."
-            fi    
+          if [ -f claude-suggestion.md ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            echo "---" >> "$GITHUB_STEP_SUMMARY"
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            cat claude-suggestion.md >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       # ---------------------------------------------------------
-      # 11. Upload Claude analize
+      # 11. Upload Claude analysis/suggestion files
       # ---------------------------------------------------------
-      - name: Upload Claude analysis
+      - name: Upload Claude analysis and suggestion
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -1117,7 +1086,7 @@ jobs:
           retention-days: 14
 
       # ---------------------------------------------------------
-      # 12. Upload HTML reporta
+      # 12. Upload Playwright HTML report
       # ---------------------------------------------------------
       - name: Upload Playwright HTML report
         if: always()
@@ -1129,16 +1098,16 @@ jobs:
           retention-days: 14
 
       # ---------------------------------------------------------
-      # 13. Upload svih test rezultata
+      # 13. Upload raw/structured Playwright results
       #
-      # Ovdje ulaze:
+      # Includes:
       # - results.json
       # - failure-context.json
+      # - fix-context.json (when tests fail)
       # - browser-diagnostics.json
-      # - diagnostics-bundle.json
       # - screenshots
-      # - trace.zip
-      # - video
+      # - traces
+      # - videos
       # ---------------------------------------------------------
       - name: Upload Playwright test results
         if: always()
@@ -1150,7 +1119,7 @@ jobs:
           retention-days: 14
 
       # ---------------------------------------------------------
-      # 14. Tek sada obori workflow ako su testovi pali
+      # 14. Fail workflow only after all analysis/artifacts finish
       # ---------------------------------------------------------
       - name: Fail workflow if Playwright tests failed
         if: always()

@@ -8,6 +8,8 @@ export type EmployeeRowExpectation = {
     recruiter: string;
     status: string;
     statusColor: string;
+    /** SAP cell text ('YES' / 'NO'). Optional — asserted only when provided. */
+    sap?: string;
     email: string;
     phone: string;
     country: string;
@@ -24,6 +26,7 @@ export class RecrutimentPage extends BasePage {
     readonly employeeNameColumn: Locator;
     readonly recruiterColumn: Locator;
     readonly stausColumn: Locator;
+    readonly sapColumn: Locator;
     readonly emailColumn: Locator;
     readonly phoneColumn: Locator;
     readonly countryColumn: Locator;
@@ -50,6 +53,9 @@ export class RecrutimentPage extends BasePage {
     readonly searchPhoneNumberField: Locator;
     readonly searchButton: Locator;
     readonly statusCheckboxes: Record<string, Locator>;
+    readonly sapHeader: Locator;
+    readonly sapFilterCheckbox: Locator;
+    readonly sapFilterInput: Locator;
     readonly pauseIcon: Locator;
     readonly snackMessage: Locator;
     readonly disabledSearchButton: Locator;
@@ -65,11 +71,12 @@ export class RecrutimentPage extends BasePage {
         this.employeeNameColumn = this.page.locator('tr td:nth-child(2)');
         this.recruiterColumn = this.page.locator('tr td:nth-child(3)');
         this.stausColumn = this.page.locator('tr td:nth-child(5)');
-        this.emailColumn = this.page.locator('tr td:nth-child(6)');
-        this.phoneColumn = this.page.locator('tr td:nth-child(7)');
-        this.countryColumn = this.page.locator('tr td:nth-child(9)');
-        this.ssnColumn = this.page.locator('tr td:nth-child(10)');
-        this.noteColumn = this.page.locator('tr td:nth-child(11)');
+        this.sapColumn = this.page.locator('tr td:nth-child(6)');
+        this.emailColumn = this.page.locator('tr td:nth-child(7)');
+        this.phoneColumn = this.page.locator('tr td:nth-child(8)');
+        this.countryColumn = this.page.locator('tr td:nth-child(10)');
+        this.ssnColumn = this.page.locator('tr td:nth-child(11)');
+        this.noteColumn = this.page.locator('tr td:nth-child(12)');
         this.recruiterTab = this.page.getByRole('tab', { name: 'Recruiters' });
         this.employeesTab = this.page.getByRole('tab', { name: 'Employees' });
         this.dialogBox = this.page.locator('.v-dialog--active');
@@ -107,6 +114,12 @@ export class RecrutimentPage extends BasePage {
             retired: this.page.locator('label').filter({ hasText: 'Retired' }),
             inContact: this.page.locator('label').filter({ hasText: 'In contact' })
         };
+        this.sapHeader = this.page.getByRole('columnheader', { name: 'SAP', exact: true });
+        // The SAP filter sits in the same filter row as the status checkboxes, but the
+        // add/edit modal carries a SAP checkbox with the identical label — scope to
+        // `main` so the filter locator stays single even while a dialog is open.
+        this.sapFilterCheckbox = this.page.getByRole('main').locator('label').filter({ hasText: 'SAP' });
+        this.sapFilterInput = this.page.getByRole('main').locator('.v-input--checkbox').filter({ hasText: 'SAP' }).locator('input[type="checkbox"]');
         this.pauseIcon = this.page.locator('.mdi-pause-circle-outline');
         this.snackMessage = page.locator('.v-snack__content');
         this.disabledSearchButton = page.locator('.v-btn--disabled.v-btn--has-bg').first();
@@ -150,6 +163,62 @@ export class RecrutimentPage extends BasePage {
         await this.page.keyboard.press('Backspace');
     }
 
+    /**
+     * Unchecks the SAP filter. The filter is server-side: unchecked adds `sap=false`
+     * to /api/employees and the table then lists ONLY non-SAP employees.
+     */
+    async excludeSapEmployees(): Promise<void> {
+        await this.uncheck(this.sapFilterCheckbox);
+        await this.page.waitForResponse(res =>
+            res.url().includes('/api/employees') &&
+            res.url().includes('sap=false') &&
+            (res.status() === 200 || res.status() === 304)
+        );
+        await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+    }
+
+    /**
+     * Re-checks the SAP filter. Checked is the default state and sends NO `sap` param
+     * at all, so the table lists SAP and non-SAP employees together.
+     */
+    async includeSapEmployees(): Promise<void> {
+        await this.check(this.sapFilterCheckbox);
+        await this.page.waitForResponse(res =>
+            res.url().includes('/api/employees') &&
+            !res.url().includes('sap=') &&
+            (res.status() === 200 || res.status() === 304)
+        );
+        await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+    }
+
+    /**
+     * Asserts every visible SAP cell reads one of `allowed`. Iterates the whole column
+     * (not just the first row) so a row the SAP filter failed to exclude is caught, and
+     * polls because the table re-renders after the /api/employees response settles.
+     */
+    async expectAllSapCellsAre(...allowed: string[]): Promise<void> {
+        await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+        await expect.poll(
+            async () => (await this.sapColumn.allInnerTexts())
+                .map(text => text.trim())
+                .filter(text => !allowed.includes(text)),
+            { timeout: 10000, message: `Every SAP cell should read one of ${allowed.join(' / ')}` }
+        ).toEqual([]);
+        await expect(this.sapColumn.first()).toHaveText(new RegExp(`^(${allowed.join('|')})$`));
+    }
+
+    /**
+     * Asserts the first row's SAP cell reads `value`. Polls — after a save or a filter
+     * change the row is re-rendered, so a single immediate read can catch the old value.
+     */
+    async expectFirstSapCellIs(value: string): Promise<void> {
+        await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+        await expect.poll(
+            async () => (await this.sapColumn.first().innerText()).trim(),
+            { timeout: 10000, message: `First row SAP cell should read ${value}` }
+        ).toBe(value);
+    }
+
     async selectOnlyStatus(statusToKeep: keyof typeof this.statusCheckboxes) {
         for (const [name, cb] of Object.entries(this.statusCheckboxes)) {
             if (name === statusToKeep) {
@@ -188,6 +257,9 @@ export class RecrutimentPage extends BasePage {
         await expect(this.recruiterColumn.first()).toContainText(data.recruiter);
         await expect(this.stausColumn.first()).toContainText(data.status);
         await expect(this.stausColumn.first()).toHaveCSS('background-color', data.statusColor);
+        if (data.sap !== undefined) {
+            await expect(this.sapColumn.first()).toHaveText(data.sap);
+        }
         await expect(this.emailColumn.first()).toContainText(data.email);
         await expect(this.phoneColumn.first()).toContainText(data.phone);
         await expect(this.countryColumn.first()).toContainText(data.country);

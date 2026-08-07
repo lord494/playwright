@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
-import { get6RandomNumber, getRandom10Number } from '../../helpers/dateUtilis';
+import { get6RandomNumber, getRandom10Number, safeDeleteEmployeeByPhone } from '../../helpers/dateUtilis';
 import { test } from '../fixtures/fixtures';
 
 test('Korisnik moze da doda employee sa statusom Unemployed', async ({ addEmployeeSetup, recruitmentOverview }) => {
@@ -342,5 +342,153 @@ test('Korisnik moze da doda edituje employee-a', async ({ addEmployeeSetup, recr
         phone: randomPhoneEdit,
         country: Constants.city,
         note: Constants.noteSecond,
+    });
+});
+
+/**
+ * SAP checkbox u add/edit formi. Mapira se na `sap: true|false` u /api/employees pozivu,
+ * a u tabeli se prikazuje kao YES / NO u SAP koloni (td:nth-child(6)).
+ * Tests za SAP kolonu i SAP filter na overview-u su u recruitmentOverview.spec.ts.
+ *
+ * Svaki test koristi random broj telefona (unique identifier) i brise dodatog zaposlenog
+ * u afterEach, da SAP=YES redovi ne bi ostajali na stagingu.
+ */
+test.describe('SAP checkbox u add/edit formi', () => {
+    // Dodavanje/edit + pretraga + cleanup u afterEach ne staju u podrazumevanih 30s
+    // (afterEach deli budzet sa testom).
+    test.describe.configure({ timeout: 60_000 });
+
+    let createdPhone: string | null = null;
+
+    test.afterEach(async ({ loggedPage }) => {
+        if (createdPhone) {
+            await safeDeleteEmployeeByPhone(loggedPage, createdPhone);
+            createdPhone = null;
+        }
+    });
+
+    test('SAP checkbox u add formi je podrazumevano neoznacen', async ({ addEmployeeSetup }) => {
+        await expect(addEmployeeSetup.sapCheckboxInput).toBeVisible();
+        await expect(addEmployeeSetup.sapCheckboxInput).not.toBeChecked();
+    });
+
+    test('Korisnik moze da doda employee-a kojem je SAP yes i da ga nadje pretragom po broju telefona', async ({ addEmployeeSetup, recruitmentOverview }) => {
+        const randomCdl = get6RandomNumber().join('');
+        const randomPhone = getRandom10Number().join('');
+        createdPhone = randomPhone;
+        await addEmployeeSetup.fillEmployeeForm({
+            cdl: randomCdl,
+            recruiterOption: addEmployeeSetup.recruiterOption,
+            name: Constants.driverName,
+            email: Constants.testEmail,
+            phone: randomPhone,
+            country: Constants.state,
+            note: Constants.noteFirst,
+            statusOption: addEmployeeSetup.unemployedStatus,
+            sap: true,
+        });
+        await addEmployeeSetup.saveButton.click();
+        await recruitmentOverview.dialogBox.waitFor({ state: 'detached', timeout: 5000 });
+        await recruitmentOverview.searchEmployeeByPhone(randomPhone);
+        await recruitmentOverview.expectFirstEmployeeRow({
+            cdl: randomCdl,
+            name: Constants.driverName,
+            recruiter: Constants.plawrightRecruiter,
+            status: Constants.unemployedStatus,
+            statusColor: Constants.unemployedStatusColor,
+            sap: Constants.sapYes,
+            email: Constants.testEmail,
+            phone: randomPhone,
+            country: Constants.state,
+            note: Constants.noteFirst,
+        });
+    });
+
+    test('Korisnik moze da doda employee-a kojem je SAP no i da ga nadje pretragom po broju telefona', async ({ addEmployeeSetup, recruitmentOverview }) => {
+        const randomCdl = get6RandomNumber().join('');
+        const randomPhone = getRandom10Number().join('');
+        createdPhone = randomPhone;
+        await addEmployeeSetup.fillEmployeeForm({
+            cdl: randomCdl,
+            recruiterOption: addEmployeeSetup.recruiterOption,
+            name: Constants.driverName,
+            email: Constants.testEmail,
+            phone: randomPhone,
+            country: Constants.state,
+            note: Constants.noteFirst,
+            statusOption: addEmployeeSetup.unemployedStatus,
+            sap: false,
+        });
+        await addEmployeeSetup.saveButton.click();
+        await recruitmentOverview.dialogBox.waitFor({ state: 'detached', timeout: 5000 });
+        await recruitmentOverview.searchEmployeeByPhone(randomPhone);
+        await recruitmentOverview.expectFirstEmployeeRow({
+            cdl: randomCdl,
+            name: Constants.driverName,
+            recruiter: Constants.plawrightRecruiter,
+            status: Constants.unemployedStatus,
+            statusColor: Constants.unemployedStatusColor,
+            sap: Constants.sapNo,
+            email: Constants.testEmail,
+            phone: randomPhone,
+            country: Constants.state,
+            note: Constants.noteFirst,
+        });
+    });
+
+    test('Korisnik moze da promeni SAP sa no na yes kroz edit formu', async ({ addEmployeeSetup, recruitmentOverview }) => {
+        const randomCdl = get6RandomNumber().join('');
+        const randomPhone = getRandom10Number().join('');
+        createdPhone = randomPhone;
+        await addEmployeeSetup.fillEmployeeForm({
+            cdl: randomCdl,
+            recruiterOption: addEmployeeSetup.recruiterOption,
+            name: Constants.driverName,
+            email: Constants.testEmail,
+            phone: randomPhone,
+            country: Constants.state,
+            note: Constants.noteFirst,
+            statusOption: addEmployeeSetup.unemployedStatus,
+            sap: false,
+        });
+        await addEmployeeSetup.saveButton.click();
+        await recruitmentOverview.dialogBox.waitFor({ state: 'detached', timeout: 5000 });
+        await recruitmentOverview.searchEmployeeByPhone(randomPhone);
+        await recruitmentOverview.expectFirstSapCellIs(Constants.sapNo);
+        await recruitmentOverview.pencilIcon.click();
+        // Edit forma cita snimljenu vrednost — za SAP=NO zaposlenog checkbox je neoznacen.
+        await expect(addEmployeeSetup.sapCheckboxInput).not.toBeChecked();
+        await addEmployeeSetup.setSap(true);
+        await addEmployeeSetup.saveButton.click();
+        await recruitmentOverview.dialogBox.waitFor({ state: 'detached', timeout: 5000 });
+        await recruitmentOverview.expectFirstSapCellIs(Constants.sapYes);
+    });
+
+    test('Korisnik moze da promeni SAP sa yes na no kroz edit formu', async ({ addEmployeeSetup, recruitmentOverview }) => {
+        const randomCdl = get6RandomNumber().join('');
+        const randomPhone = getRandom10Number().join('');
+        createdPhone = randomPhone;
+        await addEmployeeSetup.fillEmployeeForm({
+            cdl: randomCdl,
+            recruiterOption: addEmployeeSetup.recruiterOption,
+            name: Constants.driverName,
+            email: Constants.testEmail,
+            phone: randomPhone,
+            country: Constants.state,
+            note: Constants.noteFirst,
+            statusOption: addEmployeeSetup.unemployedStatus,
+            sap: true,
+        });
+        await addEmployeeSetup.saveButton.click();
+        await recruitmentOverview.dialogBox.waitFor({ state: 'detached', timeout: 5000 });
+        await recruitmentOverview.searchEmployeeByPhone(randomPhone);
+        await recruitmentOverview.expectFirstSapCellIs(Constants.sapYes);
+        await recruitmentOverview.pencilIcon.click();
+        // Edit forma cita snimljenu vrednost — za SAP=YES zaposlenog checkbox je oznacen.
+        await expect(addEmployeeSetup.sapCheckboxInput).toBeChecked();
+        await addEmployeeSetup.setSap(false);
+        await addEmployeeSetup.saveButton.click();
+        await recruitmentOverview.dialogBox.waitFor({ state: 'detached', timeout: 5000 });
+        await recruitmentOverview.expectFirstSapCellIs(Constants.sapNo);
     });
 });

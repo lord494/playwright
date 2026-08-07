@@ -408,6 +408,33 @@ export async function safeDeleteLeasingClient(page: Page, identifier: string): P
     ]);
 }
 
+// Best-effort cleanup for employees a spec created on /recruitment. The phone number is
+// the unique identifier (random per test), so it is enough to find the row.
+// Hard-capped at 15s and never throws, so a flaky cleanup can't fail the test.
+// Verified against staging.vrlz.app DOM 2026-08-06:
+//   - phone column is td:nth-child(8) (the new SAP column shifted the table by one)
+//   - Search fires /api/employees?page=1&perPage=100&search=<phone>&statuses[]=...
+//   - row delete is `.mdi-delete` + a native confirm
+export async function safeDeleteEmployeeByPhone(page: Page, phone: string): Promise<void> {
+    const acceptDialog = async (d: any) => { try { await d.accept(); } catch { /* ignore */ } };
+    const cleanup = (async () => {
+        try {
+            const recruitment = new RecrutimentPage(page);
+            await page.goto(Constants.recruitmentUrl, { waitUntil: 'domcontentloaded', timeout: 10000 });
+            await recruitment.searchEmployeeByPhone(phone);
+            if (await recruitment.phoneColumn.count().catch(() => 0) === 0) return;
+            page.on('dialog', acceptDialog);
+            await recruitment.deleteIcon.first().click({ timeout: 3000 });
+            await expect.poll(async () => await recruitment.phoneColumn.count(), { timeout: 5000 }).toBe(0);
+        } catch { /* best-effort */ }
+        finally { page.off('dialog', acceptDialog); }
+    })();
+    await Promise.race([
+        cleanup,
+        new Promise<void>(resolve => setTimeout(resolve, 15000)),
+    ]);
+}
+
 // ===== Dashboard load helpers =====
 // A load is identified server-side by driver + day. These build the date fields a
 // load create/list call needs from a single JS Date, in the exact formats the API
