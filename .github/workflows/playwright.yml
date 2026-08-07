@@ -757,77 +757,62 @@ jobs:
             --arg model "$CLAUDE_MODEL" \
             '{
               model: $model,
-              max_tokens: 4000,
+              max_tokens: 3000,
               messages: [
                 {
                   role: "user",
                   content: (
                     "Analyze this failed Playwright CI run.\n\n" +
 
-                    "Your analysis must be based only on the supplied evidence. " +
-                    "Do not classify a failure as an application bug only because " +
-                    "a test timed out, a locator was missing, or a page was closed.\n\n" +
+                    "Use only the supplied evidence. The structured failure context already " +
+                    "contains Playwright errors, retries, artifacts and browser/network diagnostics.\n\n" +
 
-                    "The structured failure context already contains browser and " +
-                    "network diagnostics under browserDiagnostics for each attempt.\n\n" +
+                    "IMPORTANT OUTPUT RULE:\n" +
+                    "The FIRST line of your response must be exactly one of these markers:\n" +
+                    "<!-- FIX_SUGGESTION:GENERATE -->\n" +
+                    "<!-- FIX_SUGGESTION:DO_NOT_GENERATE -->\n\n" +
 
-                    "Group tests that appear to share the same root cause.\n\n" +
+                    "Immediately after the marker, output:\n\n" +
+                    "## Fix Suggestion Status\n" +
+                    "Status: Generate suggestion OR Status: Do not generate suggestion\n" +
+                    "Reason: <one short evidence-based sentence>\n\n" +
 
-                    "Use exactly one classification for each failure group:\n" +
-                    "- Confirmed application bug\n" +
-                    "- Likely application bug\n" +
-                    "- Confirmed automation issue\n" +
-                    "- Likely automation issue\n" +
-                    "- Test-data issue\n" +
-                    "- Environment/CI issue\n" +
-                    "- Dependency/service issue\n" +
-                    "- Inconclusive\n\n" +
+                    "Use GENERATE only if at least one failure group is:\n" +
+                    "- Confirmed automation issue with High confidence; or\n" +
+                    "- Likely automation issue with High confidence and a concrete fix is supported by evidence.\n\n" +
 
-                    "Use exactly one confidence level:\n" +
-                    "- High\n" +
-                    "- Medium\n" +
-                    "- Low\n\n" +
+                    "Use DO_NOT_GENERATE when failures are application bugs, test-data issues, " +
+                    "environment/CI issues, dependency issues, inconclusive, or only Low/Medium confidence.\n\n" +
 
-                    "For every failure group include:\n" +
-                    "1. Affected tests\n" +
-                    "2. Immediate failure\n" +
-                    "3. Confirmed evidence\n" +
-                    "4. Most likely root cause\n" +
-                    "5. Classification\n" +
-                    "6. Confidence\n" +
-                    "7. Severity\n" +
-                    "8. Recommended next actions\n" +
-                    "9. Changes that should not be made\n" +
-                    "10. Relevant artifacts\n\n" +
+                    "Then write a concise professional report.\n\n" +
 
-                    "Clearly separate confirmed facts from hypotheses.\n" +
-                    "Do not recommend fixed waits or arbitrary timeout increases.\n\n" +
+                    "For each distinct failure group include only:\n" +
+                    "### Failure Group <number> - <short title>\n" +
+                    "- Affected tests\n" +
+                    "- Evidence: 2-5 strongest confirmed facts only\n" +
+                    "- Root cause: clearly label uncertainty when needed\n" +
+                    "- Classification: exactly one of Confirmed application bug, Likely application bug, " +
+                    "Confirmed automation issue, Likely automation issue, Test-data issue, Environment/CI issue, " +
+                    "Dependency/service issue, Inconclusive\n" +
+                    "- Confidence: High, Medium, or Low\n" +
+                    "- Recommendation: 1-3 concrete next actions\n\n" +
 
-                    "At the very end of the analysis include exactly this section:\n\n" +
-                    "## Fix Suggestion Status\n\n" +
-                    "Status: Generate suggestion\n" +
-                    "or\n" +
-                    "Status: Do not generate suggestion\n\n" +
-                    "Reason: <brief evidence-based explanation>\n\n" +
+                    "Group failures that share the same likely root cause. " +
+                    "Do not repeat the same evidence in multiple sections.\n\n" +
 
-                    "Use \"Generate suggestion\" only when:\n" +
-                    "- the failure is a confirmed or highly likely automation issue;\n" +
-                    "- confidence is High;\n" +
-                    "- the available evidence supports a concrete automation fix.\n\n" +
+                    "Do not call something an application bug merely because a timeout, missing locator, " +
+                    "closed page, or failed assertion occurred.\n" +
+                    "Do not recommend waitForTimeout, arbitrary timeout increases, extra retries, " +
+                    "weaker assertions, skipping tests, or hiding failures.\n\n" +
 
-                    "Use \"Do not generate suggestion\" for:\n" +
-                    "- application bugs;\n" +
-                    "- test-data issues;\n" +
-                    "- environment or CI issues;\n" +
-                    "- dependency failures;\n" +
-                    "- inconclusive failures;\n" +
-                    "- low or medium confidence.\n\n" +
-
-                    "Before the Fix Suggestion Status section, end the main report with:\n" +
-                    "- Overall run summary\n" +
-                    "- Release risk\n" +
+                    "Finish with:\n" +
+                    "## Run Summary\n" +
+                    "- Passed / failed / flaky counts\n" +
+                    "- Release risk: Low, Medium, High, or Blocking\n" +
                     "- Suggested owner for each failure group\n" +
-                    "- Prioritized next actions\n\n" +
+                    "- Top 1-3 next actions\n\n" +
+
+                    "Keep the report concise. Do not exceed roughly 1800 words.\n\n" +
 
                     "STRUCTURED FAILURE CONTEXT:\n" +
                     $failureContext +
@@ -898,7 +883,7 @@ jobs:
             exit 0
           fi
 
-          if ! grep -Fq "Status: Generate suggestion" claude-analysis.md; then
+          if ! grep -Fq "<!-- FIX_SUGGESTION:GENERATE -->" claude-analysis.md; then
             echo "Claude analysis did not approve a fix suggestion."
             exit 0
           fi
@@ -919,8 +904,8 @@ jobs:
                     "Do not modify repository files.\n" +
                     "Do not create a commit or pull request.\n\n" +
 
-                    "Only suggest a change that addresses the identified " +
-                    "automation root cause.\n\n" +
+                    "Only suggest changes for failure groups that the analysis identifies as " +
+                    "eligible automation issues with High confidence. Ignore all other groups.\n\n" +
 
                     "Never suggest:\n" +
                     "- waitForTimeout\n" +
@@ -929,7 +914,7 @@ jobs:
                     "- removing or weakening assertions\n" +
                     "- ignoring failures\n\n" +
 
-                    "Return Markdown with exactly these sections:\n\n" +
+                    "Return concise Markdown with these sections:\n\n" +
 
                     "# Playwright Fix Suggestion\n\n" +
 
@@ -938,15 +923,14 @@ jobs:
                     "- File\n" +
                     "- Failure type\n\n" +
 
-                    "## Why This Is an Automation Issue\n\n" +
-
                     "## Suggested Change\n" +
-                    "Include the smallest relevant TypeScript code snippet.\n\n" +
+                    "Show the current relevant code and the smallest proposed TypeScript change.\n\n" +
 
-                    "## Expected Result\n\n" +
+                    "## Why\n" +
+                    "Explain in 1-3 sentences why this addresses the automation root cause.\n\n" +
 
                     "## Manual Verification\n" +
-                    "Explain how QA should verify the suggestion.\n\n" +
+                    "Give the exact Playwright command or minimal verification steps.\n\n" +
 
                     "Do not claim the fix is confirmed because it has not " +
                     "been applied or executed.\n\n" +
@@ -1064,4 +1048,4 @@ jobs:
             exit 1
           fi
 
-          echo "No failed Playwright tests detected."
+          echo "No failed Playwright tests detected
