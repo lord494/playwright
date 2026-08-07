@@ -559,43 +559,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ---------------------------------------------------------
-      # 1. Checkout repository
-      # ---------------------------------------------------------
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      # ---------------------------------------------------------
-      # 2. Docker Hub login
-      # ---------------------------------------------------------
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # ---------------------------------------------------------
-      # 3. Build Docker image
-      # ---------------------------------------------------------
       - name: Build Docker image
         run: |
           docker build \
             -t ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest \
             .
 
-      # ---------------------------------------------------------
-      # 4. Push Docker image
-      # ---------------------------------------------------------
       - name: Push Docker image
         run: |
           docker push \
             ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest
 
-      # ---------------------------------------------------------
-      # 5. Detect which test areas should run
-      # ---------------------------------------------------------
       - name: Detect changed folders and map to test dirs
         id: detect-tests
         shell: bash
@@ -611,7 +596,6 @@ jobs:
           echo "$CHANGED_FILES"
 
           TEST_DIRS_SET=()
-          RUN_ALL_TESTS=false
 
           for file in $CHANGED_FILES; do
 
@@ -626,7 +610,10 @@ jobs:
             fi
 
             # tests/trailer/... -> tests/trailer
-            if [[ "$file" == tests/*/* ]]; then
+            # Ignore tests/fixtures because those changes should not trigger all tests.
+            if [[ "$file" == tests/*/* ]] &&
+               [[ "$file" != tests/fixtures/* ]]; then
+
               feature=$(echo "$file" | cut -d/ -f2)
               test_path="tests/$feature"
 
@@ -635,22 +622,10 @@ jobs:
               fi
             fi
 
-            # Shared files can affect many/all tests.
-            if [[ "$file" == tests/fixtures/* ]] ||
-               [[ "$file" == helpers/* ]] ||
-               [[ "$file" == scripts/* ]] ||
-               [[ "$file" == "playwright.config.ts" ]] ||
-               [[ "$file" == "globalSetup.ts" ]] ||
-               [[ "$file" == "package.json" ]] ||
-               [[ "$file" == "package-lock.json" ]] ||
-               [[ "$file" == "Dockerfile" ]] ||
-               [[ "$file" == ".github/workflows/playwright.yml" ]]; then
-              RUN_ALL_TESTS=true
-            fi
           done
 
-          if [ "$RUN_ALL_TESTS" = true ]; then
-            TEST_DIRS="tests"
+          if [ "${#TEST_DIRS_SET[@]}" -eq 0 ]; then
+            TEST_DIRS=""
           else
             TEST_DIRS=$(printf "%s\n" "${TEST_DIRS_SET[@]}" |
               sort -u |
@@ -661,15 +636,6 @@ jobs:
           echo "TEST_DIRS=$TEST_DIRS" >> "$GITHUB_ENV"
           echo "Selected test directories: $TEST_DIRS"
 
-      # ---------------------------------------------------------
-      # 6. Run Playwright inside Docker.
-      #
-      # Important:
-      # - reporters come from playwright.config.ts
-      # - Playwright failure does not stop this step immediately
-      # - failure-context and fix-context are generated in container
-      # - real Playwright exit code is saved for the final step
-      # ---------------------------------------------------------
       - name: Run matched Playwright tests in Docker
         id: playwright-tests
         if: env.TEST_DIRS != ''
@@ -740,12 +706,8 @@ jobs:
           echo "Generated Playwright report files:"
           find playwright-report -maxdepth 3 -type f -print || true
 
-          # Keep workflow alive so analysis, suggestion and artifacts can run.
           exit 0
 
-      # ---------------------------------------------------------
-      # 7. No matching tests
-      # ---------------------------------------------------------
       - name: Record skipped test execution
         if: env.TEST_DIRS == ''
         shell: bash
@@ -753,9 +715,6 @@ jobs:
           echo "No matching test directories were found."
           echo "0" > playwright-exit-code.txt
 
-      # ---------------------------------------------------------
-      # 8. Claude failure analysis
-      # ---------------------------------------------------------
       - name: Ask Claude to analyze failed Playwright tests
         if: always()
         env:
@@ -918,14 +877,6 @@ jobs:
 
           echo "Claude analysis created successfully."
 
-      # ---------------------------------------------------------
-      # 9. Claude fix suggestion
-      #
-      # Runs only when:
-      # - analysis exists
-      # - fix-context exists
-      # - analysis explicitly says Generate suggestion
-      # ---------------------------------------------------------
       - name: Ask Claude for Playwright fix suggestion
         if: always()
         env:
@@ -1045,9 +996,6 @@ jobs:
             echo "Claude returned no suggestion."
           fi
 
-      # ---------------------------------------------------------
-      # 10. GitHub job summary
-      # ---------------------------------------------------------
       - name: Add Claude analysis and suggestion to job summary
         if: always()
         shell: bash
@@ -1065,9 +1013,6 @@ jobs:
             cat claude-suggestion.md >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      # ---------------------------------------------------------
-      # 11. Upload Claude analysis/suggestion files
-      # ---------------------------------------------------------
       - name: Upload Claude analysis and suggestion
         if: always()
         uses: actions/upload-artifact@v4
@@ -1085,9 +1030,6 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      # ---------------------------------------------------------
-      # 12. Upload Playwright HTML report
-      # ---------------------------------------------------------
       - name: Upload Playwright HTML report
         if: always()
         uses: actions/upload-artifact@v4
@@ -1097,18 +1039,6 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      # ---------------------------------------------------------
-      # 13. Upload raw/structured Playwright results
-      #
-      # Includes:
-      # - results.json
-      # - failure-context.json
-      # - fix-context.json (when tests fail)
-      # - browser-diagnostics.json
-      # - screenshots
-      # - traces
-      # - videos
-      # ---------------------------------------------------------
       - name: Upload Playwright test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -1118,9 +1048,6 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
 
-      # ---------------------------------------------------------
-      # 14. Fail workflow only after all analysis/artifacts finish
-      # ---------------------------------------------------------
       - name: Fail workflow if Playwright tests failed
         if: always()
         shell: bash

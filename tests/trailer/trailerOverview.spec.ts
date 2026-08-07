@@ -75,7 +75,7 @@ test('Korisnik moze da otvori company history modal', async ({ trailerOverviewSe
 test('Korisnik moze da otvori plate history modal', async ({ trailerOverviewSetup }) => {
     await trailerOverviewSetup.clickElement(trailerOverviewSetup.reloadIconInPlateColumn.first());
     await expect(trailerOverviewSetup.historyModal).not.toBeVisible({ timeout: 3000 });
-    //
+    ///
 });
 
 test('Korisnik moze da otvori temp plate exp history modal', async ({ trailerOverviewSetup }) => {
