@@ -547,6 +547,509 @@
 
 #           echo "No failed Playwright tests detected."
 
+# name: Run Changed Playwright Tests
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   run-playwright-tests:
+#     runs-on: ubuntu-latest
+
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
+
+#       - name: Login to Docker Hub
+#         uses: docker/login-action@v3
+#         with:
+#           username: ${{ secrets.DOCKER_USERNAME }}
+#           password: ${{ secrets.DOCKER_PASSWORD }}
+
+#       - name: Build Docker image
+#         run: |
+#           docker build \
+#             -t ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest \
+#             .
+
+#       - name: Push Docker image
+#         run: |
+#           docker push \
+#             ${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest
+
+#       - name: Detect changed folders and map to test dirs
+#         id: detect-tests
+#         shell: bash
+#         run: |
+#           echo "Detecting changed files..."
+
+#           CHANGED_FILES=$(git diff \
+#             --name-only \
+#             "${{ github.event.before }}" \
+#             "${{ github.sha }}")
+
+#           echo "Changed files:"
+#           echo "$CHANGED_FILES"
+
+#           TEST_DIRS_SET=()
+
+#           for file in $CHANGED_FILES; do
+
+#             # page/trailer/... -> tests/trailer
+#             if [[ "$file" == page/*/* ]]; then
+#               feature=$(echo "$file" | cut -d/ -f2)
+#               test_path="tests/$feature"
+
+#               if [ -d "$test_path" ]; then
+#                 TEST_DIRS_SET+=("$test_path")
+#               fi
+#             fi
+
+#             # tests/trailer/... -> tests/trailer
+#             # Ignore tests/fixtures because those changes should not trigger all tests.
+#             if [[ "$file" == tests/*/* ]] &&
+#                [[ "$file" != tests/fixtures/* ]]; then
+
+#               feature=$(echo "$file" | cut -d/ -f2)
+#               test_path="tests/$feature"
+
+#               if [ -d "$test_path" ]; then
+#                 TEST_DIRS_SET+=("$test_path")
+#               fi
+#             fi
+
+#           done
+
+#           if [ "${#TEST_DIRS_SET[@]}" -eq 0 ]; then
+#             TEST_DIRS=""
+#           else
+#             TEST_DIRS=$(printf "%s\n" "${TEST_DIRS_SET[@]}" |
+#               sort -u |
+#               tr '\n' ' ' |
+#               xargs)
+#           fi
+
+#           echo "TEST_DIRS=$TEST_DIRS" >> "$GITHUB_ENV"
+#           echo "Selected test directories: $TEST_DIRS"
+
+#       - name: Run matched Playwright tests in Docker
+#         id: playwright-tests
+#         if: env.TEST_DIRS != ''
+#         shell: bash
+#         run: |
+#           echo "Running tests for: $TEST_DIRS"
+
+#           mkdir -p playwright-report
+#           mkdir -p test-results
+
+#           set +e
+
+#           docker run --rm \
+#             -e CI=true \
+#             -e PLAYWRIGHT_HTML_OPEN=never \
+#             -e TEST_DIRS="$TEST_DIRS" \
+#             -v "${{ github.workspace }}/playwright-report:/app/playwright-report" \
+#             -v "${{ github.workspace }}/test-results:/app/test-results" \
+#             "${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest" \
+#             sh -lc '
+#               set +e
+
+#               echo "Running Playwright tests: $TEST_DIRS"
+
+#               npx playwright test $TEST_DIRS
+#               TEST_EXIT_CODE=$?
+
+#               echo "Playwright exit code inside container: $TEST_EXIT_CODE"
+
+#               if [ -f test-results/results.json ]; then
+#                 echo "Building structured failure context..."
+
+#                 npm run build:failure-context
+#                 CONTEXT_EXIT_CODE=$?
+
+#                 if [ "$CONTEXT_EXIT_CODE" != "0" ]; then
+#                   echo "Failure-context generation failed."
+#                 fi
+
+#                 if [ "$TEST_EXIT_CODE" != "0" ] &&
+#                    [ -f test-results/failure-context.json ]; then
+
+#                   echo "Building fix suggestion context..."
+
+#                   npm run build:fix-context
+#                   FIX_CONTEXT_EXIT_CODE=$?
+
+#                   if [ "$FIX_CONTEXT_EXIT_CODE" != "0" ]; then
+#                     echo "Fix-context generation failed."
+#                   fi
+#                 fi
+#               else
+#                 echo "test-results/results.json was not generated."
+#               fi
+
+#               exit "$TEST_EXIT_CODE"
+#             ' 2>&1 | tee playwright-output.log
+
+#           TEST_EXIT_CODE=${PIPESTATUS[0]}
+
+#           echo "$TEST_EXIT_CODE" > playwright-exit-code.txt
+
+#           echo "Playwright exit code: $TEST_EXIT_CODE"
+
+#           echo "Generated test-results files:"
+#           find test-results -maxdepth 5 -type f -print || true
+
+#           echo "Generated Playwright report files:"
+#           find playwright-report -maxdepth 3 -type f -print || true
+
+#           exit 0
+
+#       - name: Record skipped test execution
+#         if: env.TEST_DIRS == ''
+#         shell: bash
+#         run: |
+#           echo "No matching test directories were found."
+#           echo "0" > playwright-exit-code.txt
+
+#       - name: Ask Claude to analyze failed Playwright tests
+#         if: always()
+#         env:
+#           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+#           CLAUDE_MODEL: claude-sonnet-4-6
+#         shell: bash
+#         run: |
+#           set +e
+
+#           echo "Claude analysis step started."
+
+#           if [ ! -f playwright-exit-code.txt ]; then
+#             echo "playwright-exit-code.txt does not exist."
+#             exit 0
+#           fi
+
+#           TEST_EXIT_CODE=$(cat playwright-exit-code.txt)
+#           echo "Detected Playwright exit code: $TEST_EXIT_CODE"
+
+#           if [ "$TEST_EXIT_CODE" = "0" ]; then
+#             echo "Tests passed. Claude analysis is not required."
+#             exit 0
+#           fi
+
+#           echo "# Playwright CI Failure Analysis" > claude-analysis.md
+
+#           if [ ! -f test-results/failure-context.json ]; then
+#             echo "" >> claude-analysis.md
+#             echo "failure-context.json was not generated." >> claude-analysis.md
+#             exit 0
+#           fi
+
+#           if [ ! -f playwright-output.log ]; then
+#             touch playwright-output.log
+#           fi
+
+#           jq -n \
+#             --rawfile failureContext test-results/failure-context.json \
+#             --rawfile terminalOutput playwright-output.log \
+#             --arg model "$CLAUDE_MODEL" \
+#             '{
+#               model: $model,
+#               max_tokens: 3000,
+#               messages: [
+#                 {
+#                   role: "user",
+#                   content: (
+#                     "Analyze this failed Playwright CI run.\n\n" +
+
+#                     "Use only the supplied evidence. The structured failure context already " +
+#                     "contains Playwright errors, retries, artifacts and browser/network diagnostics.\n\n" +
+
+#                     "IMPORTANT OUTPUT RULE:\n" +
+#                     "The FIRST line of your response must be exactly one of these markers:\n" +
+#                     "<!-- FIX_SUGGESTION:GENERATE -->\n" +
+#                     "<!-- FIX_SUGGESTION:DO_NOT_GENERATE -->\n\n" +
+
+#                     "Immediately after the marker, output:\n\n" +
+#                     "## Fix Suggestion Status\n" +
+#                     "Status: Generate suggestion OR Status: Do not generate suggestion\n" +
+#                     "Reason: <one short evidence-based sentence>\n\n" +
+
+#                     "Use GENERATE only if at least one failure group is:\n" +
+#                     "- Confirmed automation issue with High confidence; or\n" +
+#                     "- Likely automation issue with High confidence and a concrete fix is supported by evidence.\n\n" +
+
+#                     "Use DO_NOT_GENERATE when failures are application bugs, test-data issues, " +
+#                     "environment/CI issues, dependency issues, inconclusive, or only Low/Medium confidence.\n\n" +
+
+#                     "Then write a concise professional report.\n\n" +
+
+#                     "For each distinct failure group include only:\n" +
+#                     "### Failure Group <number> - <short title>\n" +
+#                     "- Affected tests\n" +
+#                     "- Evidence: 2-5 strongest confirmed facts only\n" +
+#                     "- Root cause: clearly label uncertainty when needed\n" +
+#                     "- Classification: exactly one of Confirmed application bug, Likely application bug, " +
+#                     "Confirmed automation issue, Likely automation issue, Test-data issue, Environment/CI issue, " +
+#                     "Dependency/service issue, Inconclusive\n" +
+#                     "- Confidence: High, Medium, or Low\n" +
+#                     "- Recommendation: 1-3 concrete next actions\n\n" +
+
+#                     "Group failures that share the same likely root cause. " +
+#                     "Do not repeat the same evidence in multiple sections.\n\n" +
+
+#                     "Do not call something an application bug merely because a timeout, missing locator, " +
+#                     "closed page, or failed assertion occurred.\n" +
+#                     "Do not recommend waitForTimeout, arbitrary timeout increases, extra retries, " +
+#                     "weaker assertions, skipping tests, or hiding failures.\n\n" +
+
+#                     "Finish with:\n" +
+#                     "## Run Summary\n" +
+#                     "- Passed / failed / flaky counts\n" +
+#                     "- Release risk: Low, Medium, High, or Blocking\n" +
+#                     "- Suggested owner for each failure group\n" +
+#                     "- Top 1-3 next actions\n\n" +
+
+#                     "Keep the report concise. Do not exceed roughly 1800 words.\n\n" +
+
+#                     "STRUCTURED FAILURE CONTEXT:\n" +
+#                     $failureContext +
+
+#                     "\n\nPLAYWRIGHT TERMINAL OUTPUT:\n" +
+#                     $terminalOutput
+#                   )
+#                 }
+#               ]
+#             }' > claude-request.json
+
+#           if [ ! -s claude-request.json ]; then
+#             echo "" >> claude-analysis.md
+#             echo "Claude request JSON could not be created." >> claude-analysis.md
+#             exit 0
+#           fi
+
+#           echo "Sending request to Claude model: $CLAUDE_MODEL"
+
+#           HTTP_CODE=$(curl \
+#             --silent \
+#             --show-error \
+#             --output claude-raw-response.json \
+#             --write-out "%{http_code}" \
+#             https://api.anthropic.com/v1/messages \
+#             --header "x-api-key: $ANTHROPIC_API_KEY" \
+#             --header "anthropic-version: 2023-06-01" \
+#             --header "content-type: application/json" \
+#             --data @claude-request.json)
+
+#           echo "Claude API status: $HTTP_CODE"
+
+#           if [ "$HTTP_CODE" != "200" ]; then
+#             echo "" >> claude-analysis.md
+#             echo "Claude API returned HTTP status $HTTP_CODE." >> claude-analysis.md
+#             echo "" >> claude-analysis.md
+#             echo '```json' >> claude-analysis.md
+#             cat claude-raw-response.json >> claude-analysis.md 2>/dev/null || true
+#             echo '```' >> claude-analysis.md
+#             exit 0
+#           fi
+
+#           jq -r \
+#             '.content[0].text // .error.message // "Claude returned no readable analysis."' \
+#             claude-raw-response.json \
+#             >> claude-analysis.md
+
+#           echo "Claude analysis created successfully."
+
+#       - name: Ask Claude for Playwright fix suggestion
+#         if: always()
+#         env:
+#           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+#           CLAUDE_MODEL: claude-sonnet-4-6
+#         shell: bash
+#         run: |
+#           set +e
+
+#           echo "Claude fix suggestion step started."
+
+#           if [ ! -f claude-analysis.md ]; then
+#             echo "Claude analysis does not exist."
+#             exit 0
+#           fi
+
+#           if [ ! -f test-results/fix-context.json ]; then
+#             echo "fix-context.json does not exist."
+#             exit 0
+#           fi
+
+#           if ! grep -Fq "<!-- FIX_SUGGESTION:GENERATE -->" claude-analysis.md; then
+#             echo "Claude analysis did not approve a fix suggestion."
+#             exit 0
+#           fi
+
+#           jq -n \
+#             --rawfile analysis claude-analysis.md \
+#             --rawfile fixContext test-results/fix-context.json \
+#             --arg model "$CLAUDE_MODEL" \
+#             '{
+#               model: $model,
+#               max_tokens: 2500,
+#               messages: [
+#                 {
+#                   role: "user",
+#                   content: (
+#                     "Create a Playwright automation fix suggestion.\n\n" +
+
+#                     "Do not modify repository files.\n" +
+#                     "Do not create a commit or pull request.\n\n" +
+
+#                     "Only suggest changes for failure groups that the analysis identifies as " +
+#                     "eligible automation issues with High confidence. Ignore all other groups.\n\n" +
+
+#                     "Never suggest:\n" +
+#                     "- waitForTimeout\n" +
+#                     "- arbitrary timeout increases\n" +
+#                     "- additional retries\n" +
+#                     "- removing or weakening assertions\n" +
+#                     "- ignoring failures\n\n" +
+
+#                     "Return concise Markdown with these sections:\n\n" +
+
+#                     "# Playwright Fix Suggestion\n\n" +
+
+#                     "## Target\n" +
+#                     "- Test\n" +
+#                     "- File\n" +
+#                     "- Failure type\n\n" +
+
+#                     "## Suggested Change\n" +
+#                     "Show the current relevant code and the smallest proposed TypeScript change.\n\n" +
+
+#                     "## Why\n" +
+#                     "Explain in 1-3 sentences why this addresses the automation root cause.\n\n" +
+
+#                     "## Manual Verification\n" +
+#                     "Give the exact Playwright command or minimal verification steps.\n\n" +
+
+#                     "Do not claim the fix is confirmed because it has not " +
+#                     "been applied or executed.\n\n" +
+
+#                     "CLAUDE FAILURE ANALYSIS:\n" +
+#                     $analysis +
+
+#                     "\n\nFIX CONTEXT AND SOURCE CODE:\n" +
+#                     $fixContext
+#                   )
+#                 }
+#               ]
+#             }' > claude-suggestion-request.json
+
+#           if [ ! -s claude-suggestion-request.json ]; then
+#             echo "Claude suggestion request JSON could not be created."
+#             exit 0
+#           fi
+
+#           HTTP_CODE=$(curl \
+#             --silent \
+#             --show-error \
+#             --output claude-suggestion-response.json \
+#             --write-out "%{http_code}" \
+#             https://api.anthropic.com/v1/messages \
+#             --header "x-api-key: $ANTHROPIC_API_KEY" \
+#             --header "anthropic-version: 2023-06-01" \
+#             --header "content-type: application/json" \
+#             --data @claude-suggestion-request.json)
+
+#           echo "Claude suggestion API status: $HTTP_CODE"
+
+#           if [ "$HTTP_CODE" != "200" ]; then
+#             echo "Claude suggestion request failed."
+#             exit 0
+#           fi
+
+#           jq -r \
+#             '.content[0].text // empty' \
+#             claude-suggestion-response.json \
+#             > claude-suggestion.md
+
+#           if [ -s claude-suggestion.md ]; then
+#             echo "Claude suggestion created successfully."
+#           else
+#             rm -f claude-suggestion.md
+#             echo "Claude returned no suggestion."
+#           fi
+
+#       - name: Add Claude analysis and suggestion to job summary
+#         if: always()
+#         shell: bash
+#         run: |
+#           if [ -f claude-analysis.md ]; then
+#             cat claude-analysis.md >> "$GITHUB_STEP_SUMMARY"
+#           else
+#             echo "## Claude analysis was not generated" >> "$GITHUB_STEP_SUMMARY"
+#           fi
+
+#           if [ -f claude-suggestion.md ]; then
+#             echo "" >> "$GITHUB_STEP_SUMMARY"
+#             echo "---" >> "$GITHUB_STEP_SUMMARY"
+#             echo "" >> "$GITHUB_STEP_SUMMARY"
+#             cat claude-suggestion.md >> "$GITHUB_STEP_SUMMARY"
+#           fi
+
+#       - name: Upload Claude analysis and suggestion
+#         if: always()
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: claude-analysis-${{ github.run_id }}
+#           path: |
+#             claude-analysis.md
+#             claude-raw-response.json
+#             claude-request.json
+#             claude-suggestion.md
+#             claude-suggestion-request.json
+#             claude-suggestion-response.json
+#             playwright-output.log
+#             playwright-exit-code.txt
+#           if-no-files-found: warn
+#           retention-days: 14
+
+#       - name: Upload Playwright HTML report
+#         if: always()
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: playwright-report-${{ github.run_id }}
+#           path: playwright-report/
+#           if-no-files-found: warn
+#           retention-days: 14
+
+#       - name: Upload Playwright test results
+#         if: always()
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: playwright-test-results-${{ github.run_id }}
+#           path: test-results/
+#           if-no-files-found: warn
+#           retention-days: 14
+
+#       - name: Fail workflow if Playwright tests failed
+#         if: always()
+#         shell: bash
+#         run: |
+#           if [ ! -f playwright-exit-code.txt ]; then
+#             echo "Playwright exit-code file was not generated."
+#             exit 1
+#           fi
+
+#           TEST_EXIT_CODE=$(cat playwright-exit-code.txt)
+
+#           if [ "$TEST_EXIT_CODE" != "0" ]; then
+#             echo "Playwright tests failed with exit code $TEST_EXIT_CODE."
+#             exit 1
+#           fi
+
+#           echo "No failed Playwright tests detected
+
 name: Run Changed Playwright Tests
 
 on:
@@ -1048,4 +1551,4 @@ jobs:
             exit 1
           fi
 
-          echo "No failed Playwright tests detected
+          echo "No failed Playwright tests detected."
