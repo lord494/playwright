@@ -1280,12 +1280,17 @@ jobs:
                     "Status: Generate suggestion OR Status: Do not generate suggestion\n" +
                     "Reason: <one short evidence-based sentence>\n\n" +
 
-                    "Use GENERATE only if at least one failure group is:\n" +
-                    "- Confirmed automation issue with High confidence; or\n" +
-                    "- Likely automation issue with High confidence and a concrete fix is supported by evidence.\n\n" +
-
-                    "Use DO_NOT_GENERATE when failures are application bugs, test-data issues, " +
-                    "environment/CI issues, dependency issues, inconclusive, or only Low/Medium confidence.\n\n" +
+                    "DECISION RULE — FOLLOW THIS EXACTLY:\n" +
+                    "If ANY failure group is a Confirmed automation issue with High confidence, " +
+                    "you MUST return <!-- FIX_SUGGESTION:GENERATE -->.\n" +
+                    "If ANY failure group is a Likely automation issue with High confidence AND " +
+                    "the evidence supports a concrete fix, you MUST also return <!-- FIX_SUGGESTION:GENERATE -->.\n" +
+                    "This applies even when other failure groups are application, environment, " +
+                    "test-data, dependency, or inconclusive issues.\n" +
+                    "Never skip suggestion generation because the fix is simple, obvious, self-evident, " +
+                    "or already described in the analysis.\n\n" +
+                    "Return <!-- FIX_SUGGESTION:DO_NOT_GENERATE --> only when NO failure group qualifies " +
+                    "under the rules above.\n\n" +
 
                     "Then write a concise professional report.\n\n" +
 

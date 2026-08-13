@@ -295,6 +295,7 @@ test('Korisnik ne moze da doda novog zaposlenog ako broj telefona vec postoji', 
         statusOption: addEmployeeSetup.unemployedStatus,
     });
     await addEmployeeSetup.saveButton.click();
+
     await expect(addEmployeeSetup.alertMessage).not.toBeVisible({ timeout: 5000 });
     await expect(addEmployeeSetup.alertMessage).toContainText('An employee with this phone number already exists');
 });
