@@ -210,7 +210,7 @@ test("Save button je disabled dok se ne popune sva obavezna polja", async ({ add
     await addEmployeeSetup.enterPhone(randomPhone);
     await addEmployeeSetup.enterCountry(Constants.state);
     await addEmployeeSetup.selectStatus(addEmployeeSetup.unemployedStatus);
-    await expect(addEmployeeSetup.saveButton).not.toBeDisabled();
+    await expect(addEmployeeSetup.saveButton).toBeDisabled();
 });
 
 // Per-field required-field matrix: name, phone, country and status are ALL
@@ -295,8 +295,7 @@ test('Korisnik ne moze da doda novog zaposlenog ako broj telefona vec postoji', 
         statusOption: addEmployeeSetup.unemployedStatus,
     });
     await addEmployeeSetup.saveButton.click();
-
-    await expect(addEmployeeSetup.alertMessage).not.toBeVisible({ timeout: 5000 });
+    await expect(addEmployeeSetup.alertMessage).toBeVisible({ timeout: 5000 });
     await expect(addEmployeeSetup.alertMessage).toContainText('An employee with this phone number already exists');
 });
 
