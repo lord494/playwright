@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { Locator, Page, Response } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 
 export class DriverOverviewPage extends BasePage {
@@ -16,6 +16,7 @@ export class DriverOverviewPage extends BasePage {
     readonly dispExtColumn: Locator;
     readonly companyColumn: Locator;
     readonly truckColumn: Locator;
+    readonly truckColumnLinks: Locator;
     readonly trailerColumn: Locator;
     readonly phoneColumn: Locator;
     readonly lbColumn: Locator;
@@ -36,6 +37,7 @@ export class DriverOverviewPage extends BasePage {
     readonly editButtonInModal: Locator;
     readonly noHistoryLocator: Locator;
     readonly snackMessage: Locator;
+    readonly tableProgressBar: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -53,6 +55,7 @@ export class DriverOverviewPage extends BasePage {
         this.dispExtColumn = page.locator('tr td:nth-child(5)');
         this.companyColumn = page.locator('tr td:nth-child(7)');
         this.truckColumn = page.locator('tr td:nth-child(8)');
+        this.truckColumnLinks = this.truckColumn.locator('a.table-link');
         this.trailerColumn = page.locator('tr td:nth-child(9)');
         this.phoneColumn = page.locator('tr td:nth-child(10)');
         this.lbColumn = page.locator('tr td:nth-child(11)');
@@ -73,6 +76,49 @@ export class DriverOverviewPage extends BasePage {
         this.editButtonInModal = page.getByRole('button', { name: 'Edit', exact: true });
         this.noHistoryLocator = page.locator('.no-history');
         this.snackMessage = page.locator('.v-snack__wrapper.v-sheet .v-snack__content');
+        this.tableProgressBar = page.locator('.v-data-table__progress');
+    }
+
+    async waitForTableLoads(): Promise<void> {
+        await this.tableProgressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+    }
+    async openFirstTruckFromTruckColumn(): Promise<string> {
+        await this.waitForTableLoads();
+        const firstTruckLink = this.truckColumnLinks.first();
+        await firstTruckLink.waitFor({ state: 'visible', timeout: 10000 });
+        const truckNumber = (await firstTruckLink.innerText()).trim();
+        await firstTruckLink.click();
+        return truckNumber;
+    }
+
+    private extractDriverName(cellText: string): string {
+        return cellText.replace(/\(NEW\)/gi, '').split('/')[0].split('(')[0].replace(/\*/g, '').trim();
+    }
+
+    async getFirstDriverName(): Promise<string> {
+        await this.waitForTableLoads();
+        const firstNameCell = this.driverNameColumn.first();
+        await firstNameCell.waitFor({ state: 'visible', timeout: 10000 });
+        return this.extractDriverName(await firstNameCell.innerText());
+    }
+
+    async getDriverNameColumnValues(): Promise<string[]> {
+        return (await this.driverNameColumn.allInnerTexts()).map(text => text.trim());
+    }
+
+    async searchDriverByName(name: string): Promise<Response> {
+        await this.searchInputField.click();
+        await this.page.keyboard.press('Control+A');
+        await this.page.keyboard.press('Delete');
+        const [response] = await Promise.all([
+            this.page.waitForResponse(res =>
+                res.url().includes('/api/drivers') &&
+                new URL(res.url()).searchParams.get('search') === name,
+                { timeout: 15000 }),
+            this.page.keyboard.type(name, { delay: 30 }),
+        ]);
+        await this.waitForTableLoads();
+        return response;
     }
 
     async selectOptionFromSearchMenu(menu: Locator, option: Locator): Promise<void> {

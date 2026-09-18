@@ -8,7 +8,7 @@ test('korisnik moze da pretrazuje drivere po drivers with no truck opciji', asyn
             res.url().includes('/api/drivers') &&
             res.url().includes('searchBy=no_truck')
         ),
-        await driverOverviewSetup.selectOptionFromSearchMenu(driverOverviewSetup.driversWithNoTruckOrTrailerFilter, driverOverviewSetup.drivertsWithNoTruckOption)
+        driverOverviewSetup.selectOptionFromSearchMenu(driverOverviewSetup.driversWithNoTruckOrTrailerFilter, driverOverviewSetup.drivertsWithNoTruckOption)
     ]);
     expect([200, 304]).toContain(response.status());
     const isEmptyVisible = await driverOverviewSetup.noDataAvailableLocator.isVisible();
@@ -29,7 +29,7 @@ test('korisnik moze da pretrazuje drivere po drivers with no trailer opciji', as
             res.url().includes('/api/drivers') &&
             res.url().includes('searchBy=no_trailer')
         ),
-        await driverOverviewSetup.selectOptionFromSearchMenu(driverOverviewSetup.driversWithNoTruckOrTrailerFilter, driverOverviewSetup.driversWithNoTrailerOption)
+        driverOverviewSetup.selectOptionFromSearchMenu(driverOverviewSetup.driversWithNoTruckOrTrailerFilter, driverOverviewSetup.driversWithNoTrailerOption)
     ]);
     expect([200, 304]).toContain(response.status());
     const isEmptyVisible = await driverOverviewSetup.noDataAvailableLocator.isVisible();
@@ -44,24 +44,16 @@ test('korisnik moze da pretrazuje drivere po drivers with no trailer opciji', as
     }
 });
 
-test('Korisnik moze da otvori truck sranicu kada klikne na truck broj iz truck kolone', async ({ driverOverviewSetup }) => {
-    let clickedValue = '';
-    const truckCells = await driverOverviewSetup.truckColumn.all();
-    for (let i = 0; i < truckCells.length; i++) {
-        const cell = driverOverviewSetup.truckColumn.nth(i);
-        const text = await cell.innerText();
-        if (text.trim() !== '') {
-            clickedValue = text.trim();
-            await cell.click();
-            break;
-        }
-    }
-    await expect(driverOverviewSetup.page).toHaveURL('trucks/all?search=' + clickedValue);
+test('Korisnik moze da otvori truck sranicu kada klikne na truck broj iz truck kolone', async ({ page, driverOverviewSetup, truckOverview }) => {
+    const clickedTruckNumber = await driverOverviewSetup.openFirstTruckFromTruckColumn();
+    await expect(page).toHaveURL(`${Constants.truckUrl}?search=${clickedTruckNumber}`, { timeout: 10000 });
+    await expect(truckOverview.allTrucksRadiobutton).toBeAttached({ timeout: 10000 });
+    await expect(truckOverview.searchInputField).toHaveValue(clickedTruckNumber, { timeout: 10000 });
 });
 
 test('Korisnik moze da otvori truck sranicu kada klikne na trialer broj iz trailer kolone', async ({ driverOverviewSetup }) => {
-    let clickedValue = '';
     const trailerCells = await driverOverviewSetup.trailerColumn.all();
+    let clickedValue: string | undefined;
     for (let i = 0; i < trailerCells.length; i++) {
         const cell = driverOverviewSetup.trailerColumn.nth(i);
         const text = await cell.innerText();
@@ -71,7 +63,8 @@ test('Korisnik moze da otvori truck sranicu kada klikne na trialer broj iz trail
             break;
         }
     }
-    await expect(driverOverviewSetup.page).toHaveURL('trailers?search=' + clickedValue);
+    expect(clickedValue).toBeTruthy();
+    await expect(driverOverviewSetup.page).toHaveURL(`trailers?search=${encodeURIComponent(clickedValue!)}`);
 });
 
 test('Korisnik moze da doda, edituje i brise employment history', async ({ driverOverviewSetup }) => {
@@ -113,16 +106,14 @@ test('Korisnik moze da doda, edituje i brise employment history', async ({ drive
 });
 
 test('korisnik moze da pretrazuje drivere po imenu', async ({ driverOverviewSetup }) => {
-    const [response] = await Promise.all([
-        driverOverviewSetup.page.waitForResponse(res =>
-            res.url().includes('/api/drivers')
-        ),
-        await driverOverviewSetup.enterDriverNameInSearchField(driverOverviewSetup.searchInputField, Constants.markLabatDriver)
-    ]);
+    const searchedDriver = await driverOverviewSetup.getFirstDriverName();
+    const response = await driverOverviewSetup.searchDriverByName(searchedDriver);
     expect([200, 304]).toContain(response.status());
-    const driverNumber = await driverOverviewSetup.driverNameColumn.all();
-    for (let i = 0; i < driverNumber.length; i++) {
-        const text = await driverOverviewSetup.driverNameColumn.nth(i).innerText();
-        expect(text.trim()).toContain(Constants.markLabatDriver);
-    }
+    await expect.poll(
+        async () => (await driverOverviewSetup.getDriverNameColumnValues())
+            .filter(name => !name.includes(searchedDriver)),
+        { timeout: 10000, message: `Every Name cell should contain "${searchedDriver}"` }
+    ).toEqual([]);
+    const names = await driverOverviewSetup.getDriverNameColumnValues();
+    expect(names.length).toBeGreaterThan(0);
 });

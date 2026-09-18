@@ -187,22 +187,6 @@ export class LeasingTeamsPage extends BasePage {
         }
     }
 
-    async expectMoveAllEnabled(teamName: string): Promise<void> {
-        await expect(this.getMoveAllButton(teamName)).toBeEnabled();
-    }
-
-    async expectMoveAllDisabled(teamName: string): Promise<void> {
-        await expect(this.getMoveAllButton(teamName)).toBeDisabled();
-    }
-
-    async expectDeleteTeamEnabled(teamName: string): Promise<void> {
-        await expect(this.getDeleteTeamButton(teamName)).toBeEnabled();
-    }
-
-    async expectDeleteTeamDisabled(teamName: string): Promise<void> {
-        await expect(this.getDeleteTeamButton(teamName)).toBeDisabled();
-    }
-
     async getCardsCount(): Promise<number> {
         return this.teamCards.count();
     }
@@ -274,10 +258,6 @@ export class LeasingTeamsPage extends BasePage {
     async getAvailableUserTexts(): Promise<string[]> {
         const texts = await this.availableUserChips.allTextContents();
         return texts.map(t => t.trim()).filter(Boolean);
-    }
-
-    async expectAvailableUserVisible(userText: string): Promise<void> {
-        await expect(this.getAvailableUserChipByText(userText)).toBeVisible();
     }
 
     // ===== DRAG AND DROP =====

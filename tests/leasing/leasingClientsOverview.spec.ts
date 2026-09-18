@@ -3,8 +3,8 @@ import { Constants } from '../../helpers/constants';
 import { cleanupOrphanSavedFilters } from '../../helpers/dateUtilis';
 import { test } from '../fixtures/fixtures';
 
-test('Korisnik moze da vidi leasing clients stranicu', async ({ leasingClientsOverview }) => {
-    await leasingClientsOverview.expectOnUrl();
+test('Korisnik moze da vidi leasing clients stranicu', async ({ page, leasingClientsOverview }) => {
+    await expect(page).toHaveURL(Constants.leasingClientsUrlRegex);
     await expect(leasingClientsOverview.newCompanyButton).toBeVisible();
     await expect(leasingClientsOverview.newOwnerOperatorButton).toBeVisible();
     await expect(leasingClientsOverview.exportButton).toBeVisible();

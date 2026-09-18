@@ -322,7 +322,7 @@ test.describe('New Company modal', () => {
         await expect(row).toContainText(name);
     });
 
-    test('Korisnik moze da poveze novu kompaniju sa postojecim Owner Operatorom kao Presidentom', async ({ leasingClientsOverview, newCompanyModal, leasingClientDetail }) => {
+    test('Korisnik moze da poveze novu kompaniju sa postojecim Owner Operatorom kao Presidentom', async ({ page, leasingClientsOverview, newCompanyModal, leasingClientDetail }) => {
         const ownerName = await leasingClientsOverview.getFirstOwnerOperatorName();
         expect(ownerName.length).toBeGreaterThan(0);
         const name = uniqueCompanyName();
@@ -342,8 +342,9 @@ test.describe('New Company modal', () => {
         await expect(row).toContainText(ownerFirst);
         await expect(row).toContainText(ownerLast);
         await leasingClientsOverview.openOverviewForRow(name);
-        await leasingClientDetail.expectOnDetailUrl();
-        await leasingClientDetail.expectPresidentVisible(ownerName);
+        await expect(page).toHaveURL(Constants.leasingClientDetailUrlRegex, { timeout: 10000 });
+        await expect(leasingClientDetail.presidentsHeader).toBeVisible({ timeout: 10000 });
+        await expect(leasingClientDetail.presidentsSection).toContainText(ownerName, { timeout: 10000 });
     });
 
     test('Sacuvana kompanija se prikazuje sa ispravnim podacima u Leasing Clients listi', async ({ openNewCompanyModal, leasingClientsOverview }) => {

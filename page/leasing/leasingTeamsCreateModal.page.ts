@@ -80,14 +80,6 @@ export class LeasingTeamsCreateModalPage extends BasePage {
         await this.dialog.waitFor({ state: 'hidden', timeout: 10000 });
     }
 
-    async expectCreateEnabled(): Promise<void> {
-        await expect(this.createButton).toBeEnabled();
-    }
-
-    async expectCreateDisabled(): Promise<void> {
-        await expect(this.createButton).toBeDisabled();
-    }
-
     // ===== FIELDS =====
 
     async selectTeamType(typeName: string): Promise<void> {

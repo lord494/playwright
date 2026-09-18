@@ -2,8 +2,8 @@ import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { test } from '../fixtures/fixtures';
 
-test('Korisnik moze da vidi leasing teams stranicu sa svim sekcijama', async ({ leasingTeams }) => {
-    await leasingTeams.expectOnUrl();
+test('Korisnik moze da vidi leasing teams stranicu sa svim sekcijama', async ({ page, leasingTeams }) => {
+    await expect(page).toHaveURL(Constants.leasingTeamsUrlRegex);
     await expect(leasingTeams.createNewButton).toBeVisible();
     await expect(leasingTeams.selectTeamTypeWrapper).toBeVisible();
     await expect(leasingTeams.searchUsersByRoleWrapper).toBeVisible();

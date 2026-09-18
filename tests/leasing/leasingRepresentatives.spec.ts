@@ -3,8 +3,8 @@ import { Constants } from '../../helpers/constants';
 import { safeRestoreRepresentativeCard } from '../../helpers/dateUtilis';
 import { test } from '../fixtures/fixtures';
 
-test('Korisnik moze da vidi leasing representatives stranicu sa svim elementima', async ({ leasingRepresentatives }) => {
-    await leasingRepresentatives.expectOnUrl();
+test('Korisnik moze da vidi leasing representatives stranicu sa svim elementima', async ({ page, leasingRepresentatives }) => {
+    await expect(page).toHaveURL(Constants.leasingRepresentativesUrlRegex);
     await expect(leasingRepresentatives.wrapper).toBeVisible();
     await expect(leasingRepresentatives.form).toBeVisible();
     await expect(leasingRepresentatives.roleAutocompleteWrapper).toBeVisible();

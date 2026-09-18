@@ -5,6 +5,7 @@ import { LeasingTeamsPage } from '../page/leasing/leasingTeams.page';
 import { LeasingRepresentativesPage } from '../page/leasing/leasingRepresentatives.page';
 import { LeasingClientsOverviewPage } from '../page/leasing/leasingClientsOverview.page';
 import { Constants } from './constants';
+import type { NewLeasingCompanyPayload } from '../services/leasingCompanyService';
 import { time } from 'console';
 
 
@@ -356,6 +357,79 @@ export async function cleanupOrphanSavedFilters(page: Page, tableName: string): 
 export function uniqueCompanyName(prefix: string = Constants.newCompanyTestPrefix): string {
     const workerIndex = process.env.TEST_WORKER_INDEX ?? '0';
     return `${prefix}${workerIndex}_${Date.now()}_${generateRandomString(4)}`;
+}
+
+// Random numeric string for the numeric-looking company fields (MC / DOT /
+// FEIN). Prefixed with the worker index so two of the 4 CI workers cannot
+// produce the same value, in case the backend ever enforces uniqueness on them.
+export function uniqueDigits(length: number = 6): string {
+    const workerIndex = process.env.TEST_WORKER_INDEX ?? '0';
+    const random = Array.from({ length }, () => Math.floor(Math.random() * 10)).join('');
+    return `${workerIndex}${random}`.slice(0, length);
+}
+
+// Builds a complete, valid `clientDto` for POST/PUT /ms-leasing/company: unique
+// name + unique MC/DOT/FEIN, a full company address, a risk level and the
+// cooperation flags. The field set is a copy of what the New Company and Edit
+// company modals send (captured from /leasing/clients 2026-09-03), including the
+// block of agency/plaintiff/representative slots they always send as null —
+// PUT replaces the record, so an omitted field is not the same as a null one.
+// The `*CoopStartDate` fields are deliberately absent: the modals never send
+// them and the backend stamps each one when its flag is true.
+export function buildLeasingCompanyPayload(
+    overrides: Partial<NewLeasingCompanyPayload> = {},
+): NewLeasingCompanyPayload {
+    return {
+        name: uniqueCompanyName(Constants.leasingApiCompanyNamePrefix),
+        mc: uniqueDigits(6),
+        dot: uniqueDigits(7),
+        fain: uniqueDigits(9),
+        companyAddress: {
+            address: Constants.leasingApiCompanyAddress,
+            city: Constants.leasingApiCompanyCity,
+            state: Constants.leasingApiCompanyState,
+            zip: Constants.leasingApiCompanyZip,
+        },
+        isMuslim: false,
+        note: Constants.leasingApiCompanyNote,
+        leasingCooperation: true,
+        recruitingCooperation: true,
+        maintenanceCooperation: false,
+        fuelCooperation: false,
+        startDateOfCooperation: null,
+        riskLevel: Constants.newCompanyRiskLevelA,
+        presidentsIds: [],
+
+        insuredAgencyId: null,
+        insuredAgencyName: null,
+        insuredAgencyDateOfPlacement: null,
+        insuredAgencyInsuredAmount: null,
+        insuredAgencyPolicyNumber: null,
+        insuredAgencyPolicyStatus: null,
+        insuredAgencyDateOfClaim: null,
+        insuredAgencyClaimId: null,
+        insuredAgencySettlementAmount: null,
+        insuredAgencySettlementDate: null,
+        collectionAgencyId: null,
+        collectionAgencyName: null,
+        collectionAgencyStatus: null,
+        collectionAgencyLastReturnCode: null,
+        plaintiffId: null,
+        plaintiffName: null,
+        plaintiffDateFiled: null,
+        plaintiffLawsuitAmount: null,
+        plaintiffReceivedAmount: null,
+        plaintiffPercentageOfAgency: null,
+        plaintiffCaseStatus: null,
+        salesTrucksManager: null,
+        salesTrucks: null,
+        salesTrailersManager: null,
+        salesTrailers: null,
+        accTeamLeader: null,
+        accPerson: null,
+        collectionPerson: null,
+        ...overrides,
+    };
 }
 
 // Generates a unique { firstName, lastName, fullName } triple for New Owner

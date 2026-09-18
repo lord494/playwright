@@ -344,6 +344,7 @@ export class Constants {
     // ===== LEASING =====
     static leasingClientsUrl = '/leasing/clients';
     static leasingClientsUrlRegex = /\/leasing\/clients$/;
+    static leasingClientDetailUrlRegex = /\/leasing\/client\/\d+/;
 
     static newCompanyButtonLabel = 'New Company';
     static newOwnerOperatorButtonLabel = 'New Owner Operator';
@@ -413,6 +414,21 @@ export class Constants {
     static leasingApiCompanyNamePrefix = 'PWApiCo';
     // Status a freshly created company starts in (server default on POST /ms-leasing/company).
     static leasingCompanyDefaultStatus = 'PENDING';
+
+    // Payload values for the leasing company API CRUD flow. The "updated" set is
+    // what the PUT step writes, so create/update values must stay different —
+    // otherwise the update assertions would pass on unchanged data.
+    static leasingApiCompanyAddress = '233 South Wacker Drive';
+    static leasingApiCompanyCity = 'Chicago';
+    static leasingApiCompanyState = 'IL';
+    static leasingApiCompanyZip = '60606';
+    static leasingApiCompanyNote = 'Kompanija kreirana kroz API CRUD test';
+
+    static leasingApiCompanyUpdatedAddress = '400 North Michigan Avenue';
+    static leasingApiCompanyUpdatedCity = 'Springfield';
+    static leasingApiCompanyUpdatedState = 'MO';
+    static leasingApiCompanyUpdatedZip = '65806';
+    static leasingApiCompanyUpdatedNote = 'Napomena izmenjena kroz API CRUD test';
 
     // ===== NEW COMPANY MODAL (Leasing Clients) =====
     static newCompanyModalTitle = 'New company';

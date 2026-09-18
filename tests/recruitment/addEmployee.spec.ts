@@ -207,16 +207,15 @@ test("Save button je disabled dok se ne popune sva obavezna polja", async ({ add
     const randomPhone = getRandom10Number().join('');
     await expect(addEmployeeSetup.saveButton).toBeDisabled();
     await addEmployeeSetup.enterName(Constants.driverName);
-    await addEmployeeSetup.enterPhone(randomPhone);
-    await addEmployeeSetup.enterCountry(Constants.state);
-    await addEmployeeSetup.selectStatus(addEmployeeSetup.unemployedStatus);
     await expect(addEmployeeSetup.saveButton).toBeDisabled();
+    await addEmployeeSetup.enterPhone(randomPhone);
+    await expect(addEmployeeSetup.saveButton).toBeDisabled();
+    await addEmployeeSetup.enterCountry(Constants.state);
+    await expect(addEmployeeSetup.saveButton).toBeDisabled();
+    await addEmployeeSetup.selectStatus(addEmployeeSetup.unemployedStatus);
+    await expect(addEmployeeSetup.saveButton).toBeEnabled();
 });
 
-// Per-field required-field matrix: name, phone, country and status are ALL
-// required (verified against staging — Save enables only when all four are
-// present). Each case fills three of the four and asserts Save stays disabled,
-// pinpointing that no single required field was silently dropped.
 const requiredFieldCases: { missing: string; fill: (p: import('../../page/recruitment/addNewEmployee.page').AddNewEmployeePage, phone: string) => Promise<void> }[] = [
     {
         missing: 'Name',
@@ -345,21 +344,9 @@ test('Korisnik moze da doda edituje employee-a', async ({ addEmployeeSetup, recr
     });
 });
 
-/**
- * SAP checkbox u add/edit formi. Mapira se na `sap: true|false` u /api/employees pozivu,
- * a u tabeli se prikazuje kao YES / NO u SAP koloni (td:nth-child(6)).
- * Tests za SAP kolonu i SAP filter na overview-u su u recruitmentOverview.spec.ts.
- *
- * Svaki test koristi random broj telefona (unique identifier) i brise dodatog zaposlenog
- * u afterEach, da SAP=YES redovi ne bi ostajali na stagingu.
- */
 test.describe('SAP checkbox u add/edit formi', () => {
-    // Dodavanje/edit + pretraga + cleanup u afterEach ne staju u podrazumevanih 30s
-    // (afterEach deli budzet sa testom).
     test.describe.configure({ timeout: 60_000 });
-
     let createdPhone: string | null = null;
-
     test.afterEach(async ({ loggedPage }) => {
         if (createdPhone) {
             await safeDeleteEmployeeByPhone(loggedPage, createdPhone);
@@ -484,7 +471,6 @@ test.describe('SAP checkbox u add/edit formi', () => {
         await recruitmentOverview.searchEmployeeByPhone(randomPhone);
         await recruitmentOverview.expectFirstSapCellIs(Constants.sapYes);
         await recruitmentOverview.pencilIcon.click();
-        // Edit forma cita snimljenu vrednost — za SAP=YES zaposlenog checkbox je oznacen.
         await expect(addEmployeeSetup.sapCheckboxInput).toBeChecked();
         await addEmployeeSetup.setSap(false);
         await addEmployeeSetup.saveButton.click();

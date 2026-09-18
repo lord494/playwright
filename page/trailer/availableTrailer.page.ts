@@ -1,24 +1,9 @@
 import { Locator, Page, expect } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 
-// All selectors verified against the live staging.vrlz.app DOM on 2026-05-11.
-//
-// Table layout (24 columns):
-//   1=Trailer, 2=Type, 3=Year, 4=Driver/Third party, 5=Sales person, 6=Truck, 7=Option,
-//   8=GPS, 9=GPS APP, 10=Sign, 11=Loaded, 12=Broken, 13=Availability, 14=Status,
-//   15=Location GPS, 16=Brokerage, 17=Assign Date, 18=Info, 19=Note, 20=Towing,
-//   21=Payment Start Date, 22=Payment Status, 23=Sales Ready, 24=Actions
-//
-// Yard is NOT a visible column — trailers are grouped via the API endpoint
-// `/api/trailers/available-trailers-by-yard?search=...`.
-//
-// Delete is a NATIVE BROWSER CONFIRM, not a Vuetify dialog.
 
 export class AvailableTrailersPage extends BasePage {
     readonly page: Page;
-
-    // Trailer number associated with this page-object instance, populated by fixtures
-    // (e.g. availableTrailerWithUiCreatedTrailer) for tests that operate on a specific trailer.
     trailerNumber: string = '';
 
     // Top toolbar
@@ -107,18 +92,12 @@ export class AvailableTrailersPage extends BasePage {
     constructor(page: Page) {
         super(page);
         this.page = page;
-
-        // Top toolbar — verified: links navigate to /trailers and /available-trailers-statistics
         this.allTrailersLink = page.getByRole('link', { name: 'Trailers', exact: true });
         this.statsLink = page.getByRole('link', { name: 'Stats', exact: true });
         this.exportAllButton = page.getByRole('button', { name: 'Export All', exact: true });
         this.exportButton = page.getByRole('button', { name: 'Export', exact: true });
-        // Add button is icon-only (mdi-plus) at the right side of the search bar
         this.addButton = page.locator('button.v-btn.primary.v-size--small').locator('i.mdi-plus').or(page.locator('button:has(i.mdi-plus)')).first();
-        // Verified: single input on the page lives inside .TableFilters__field
         this.globalSearchInput = page.locator('.TableFilters__field input').first();
-
-        // Table columns
         this.trailerNumberColumn = page.locator('tbody tr td:nth-child(1)');
         this.trailerTypeColumn = page.locator('tbody tr td:nth-child(2)');
         this.trailerYearColumn = page.locator('tbody tr td:nth-child(3)');
@@ -133,13 +112,9 @@ export class AvailableTrailersPage extends BasePage {
         this.notesColumn = page.locator('tbody tr td:nth-child(19)');
         this.towingColumn = page.locator('tbody tr td:nth-child(20)');
         this.actionsColumn = page.locator('tbody tr td:nth-child(24)');
-
-        // Row-level action icons — verified: <button> elements with mdi-* classes
         this.pencilIcon = page.locator('tbody tr button.mdi-pencil');
         this.transferIcon = page.locator('tbody tr button.mdi-transfer');
         this.minusIcon = page.locator('tbody tr button.mdi-minus-box-outline');
-
-        // Info & Notes (column 18/19 has a button with text)
         this.infoButtonInRow = page.locator('tbody tr td:nth-child(18) button', { hasText: "Info's" });
         this.notesButtonInRow = page.locator('tbody tr td:nth-child(19) button', { hasText: 'Notes' });
         this.infoAndNoteModal = page.locator('.v-menu__content.menuable__content__active');
@@ -148,8 +123,6 @@ export class AvailableTrailersPage extends BasePage {
         this.commentList = page.locator('.comments-wrapper .v-list-item');
         this.editButton = page.getByRole('button', { name: 'Edit', exact: true });
         this.cancelButton = page.getByRole('button', { name: 'Cancel', exact: true });
-
-        // Edit modal — verified labels
         this.editModal = page.locator('.v-dialog--active').filter({ hasText: 'Edit Available Trailer' });
         this.editModalTitle = this.editModal.locator('.v-card__title');
         this.editModalSaveButton = this.editModal.getByRole('button', { name: 'Save', exact: true });
@@ -168,17 +141,11 @@ export class AvailableTrailersPage extends BasePage {
         this.editModalTowingCheckbox = this.editModal.getByLabel('Towing', { exact: true });
         this.editModalSignCheckbox = this.editModal.getByLabel('Sign', { exact: true });
         this.editModalSalesReadyCheckbox = this.editModal.getByLabel('Sales Ready', { exact: true });
-
-        // Add Available Trailer modal — verified: title "Add Available Trailer"
         this.addAvailableModal = page.locator('.v-dialog--active').filter({ hasText: 'Add Available Trailer' });
         this.addAvailableTrailerNumberField = this.addAvailableModal.getByLabel('Trailer Number *', { exact: true });
         this.addAvailableYardField = this.addAvailableModal.getByLabel('Yard *', { exact: true });
         this.addAvailableSaveButton = this.addAvailableModal.getByRole('button', { name: 'Save', exact: true });
         this.addAvailableCancelButton = this.addAvailableModal.getByRole('button', { name: 'Cancel', exact: true });
-        // After a trailer is selected the modal auto-fills these read-only fields from that
-        // trailer's /trailers record. Type/Availability/Status/Payment Status render as a
-        // v-select selection (text); Year is held in the hidden production_year input.
-        // Verified against staging.vrlz.app DOM (2026-06-03).
         const addModalSelectionByLabel = (label: RegExp): Locator =>
             this.addAvailableModal.locator('.v-select__slot')
                 .filter({ has: page.locator('label', { hasText: label }) })
@@ -188,15 +155,12 @@ export class AvailableTrailersPage extends BasePage {
         this.addAvailableAvailabilitySelection = addModalSelectionByLabel(/^Availability$/);
         this.addAvailableStatusSelection = addModalSelectionByLabel(/^Status$/);
         this.addAvailablePaymentStatusSelection = addModalSelectionByLabel(/^Payment Status$/);
-
-        // Transfer modal — verified: title contains "Transfer trailer ... from ... to"
         this.transferModal = page.locator('.v-dialog--active').filter({ hasText: 'Transfer trailer' });
         this.transferModalTitle = this.transferModal.locator('.v-card__title');
         this.transferModalDestinationYard = this.transferModal.getByLabel('Select target yard', { exact: true });
         this.transferModalTransferButton = this.transferModal.getByRole('button', { name: 'Transfer', exact: true });
         this.transferModalCancelButton = this.transferModal.getByRole('button', { name: 'Cancel', exact: true });
 
-        // Misc
         this.snackbar = page.locator('.v-snack__content');
         this.progressBar = page.locator('.v-data-table__progress');
     }
@@ -207,7 +171,6 @@ export class AvailableTrailersPage extends BasePage {
         });
     }
 
-    // Table cell accessors for a given trailer's row (columns: 1=Trailer, 2=Type, 3=Year).
     availableRowTrailerNumberCell(trailerNumber: string): Locator {
         return this.getRowByTrailerNumber(trailerNumber).first().locator('td:nth-child(1)');
     }
@@ -255,18 +218,9 @@ export class AvailableTrailersPage extends BasePage {
         ).catch(() => { });
         await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
     }
-
-    // Opens the "+" Add modal, picks the trailer from the autocomplete, and saves.
-    // The Yard field in this modal is disabled and pre-filled with a default — the user
-    // cannot change it here; transfer between yards is done via the Transfer action.
-    // Trailer must already exist on /trailers.
     async addToAvailable(trailerNumber: string): Promise<void> {
         await this.page.locator('button.v-btn.primary.v-size--small:has(i.mdi-plus)').first().click();
         await this.addAvailableModal.waitFor({ state: 'visible', timeout: 10000 });
-
-        // Trailer Number is a v-autocomplete — type to filter, then click the matching option.
-        // The async option fetch can be slow/miss under parallel load, so re-type and re-wait
-        // a couple of times before giving up.
         const optionsMenu = this.page.locator('.v-menu__content.menuable__content__active');
         const option = optionsMenu.locator('.v-list-item', { hasText: trailerNumber }).first();
         let optionShown = false;
@@ -292,8 +246,6 @@ export class AvailableTrailersPage extends BasePage {
         await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
     }
 
-    // Opens the "+" Add modal and picks the trailer from the autocomplete, leaving the modal
-    // OPEN so callers can assert the auto-filled fields and then either save or cancel.
     async openAddModalAndSelectTrailer(trailerNumber: string): Promise<void> {
         await this.page.locator('button.v-btn.primary.v-size--small:has(i.mdi-plus)').first().click();
         await this.addAvailableModal.waitFor({ state: 'visible', timeout: 10000 });
@@ -306,11 +258,9 @@ export class AvailableTrailersPage extends BasePage {
         await option.waitFor({ state: 'visible', timeout: 15000 });
         await option.click();
 
-        // The dependent fields (Type/Year/Availability/Status) populate once the selection resolves.
         await this.addAvailableTypeSelection.waitFor({ state: 'visible', timeout: 10000 });
     }
 
-    // Confirms the Add modal (Save) — dispatches PUT /api/trailers/available/{id}.
     async confirmAddAvailable(): Promise<void> {
         await Promise.all([
             this.page.waitForResponse(
@@ -365,9 +315,6 @@ export class AvailableTrailersPage extends BasePage {
         await this.transferModal.waitFor({ state: 'detached', timeout: 10000 });
     }
 
-    // Delete uses native browser confirm. Caller must use deleteTrailerAccept / deleteTrailerDismiss
-    // which set up the dialog handler before clicking.
-
     async deleteTrailerAccept(trailerNumber: string): Promise<void> {
         const row = this.getRowByTrailerNumber(trailerNumber).first();
         await row.waitFor({ state: 'visible', timeout: 10000 });
@@ -396,13 +343,4 @@ export class AvailableTrailersPage extends BasePage {
         return { message: captured };
     }
 
-    async assertEveryRowMatches(predicate: (row: Locator, index: number) => Promise<boolean>): Promise<void> {
-        const count = await this.page.locator('tbody tr').count();
-        expect(count).toBeGreaterThan(0);
-        for (let i = 0; i < count; i++) {
-            const row = this.page.locator('tbody tr').nth(i);
-            const ok = await predicate(row, i);
-            if (!ok) throw new Error(`Row ${i} failed predicate (text="${(await row.textContent())?.slice(0, 200)}")`);
-        }
-    }
 }
