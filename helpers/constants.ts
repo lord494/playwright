@@ -784,4 +784,74 @@ export class Constants {
     static leasingRepresentativesEmptyRep2 = 'Sales truck manager 2';
     static leasingRepresentativesEmptyRep3 = 'sales truck test';
     static leasingRepresentativesEmptyRep4 = 'Super truck manager';
+
+    // ===== NEW GUARANTOR MODAL (Leasing Clients) =====
+    // "New guarantor" on /leasing/clients opens a menu (Company / Owner operator).
+    // Each option opens the regular New company / New owner form in guarantor
+    // mode: only the information block + a required "Guarantees for" picker.
+    // Reuses the newCompany* / newOwnerOperator* labels and validation texts.
+    // Verified 2026-10-06.
+    static newGuarantorButtonLabel = 'New guarantor';
+    static newGuarantorTypeCompany = 'Company';
+    static newGuarantorTypeOwnerOperator = 'Owner operator';
+    static newGuarantorSectionGuaranteesFor = 'Guarantees for';
+    static newGuarantorLabelGuaranteesFor = 'Guarantees for';
+    static newGuarantorValidationGuaranteesForRequired = 'The Guarantees for field is required';
+    static newGuarantorSuccessMessage = 'Guarantor was added successfully';
+    // Status the backend stores for every guarantor (GET /ms-leasing/company/{id})
+    static newGuarantorApiStatus = 'GUARANTOR';
+    // Prefix for guarantors and guaranteed companies created by these tests
+    static newGuarantorTestPrefix = 'PWGuar';
+
+    // Optional field values for the "all fields" scenarios
+    static newGuarantorMC = '482915';
+    static newGuarantorDOT = '7391046';
+    static newGuarantorAddress = '1200 Lakeshore Drive';
+    static newGuarantorCity = 'Chicago';
+    static newGuarantorState = 'IL';
+    static newGuarantorZip = '60611';
+    static newGuarantorFEIN = '362845910';
+    static newGuarantorOwnerMiddleName = 'Guarantor';
+
+    // ===== LEASING MANAGE SALES =====
+    // /leasing/manage-sales: one card per active SALES user (lazy-rendered),
+    // right-hand pool of companies without a sales rep. Verified 2026-10-06.
+    static manageSalesUrl = '/leasing/manage-sales';
+    static manageSalesUrlRegex = /\/leasing\/manage-sales$/;
+    static manageSalesRoleName = 'SALES';
+
+    static manageSalesSearchButtonLabel = 'Search';
+    static manageSalesMoveAllButtonLabel = 'Move All';
+    static manageSalesUntieAllButtonLabel = 'Untie All';
+
+    static manageSalesMoveAllDialogTitle = 'Move All Companies';
+    static manageSalesMoveAllSelectLabel = 'Select sales to move companies';
+    static manageSalesSubmitButtonLabel = 'Submit';
+    static manageSalesCancelButtonLabel = 'Cancel';
+    static manageSalesMoveAllRequiredMessage = 'The Move Sales Name field is required';
+
+    // Native confirm messages
+    static manageSalesRemoveCompanyConfirmText = 'Are you sure you want to remove sales for this company?';
+    static manageSalesUntieAllConfirmText = 'Are you sure you want to untie all companies from this sales?';
+
+    // Sales users with a unique name and no real companies on staging — used as
+    // sandboxes. Each mutating scenario owns one rep so a concurrent worker's
+    // Untie All / Move All can never touch another test's companies:
+    //   DragRep       — drag-in, chip X, read-only confirm/dialog checks (assertions scoped to own company)
+    //   UntieRep      — Untie All (unties the whole card)
+    //   MoveSourceRep — Move All source (moves the whole card)
+    //   MoveTargetRep — Move All target
+    static manageSalesDragRep = 'Nikola Dinic';
+    static manageSalesUntieRep = 'TemporaryUser';
+    static manageSalesMoveSourceRep = 'sales test user';
+    static manageSalesMoveTargetRep = 'Nikola Dinic';
+
+    // Sales search matches name OR email server-side; this term is present only
+    // in names ("sales test user", "Test Sales"), so every card name must contain it.
+    static manageSalesSearchTerm = 'sales';
+    static manageSalesSearchTermMixedCase = 'nIkOlA';
+    static manageSalesNoMatchSearchTerm = 'PWNoSuchSales';
+    static manageSalesNoMatchCompanySearchTerm = 'PWNoSuchCompany';
+    // Companies created by this spec (prefix keeps them inside leasingTestEntityPrefix)
+    static manageSalesCompanyPrefix = 'PWMs';
 }

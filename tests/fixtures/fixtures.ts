@@ -61,6 +61,11 @@ import { NewOwnerOperatorModalPage } from '../../page/leasing/newOwnerOperatorMo
 import { EditCompanyModalPage } from '../../page/leasing/editCompanyModal.page';
 import { EditOwnerOperatorModalPage } from '../../page/leasing/editOwnerOperatorModal.page';
 import { UnderwritingModalPage } from '../../page/leasing/underwritingModal.page';
+import { LeasingManageSalesPage } from '../../page/leasing/leasingManageSales.page';
+import { NewGuarantorModalPage } from '../../page/leasing/newGuarantorModal.page';
+import { LeasingCompanyService } from '../../services/leasingCompanyService';
+import type { LeasingCompany, LeasingRepresentative } from '../../services/leasingCompanyService';
+import { buildLeasingCompanyPayload, uniqueCompanyName } from '../../helpers/dateUtilis';
 
 type TrailerData = {
     number?: string | null
@@ -175,6 +180,13 @@ export const test = base.extend<{
     leasingTeams: LeasingTeamsPage;
     leasingTeamsCreateModal: LeasingTeamsCreateModalPage;
     leasingRepresentatives: LeasingRepresentativesPage;
+    manageSales: LeasingManageSalesPage;
+    leasingCompanyService: LeasingCompanyService;
+    createSalesCompany: () => Promise<LeasingCompany>;
+    salesRepresentative: (name: string) => Promise<LeasingRepresentative>;
+    newGuarantorModal: NewGuarantorModalPage;
+    openCompanyGuarantorModal: NewGuarantorModalPage;
+    openOwnerOperatorGuarantorModal: NewGuarantorModalPage;
     newCompanyModal: NewCompanyModalPage;
     openNewCompanyModal: NewCompanyModalPage;
     leasingClientDetail: LeasingClientDetailPage;
@@ -223,6 +235,65 @@ export const test = base.extend<{
         await loggedPage.goto(Constants.leasingRepresentativesUrl, { waitUntil: 'networkidle', timeout: 20000 });
         await leasingRepresentatives.waitForLoaded();
         await use(leasingRepresentatives);
+    },
+
+    // Does NOT navigate: Manage Sales tests seed companies through the API first,
+    // then call manageSales.open() so the freshly created data is on the page.
+    manageSales: async ({ loggedPage }, use) => {
+        const manageSales = new LeasingManageSalesPage(loggedPage);
+        await use(manageSales);
+    },
+
+    // Same service as api.fixture, but on the logged page's request context
+    // (shares auth.json cookies). Soft-deletes every company it created.
+    leasingCompanyService: async ({ loggedPage }, use) => {
+        const leasingCompanyService = new LeasingCompanyService(loggedPage.request);
+        await use(leasingCompanyService);
+        await leasingCompanyService.cleanup();
+    },
+
+    // Creates a uniquely-named PWMs* company (lands in the Manage Sales "without
+    // sales" pool). Teardown removes its sales rep before leasingCompanyService
+    // cleanup soft-deletes it.
+    createSalesCompany: async ({ leasingCompanyService }, use) => {
+        const createdIds: number[] = [];
+        await use(async () => {
+            const company = await leasingCompanyService.createCompany(
+                buildLeasingCompanyPayload({ name: uniqueCompanyName(Constants.manageSalesCompanyPrefix) }),
+            );
+            createdIds.push(company.id);
+            return company;
+        });
+        if (createdIds.length > 0) {
+            try {
+                await leasingCompanyService.removeRepresentative(Constants.manageSalesRoleName, createdIds);
+            } catch (error) {
+                console.warn(`Failed to remove sales from companies ${createdIds.join(', ')}`, error);
+            }
+        }
+    },
+
+    // Instantiated on /leasing/clients (via leasingClientsOverview) with nothing opened.
+    newGuarantorModal: async ({ leasingClientsOverview, loggedPage }, use) => {
+        const modal = new NewGuarantorModalPage(loggedPage);
+        await use(modal);
+    },
+
+    // Navigates to /leasing/clients and opens New guarantor -> Company.
+    openCompanyGuarantorModal: async ({ newGuarantorModal }, use) => {
+        await newGuarantorModal.openCompanyGuarantorModal();
+        await use(newGuarantorModal);
+    },
+
+    // Navigates to /leasing/clients and opens New guarantor -> Owner operator.
+    openOwnerOperatorGuarantorModal: async ({ newGuarantorModal }, use) => {
+        await newGuarantorModal.openOwnerOperatorGuarantorModal();
+        await use(newGuarantorModal);
+    },
+
+    // Looks up an existing SALES user (id/name/email) for API-seeded assignments.
+    salesRepresentative: async ({ leasingCompanyService }, use) => {
+        await use(name => leasingCompanyService.getRepresentativeByName(Constants.manageSalesRoleName, name));
     },
 
     newCompanyModal: async ({ loggedPage }, use) => {

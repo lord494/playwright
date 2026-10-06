@@ -28,6 +28,16 @@ export type LeasingCompanyAddress = {
     zip: string | null;
 };
 
+/** Entry of `guarantors` on GET /ms-leasing/company/{id} (verified 2026-10-06). */
+export type LeasingCompanyGuarantor = {
+    id: number;
+    name: string | null;
+    status: string;
+    isOwnerOperator: boolean;
+    ownerFirstName: string | null;
+    ownerLastName: string | null;
+};
+
 /**
  * Fields of a leasing company record that the tests read. The endpoint returns
  * ~70 columns (agency / plaintiff / collection blocks, money totals, nested
@@ -55,6 +65,9 @@ export type LeasingCompany = {
     riskLevel: string | null;
     isOwnerOperator: boolean;
     isActive: boolean;
+    isGuarantor?: boolean;
+    /** Guarantors of this company (filled on the guaranteed company, empty on the guarantor itself). */
+    guarantors?: LeasingCompanyGuarantor[];
     fullNameSearch?: string;
     created_at?: string;
     updated_at?: string;
@@ -145,6 +158,21 @@ export type LeasingCompanyOptionsResponse = { data: LeasingCompanyOption[]; tota
 
 export type LeasingCompanyListResponse = { data: LeasingCompany[]; total: number };
 
+/** Representative (user) as the /leasing/manage-* pages send it to change-representative. */
+export type LeasingRepresentative = { id: string; name: string; email: string };
+
+/** Row of GET /ms-leasing/company/grouped-by-representatives (one card on /leasing/manage-sales). */
+export type CompaniesGroupedByRepresentative = {
+    representative: LeasingRepresentative;
+    companies: Array<{
+        id: number;
+        name: string | null;
+        ownerFirstName: string | null;
+        ownerMiddleName: string | null;
+        ownerLastName: string | null;
+    }>;
+};
+
 export class LeasingCompanyService {
     private apiContext: APIRequestContext;
     private createdCompanyIds: number[] = [];
@@ -162,6 +190,11 @@ export class LeasingCompanyService {
         expect(created.id).toBeDefined();
         this.createdCompanyIds.push(created.id);
         return created;
+    }
+
+    /** Registers a company created outside this service (e.g. through a UI modal) so cleanup() deletes it too. */
+    trackCompanyForCleanup(id: number): void {
+        if (!this.createdCompanyIds.includes(id)) this.createdCompanyIds.push(id);
     }
 
     async getCompanyById(id: number): Promise<LeasingCompany | undefined> {
@@ -229,6 +262,67 @@ export class LeasingCompanyService {
         });
         await this.expectStatus(response, [200], `GET /ms-leasing/company?page=${page}`);
         return await response.json() as LeasingCompanyListResponse;
+    }
+
+    // ===== REPRESENTATIVES (/leasing/manage-sales and siblings) =====
+    // Endpoints verified 2026-10-06 against /leasing/manage-sales (roleName=SALES):
+    //   GET /api/roles/by-name?roleName                     -> 200 { docs: { id, name } }
+    //   GET /api/users?search&role_id&isActive=true         -> 200 { docs: [user] } (case-insensitive search)
+    //   PUT /ms-leasing/company/change-representative       body { roleName, selectedRepresentative, companyIds }
+    //   PUT /ms-leasing/company/remove-representative       body { roleName, companyIds }
+    //   GET /ms-leasing/company/without-representative-role?roleName  -> 200 { docs: [company] } (right-hand pool)
+    //   GET /ms-leasing/company/grouped-by-representatives?roleName&userIds[] -> 200 { docs: [{ representative, companies }] }
+
+    /** Active user with `roleName` whose name is exactly `name` (the page shows one card per user). */
+    async getRepresentativeByName(roleName: string, name: string): Promise<LeasingRepresentative> {
+        const roleResponse = await this.apiContext.get('/api/roles/by-name', { params: { roleName } });
+        await this.expectStatus(roleResponse, [200], `GET /api/roles/by-name?roleName=${roleName}`);
+        const role = (await roleResponse.json() as { docs: { id: number } }).docs;
+
+        const usersResponse = await this.apiContext.get('/api/users', {
+            params: { page: '1', perPage: '200', search: name, role_id: String(role.id), isActive: 'true' },
+        });
+        await this.expectStatus(usersResponse, [200], `GET /api/users?search=${name}&role_id=${role.id}`);
+        const users = (await usersResponse.json() as { docs: LeasingRepresentative[] }).docs;
+        const matches = users.filter((user) => user.name === name);
+        expect(matches, `Expected exactly one active ${roleName} user named "${name}"`).toHaveLength(1);
+        const { id, email } = matches[0];
+        return { id, name, email };
+    }
+
+    async assignRepresentative(roleName: string, representative: LeasingRepresentative, companyIds: number[]): Promise<void> {
+        const response = await this.apiContext.put('/ms-leasing/company/change-representative', {
+            data: { roleName, selectedRepresentative: representative, companyIds },
+        });
+        await this.expectStatus(response, [200], `PUT /ms-leasing/company/change-representative (${companyIds.join(',')})`);
+    }
+
+    async removeRepresentative(roleName: string, companyIds: number[]): Promise<void> {
+        const response = await this.apiContext.put('/ms-leasing/company/remove-representative', {
+            data: { roleName, companyIds },
+        });
+        await this.expectStatus(response, [200], `PUT /ms-leasing/company/remove-representative (${companyIds.join(',')})`);
+    }
+
+    async getCompaniesWithoutRepresentative(roleName: string): Promise<LeasingCompany[]> {
+        const response = await this.apiContext.get('/ms-leasing/company/without-representative-role', { params: { roleName } });
+        await this.expectStatus(response, [200], `GET /ms-leasing/company/without-representative-role?roleName=${roleName}`);
+        return (await response.json() as { docs: LeasingCompany[] }).docs;
+    }
+
+    async getCompaniesGroupedByRepresentatives(roleName: string, userIds: string[]): Promise<CompaniesGroupedByRepresentative[]> {
+        const query = new URLSearchParams({ roleName });
+        userIds.forEach((userId) => query.append('userIds[]', userId));
+        const response = await this.apiContext.get(`/ms-leasing/company/grouped-by-representatives?${query.toString()}`);
+        await this.expectStatus(response, [200], `GET /ms-leasing/company/grouped-by-representatives?roleName=${roleName}`);
+        return (await response.json() as { docs: CompaniesGroupedByRepresentative[] }).docs;
+    }
+
+    /** Ids of the companies `representativeId` currently holds for `roleName` (empty when none). */
+    async getRepresentativeCompanyIds(roleName: string, representativeId: string): Promise<number[]> {
+        const groups = await this.getCompaniesGroupedByRepresentatives(roleName, [representativeId]);
+        const group = groups.find((g) => g.representative.id === representativeId);
+        return group ? group.companies.map((company) => company.id) : [];
     }
 
     async cleanup(): Promise<void> {
