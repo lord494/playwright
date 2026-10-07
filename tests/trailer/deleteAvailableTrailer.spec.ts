@@ -8,7 +8,7 @@ import { test } from '../fixtures/fixtures';
 //   7.3 — After accept, the trailer reappears on the /trailers table
 //
 // Side effect: 7.2/7.3 permanently move the picked trailer back to /trailers.
-// Each parallel worker targets a different row (via workerIndex in availableTrailerData),
+// Each parallel worker targets a different row (via parallelIndex in availableTrailerData),
 // so workers do not collide within a single run.
 
 test('Klik na minus ikonu prikazuje native confirm sa porukom o uklanjanju (test 7.1)', async ({ availableTrailerSetup, availableTrailerData }) => {

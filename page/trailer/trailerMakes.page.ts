@@ -37,6 +37,41 @@ export class TrailerMakesPage extends BasePage {
         this.noteColumn = page.locator('tr td:nth-child(3)');
     }
 
+    // ===== Row by make name =====
+    // The table is sorted by name, so a make's row position depends on what other
+    // makes exist on staging — always locate a test's own make by its (unique) name.
+
+    getRowByMakeName(name: string): Locator {
+        const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        return this.page.locator('tbody tr', {
+            has: this.page.locator('td:nth-child(1)', { hasText: new RegExp(`^\\s*${escaped}\\s*$`) }),
+        });
+    }
+
+    getMakeNameCell(name: string): Locator {
+        return this.getRowByMakeName(name).locator('td:nth-child(1)');
+    }
+
+    getVinPrefixCell(name: string): Locator {
+        return this.getRowByMakeName(name).locator('td:nth-child(2)');
+    }
+
+    getNoteCell(name: string): Locator {
+        return this.getRowByMakeName(name).locator('td:nth-child(3)');
+    }
+
+    getIsActiveCell(name: string): Locator {
+        return this.getRowByMakeName(name).locator('td:nth-child(4)');
+    }
+
+    getPencilIcon(name: string): Locator {
+        return this.getRowByMakeName(name).locator('.mdi-pencil');
+    }
+
+    getDeleteIcon(name: string): Locator {
+        return this.getRowByMakeName(name).locator('.mdi-delete');
+    }
+
     async fillMakeName(make: Locator, name: string): Promise<void> {
         await this.fillInputField(make, name);
     }

@@ -1032,8 +1032,13 @@ export const test = base.extend<{
 
     trailerOverviewSetup: async ({ loggedPage }, use) => {
         const trailerOverviewSetup = new TrailersPage(loggedPage);
-        await loggedPage.goto(Constants.trailerUrl);
+        // After the first page renders, the table keeps loading pages 2-3 to fill the viewport
+        // (infinite scroll). A filter applied while one of those is still in flight gets the
+        // stale unfiltered page appended above the filtered rows (app bug). networkidle alone
+        // proved not enough, so wait until the table has settled before handing it to a test.
+        await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
         await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
+        await trailerOverviewSetup.waitForTableSettled();
         await use(trailerOverviewSetup);
     },
 
@@ -1145,13 +1150,26 @@ export const test = base.extend<{
     },
 
     trailerDocumentSetup: async ({ loggedPage, trailerOverview, trailerInsertPermitOverview, trailerDocument }, use) => {
-        // Uploads one expired Registration document to the first /trailers row. Extracted so it
+        // Works on a dedicated trailer (Constants.documentTestTrailer), located by number: a
+        // trailer created by another worker can appear on top of /trailers mid-test, so the
+        // old "first row" ended up being a different trailer in the fixture and in the test.
+        const trailerNumber = Constants.documentTestTrailer;
+
+        // Reloads /trailers and filters it down to the document trailer, so the test (and the
+        // steps below) always act on that row.
+        const reloadFiltered = async () => {
+            await loggedPage.reload();
+            await loggedPage.waitForLoadState('networkidle');
+            await trailerOverview.searchByTrailerNumber(trailerNumber);
+        };
+
+        // Uploads one expired Registration document to the document trailer. Extracted so it
         // can be retried — under 4-worker load the upload occasionally fails silently, leaving
         // the trailer with no document (the old flaky `eyeIcon` timeouts).
         const uploadRegistrationDocument = async () => {
-            await trailerOverview.clickElement(trailerOverview.documentIcon.first());
+            await trailerOverview.clickElement(trailerOverview.documentIconForRow(trailerNumber));
             await trailerDocument.deleteAllItemsWithDeleteIconForDrivers();
-            await trailerOverview.clickElement(trailerOverview.uploadIcon.first());
+            await trailerOverview.clickElement(trailerOverview.uploadIconForRow(trailerNumber));
             await loggedPage.waitForFunction(() => {
                 const el = document.querySelector('.v-dialog.v-dialog--active');
                 if (!el) return false;
@@ -1177,26 +1195,24 @@ export const test = base.extend<{
             await loggedPage.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached', timeout: 10000 }).catch(() => { });
         };
 
-        // Reloads, opens the first trailer's documents, and reports whether a document is present
-        // (then leaves a clean /trailers page so the test reopens the modal itself).
-        const firstTrailerHasDocument = async (): Promise<boolean> => {
-            await loggedPage.reload();
-            await loggedPage.waitForLoadState('networkidle');
-            await trailerDocument.openFirstTrailerDocuments();
+        // Reloads, opens the document trailer's documents, and reports whether a document is
+        // present (then leaves a clean, filtered /trailers page so the test reopens the modal).
+        const trailerHasDocument = async (): Promise<boolean> => {
+            await reloadFiltered();
+            await trailerDocument.openTrailerDocuments(trailerNumber);
             const present = await trailerDocument.eyeIcon.first()
                 .waitFor({ state: 'visible', timeout: 8000 }).then(() => true).catch(() => false);
-            await loggedPage.reload();
-            await loggedPage.waitForLoadState('networkidle');
+            await reloadFiltered();
             return present;
         };
 
         await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
+        await trailerOverview.searchByTrailerNumber(trailerNumber);
         await uploadRegistrationDocument();
         // Guarantee the document persisted before the test runs; retry once if it silently failed.
-        if (!(await firstTrailerHasDocument())) {
+        if (!(await trailerHasDocument())) {
             await uploadRegistrationDocument();
-            await loggedPage.reload();
-            await loggedPage.waitForLoadState('networkidle');
+            await reloadFiltered();
         }
         await use(trailerDocument);
     },
@@ -1286,8 +1302,11 @@ export const test = base.extend<{
     // Depends on `availableTrailerSetup` so navigation happens once.
     // Mirrors the existing `trailerData` pattern: { number: string } accessed via property.
     availableTrailerData: async ({ availableTrailerSetup }, use, testInfo) => {
+        // parallelIndex (0..workers-1) is unique among workers running at the same time.
+        // workerIndex is NOT: it grows every time a worker restarts after a failure, so
+        // e.g. workers 4 and 10 both mapped to the same candidate and raced on it.
         const candidates = Constants.workerCandidateAvailableTrailers;
-        const number = candidates[testInfo.workerIndex % candidates.length];
+        const number = candidates[testInfo.parallelIndex % candidates.length];
 
         // Is the trailer already in /available-trailers?
         await availableTrailerSetup.searchTrailer(number);
@@ -1320,7 +1339,7 @@ export const test = base.extend<{
     //   28=Availability, 29=Status
     trailerData: async ({ loggedPage }, use, testInfo) => {
         const candidates = Constants.workerCandidateAvailableTrailers;
-        const number = candidates[testInfo.workerIndex % candidates.length];
+        const number = candidates[testInfo.parallelIndex % candidates.length];
         const avail = new AvailableTrailersPage(loggedPage);
         const trailers = new TrailersPage(loggedPage);
 

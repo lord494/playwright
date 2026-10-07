@@ -2,7 +2,7 @@ import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { test } from '../fixtures/fixtures';
 
-// Each test targets a WORKER-SPECIFIC trailer (Constants.workerTrailers[workerIndex]) and
+// Each test targets a WORKER-SPECIFIC trailer (Constants.workerTrailers[parallelIndex]) and
 // drives its row by NUMBER (via getRowByTrailerNumber), never by reading back the first row.
 // Reading `trailerNameColumn.first()` after a filter was racy — another worker's created
 // trailer (whose random VIN matched the search) could surface as the first row.
@@ -13,7 +13,7 @@ import { test } from '../fixtures/fixtures';
 
 test('Dodavanje dokumenta kojem je istekao datum vazenja', async ({ insertPermitTrailerSetup, trailerOverview, trailerDocument }, testInfo) => {
     test.setTimeout(120000);
-    const trailerNumber = Constants.workerTrailers[testInfo.workerIndex % Constants.workerTrailers.length];
+    const trailerNumber = Constants.workerTrailers[testInfo.parallelIndex % Constants.workerTrailers.length];
     await trailerOverview.searchByTrailerNumber(trailerNumber);
     const documentIcon = trailerOverview.documentIconForRow(trailerNumber);
     const uploadIcon = trailerOverview.uploadIconForRow(trailerNumber);
@@ -46,7 +46,7 @@ test('Dodavanje dokumenta kojem je istekao datum vazenja', async ({ insertPermit
 
 test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ insertPermitTrailerSetup, trailerOverview, trailerDocument }, testInfo) => {
     test.setTimeout(120000);
-    const trailerNumber = Constants.workerTrailers[testInfo.workerIndex % Constants.workerTrailers.length];
+    const trailerNumber = Constants.workerTrailers[testInfo.parallelIndex % Constants.workerTrailers.length];
     await trailerOverview.searchByTrailerNumber(trailerNumber);
     const documentIcon = trailerOverview.documentIconForRow(trailerNumber);
     const uploadIcon = trailerOverview.uploadIconForRow(trailerNumber);
@@ -79,7 +79,7 @@ test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ insert
 
 test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ insertPermitTrailerSetup, trailerOverview, trailerDocument }, testInfo) => {
     test.setTimeout(120000);
-    const trailerNumber = Constants.workerTrailers[testInfo.workerIndex % Constants.workerTrailers.length];
+    const trailerNumber = Constants.workerTrailers[testInfo.parallelIndex % Constants.workerTrailers.length];
     await trailerOverview.searchByTrailerNumber(trailerNumber);
     const documentIcon = trailerOverview.documentIconForRow(trailerNumber);
     const uploadIcon = trailerOverview.uploadIconForRow(trailerNumber);
@@ -111,7 +111,7 @@ test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ insertPermi
 });
 
 test('Korisnik ne moze da uradi upload za fajl koji je veci od 10mb', async ({ insertPermitTrailerSetup, trailerOverview }, testInfo) => {
-    const trailerNumber = Constants.workerTrailers[testInfo.workerIndex % Constants.workerTrailers.length];
+    const trailerNumber = Constants.workerTrailers[testInfo.parallelIndex % Constants.workerTrailers.length];
     await trailerOverview.searchByTrailerNumber(trailerNumber);
     await trailerOverview.uploadIconForRow(trailerNumber).click();
     await trailerOverview.page.waitForFunction(() => {
@@ -125,7 +125,7 @@ test('Korisnik ne moze da uradi upload za fajl koji je veci od 10mb', async ({ i
 });
 
 test('Expiring date je obavezno polje', async ({ insertPermitTrailerSetup, trailerOverview }, testInfo) => {
-    const trailerNumber = Constants.workerTrailers[testInfo.workerIndex % Constants.workerTrailers.length];
+    const trailerNumber = Constants.workerTrailers[testInfo.parallelIndex % Constants.workerTrailers.length];
     await trailerOverview.searchByTrailerNumber(trailerNumber);
     await trailerOverview.uploadIconForRow(trailerNumber).click();
     await insertPermitTrailerSetup.uploadDocument();

@@ -64,6 +64,8 @@ export class AvailableTrailersPage extends BasePage {
     readonly editModalTowingCheckbox: Locator;
     readonly editModalSignCheckbox: Locator;
     readonly editModalSalesReadyCheckbox: Locator;
+    readonly editModalTowingToggle: Locator;
+    readonly editModalInCompanyLabel: Locator;
 
     // Add Available Trailer modal (opens via the + button)
     readonly addAvailableModal: Locator;
@@ -71,6 +73,11 @@ export class AvailableTrailersPage extends BasePage {
     readonly addAvailableYardField: Locator;
     readonly addAvailableSaveButton: Locator;
     readonly addAvailableCancelButton: Locator;
+    // Save is blocked client-side (no request, error shown at the top of the modal)
+    // unless one of these is checked: 'Either "In company" or "Out of company" must be selected.'
+    readonly addAvailableInCompanyCheckbox: Locator;
+    readonly addAvailableOutOfCompanyCheckbox: Locator;
+    readonly addAvailableInCompanyLabel: Locator;
     // Read-only fields the modal auto-fills from the selected trailer's /trailers record.
     readonly addAvailableTypeSelection: Locator;
     readonly addAvailableYearInput: Locator;
@@ -141,11 +148,17 @@ export class AvailableTrailersPage extends BasePage {
         this.editModalTowingCheckbox = this.editModal.getByLabel('Towing', { exact: true });
         this.editModalSignCheckbox = this.editModal.getByLabel('Sign', { exact: true });
         this.editModalSalesReadyCheckbox = this.editModal.getByLabel('Sales Ready', { exact: true });
+        // Vuetify v-checkbox toggle: click the v-input--checkbox wrapper, not the hidden input.
+        this.editModalTowingToggle = this.editModal.locator('.v-input--checkbox').filter({ hasText: 'Towing' });
+        this.editModalInCompanyLabel = this.editModal.locator('label', { hasText: /^\s*In company\s*$/ });
         this.addAvailableModal = page.locator('.v-dialog--active').filter({ hasText: 'Add Available Trailer' });
         this.addAvailableTrailerNumberField = this.addAvailableModal.getByLabel('Trailer Number *', { exact: true });
         this.addAvailableYardField = this.addAvailableModal.getByLabel('Yard *', { exact: true });
         this.addAvailableSaveButton = this.addAvailableModal.getByRole('button', { name: 'Save', exact: true });
         this.addAvailableCancelButton = this.addAvailableModal.getByRole('button', { name: 'Cancel', exact: true });
+        this.addAvailableInCompanyCheckbox = this.addAvailableModal.getByLabel('In company', { exact: true });
+        this.addAvailableOutOfCompanyCheckbox = this.addAvailableModal.getByLabel('Out of company', { exact: true });
+        this.addAvailableInCompanyLabel = this.addAvailableModal.locator('label', { hasText: /^\s*In company\s*$/ });
         const addModalSelectionByLabel = (label: RegExp): Locator =>
             this.addAvailableModal.locator('.v-select__slot')
                 .filter({ has: page.locator('label', { hasText: label }) })
@@ -235,11 +248,52 @@ export class AvailableTrailersPage extends BasePage {
         await option.waitFor({ state: 'visible', timeout: 10000 });
         await option.click();
 
+        await this.saveAddAvailable();
+    }
+
+    /**
+     * The modal pre-fills In company / Out of company from the trailer record. When the
+     * record has neither, Save silently does nothing — check "In company", as a user would.
+     */
+    async ensureInOrOutOfCompanySelected(): Promise<void> {
+        await this.ensureCompanyFlag(
+            this.addAvailableInCompanyCheckbox, this.addAvailableOutOfCompanyCheckbox, this.addAvailableInCompanyLabel);
+    }
+
+    private async ensureCompanyFlag(inCompanyCheckbox: Locator, outOfCompanyCheckbox: Locator, inCompanyLabel: Locator): Promise<void> {
+        const inCompany = await inCompanyCheckbox.isChecked();
+        const outOfCompany = await outOfCompanyCheckbox.isChecked();
+        if (!inCompany && !outOfCompany) {
+            await this.clickElement(inCompanyLabel);
+        }
+    }
+
+    // Edit modal has the same client-side In/Out company rule as the Add modal: with neither
+    // checked, Save shows an off-screen error and sends nothing. Other tests that move the
+    // shared candidate trailers out of / back into Available can leave both flags cleared.
+    async saveEditModal(): Promise<void> {
+        await this.ensureCompanyFlag(
+            this.editModalInCompanyCheckbox, this.editModalOutOfCompanyCheckbox, this.editModalInCompanyLabel);
         await Promise.all([
             this.page.waitForResponse(
-                r => r.url().includes('/api/trailers') && (r.status() === 200 || r.status() === 304),
+                r => r.request().method() === 'PUT' && r.url().includes('/api/trailers/available/') && r.status() === 200,
                 { timeout: 15000 }
-            ).catch(() => { }),
+            ),
+            this.editModalSaveButton.click()
+        ]);
+        await this.editModal.waitFor({ state: 'detached', timeout: 10000 });
+    }
+
+    // Clicks Save and waits for the PUT /api/trailers/available/{id} it must dispatch.
+    // No .catch: if Save is blocked, fail here with the real cause instead of a
+    // "dialog still open" timeout later.
+    private async saveAddAvailable(): Promise<void> {
+        await this.ensureInOrOutOfCompanySelected();
+        await Promise.all([
+            this.page.waitForResponse(
+                r => r.request().method() === 'PUT' && r.url().includes('/api/trailers/available/') && r.status() === 200,
+                { timeout: 15000 }
+            ),
             this.addAvailableSaveButton.click()
         ]);
         await this.addAvailableModal.waitFor({ state: 'detached', timeout: 10000 });
@@ -262,15 +316,7 @@ export class AvailableTrailersPage extends BasePage {
     }
 
     async confirmAddAvailable(): Promise<void> {
-        await Promise.all([
-            this.page.waitForResponse(
-                r => r.url().includes('/api/trailers') && (r.status() === 200 || r.status() === 304),
-                { timeout: 15000 }
-            ).catch(() => { }),
-            this.addAvailableSaveButton.click()
-        ]);
-        await this.addAvailableModal.waitFor({ state: 'detached', timeout: 10000 });
-        await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
+        await this.saveAddAvailable();
     }
 
     async cancelAddAvailable(): Promise<void> {

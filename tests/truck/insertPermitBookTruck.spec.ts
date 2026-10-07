@@ -3,7 +3,7 @@ import { Constants } from '../../helpers/constants';
 import { test } from '../fixtures/fixtures';
 
 // Truck permit-book UPLOAD tests — the truck analog of tests/trailer/insertPermitBookTrailer.spec.ts.
-// Each test targets a WORKER-SPECIFIC truck (Constants.workerTrucks[workerIndex]) and drives its
+// Each test targets a WORKER-SPECIFIC truck (Constants.workerTrucks[parallelIndex]) and drives its
 // row by NUMBER (searchByTruckNumber + documentIconForRow / uploadIconForRow), never the shared
 // .first()/.nth() rows the previous version used — those collide when several workers upload to
 // the same truck at once. All page.waitForTimeout()/networkidle-as-sync calls were replaced with
@@ -15,7 +15,7 @@ import { test } from '../fixtures/fixtures';
 
 test('Dodavanje dokumenta kojem je istekao datum vazenja', async ({ insertPermitTruckSetup, truckOverview, truckDocument }, testInfo) => {
     test.setTimeout(120000);
-    const truckNumber = Constants.workerTrucks[testInfo.workerIndex % Constants.workerTrucks.length];
+    const truckNumber = Constants.workerTrucks[testInfo.parallelIndex % Constants.workerTrucks.length];
     await truckOverview.searchByTruckNumber(truckNumber);
     const documentIcon = truckOverview.documentIconForRow(truckNumber);
     const uploadIcon = truckOverview.uploadIconForRow(truckNumber);
@@ -49,7 +49,7 @@ test('Dodavanje dokumenta kojem je istekao datum vazenja', async ({ insertPermit
 
 test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ insertPermitTruckSetup, truckOverview, truckDocument }, testInfo) => {
     test.setTimeout(120000);
-    const truckNumber = Constants.workerTrucks[testInfo.workerIndex % Constants.workerTrucks.length];
+    const truckNumber = Constants.workerTrucks[testInfo.parallelIndex % Constants.workerTrucks.length];
     await truckOverview.searchByTruckNumber(truckNumber);
     const documentIcon = truckOverview.documentIconForRow(truckNumber);
     const uploadIcon = truckOverview.uploadIconForRow(truckNumber);
@@ -83,7 +83,7 @@ test('Dodavanje valid dokumenta koji istice za vise od 30 dana', async ({ insert
 
 test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ insertPermitTruckSetup, truckOverview, truckDocument }, testInfo) => {
     test.setTimeout(120000);
-    const truckNumber = Constants.workerTrucks[testInfo.workerIndex % Constants.workerTrucks.length];
+    const truckNumber = Constants.workerTrucks[testInfo.parallelIndex % Constants.workerTrucks.length];
     await truckOverview.searchByTruckNumber(truckNumber);
     const documentIcon = truckOverview.documentIconForRow(truckNumber);
     const uploadIcon = truckOverview.uploadIconForRow(truckNumber);
@@ -116,7 +116,7 @@ test('Dodavanje dokumenta koji istice za manje od 30 dana', async ({ insertPermi
 });
 
 test('Korisnik ne moze da uradi upload za fajl koji je veci od 10mb', async ({ insertPermitTruckSetup, truckOverview }, testInfo) => {
-    const truckNumber = Constants.workerTrucks[testInfo.workerIndex % Constants.workerTrucks.length];
+    const truckNumber = Constants.workerTrucks[testInfo.parallelIndex % Constants.workerTrucks.length];
     await truckOverview.searchByTruckNumber(truckNumber);
     await truckOverview.uploadIconForRow(truckNumber).click();
     await insertPermitTruckSetup.savePermitButton.waitFor({ state: 'visible', timeout: 10000 });
@@ -125,7 +125,7 @@ test('Korisnik ne moze da uradi upload za fajl koji je veci od 10mb', async ({ i
 });
 
 test('Expiring date je obavezno polje', async ({ insertPermitTruckSetup, truckOverview }, testInfo) => {
-    const truckNumber = Constants.workerTrucks[testInfo.workerIndex % Constants.workerTrucks.length];
+    const truckNumber = Constants.workerTrucks[testInfo.parallelIndex % Constants.workerTrucks.length];
     await truckOverview.searchByTruckNumber(truckNumber);
     await truckOverview.uploadIconForRow(truckNumber).click();
     await insertPermitTruckSetup.uploadDocument();

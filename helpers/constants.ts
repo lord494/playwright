@@ -180,6 +180,11 @@ export class Constants {
         '002897',
         '002899',
     ];
+    // Dedicated to tests/trailer/trailerDocument.spec.ts (not used by any other test). Those
+    // tests used the first /trailers row, but a trailer another worker creates can appear on
+    // top of the table mid-test, so the fixture's document ended up on a different trailer.
+    static documentTestTrailer = '002910';
+    static valueRequiredMessage = 'Value is required';
     static dealership = 'testOwn';
     static oldStateValue = 'old state';
     static newStateValue = 'new state';

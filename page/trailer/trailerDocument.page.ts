@@ -1,6 +1,7 @@
 import { Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 import { InsertPermitBookPage } from "../Content/uploadDocuments.page";
+import { Constants } from "../../helpers/constants";
 import path from 'path';
 
 export class TrailerDocumentPage extends BasePage {
@@ -19,6 +20,11 @@ export class TrailerDocumentPage extends BasePage {
     readonly qrCode: Locator;
     readonly pencilIcon: Locator;
     readonly titleInModal: Locator;
+    readonly uploadedFileName: Locator;
+    readonly permitBookSearchField: Locator;
+    readonly truckSearchInput: Locator;
+    readonly inputWithErrorState: Locator;
+    readonly valueRequiredMessage: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -37,13 +43,51 @@ export class TrailerDocumentPage extends BasePage {
         this.qrCode = page.locator('.mdi-qrcode');
         this.pencilIcon = page.locator('.text-start .mdi-pencil');
         this.titleInModal = page.locator('.v-card__title.headline')
+        // Filename chip of the file picked in the upload/edit document modal.
+        this.uploadedFileName = page.locator('.v-file-input__text');
+        // /permit-book: the first text field is the search box.
+        this.permitBookSearchField = page.locator('.v-text-field__slot').first();
+        // /truck: the only plain text input on the page is the search box.
+        this.truckSearchInput = page.locator('.v-text-field input');
+        this.inputWithErrorState = page.locator('.v-input.v-input--has-state');
+        this.valueRequiredMessage = page.getByText(Constants.valueRequiredMessage);
     }
 
-    // Opens the first /trailers row's document modal and waits for its permit-book list to
+    // /permit-book row whose Referrer column (3rd) contains `referrerName`.
+    getPermitBookRowByReferrer(referrerName: string): Locator {
+        return this.page.locator('tr', {
+            has: this.page.locator('td:nth-child(3)', { hasText: referrerName })
+        });
+    }
+
+    // Option of the currently open v-select / autocomplete menu, matched by exact name.
+    getMenuOption(name: string): Locator {
+        return this.page.getByRole('option', { name, exact: true });
+    }
+
+    async searchPermitBook(text: string): Promise<void> {
+        await this.permitBookSearchField.click();
+        await this.permitBookSearchField.type(text);
+    }
+
+    async openPermitBookDocumentPreview(referrerName: string): Promise<void> {
+        await this.getPermitBookRowByReferrer(referrerName).locator('.mdi-eye').click();
+    }
+
+    async searchTruck(truckName: string): Promise<void> {
+        await this.truckSearchInput.fill(truckName);
+    }
+
+    // Opens the document modal of the given /trailers row and waits for its permit-book list to
     // finish loading. Opening the modal triggers GET /api/permit-books; waiting for it (rather
     // than racing a fixed eyeIcon timeout) is what keeps these tests stable under 4-worker load.
-    async openFirstTrailerDocuments(): Promise<void> {
-        const docIcon = this.page.locator('.mdi-file-document-multiple').first();
+    // Located by trailer number, never .first(): a trailer created by another worker can show
+    // up on top of the table at any moment.
+    async openTrailerDocuments(trailerNumber: string): Promise<void> {
+        const row = this.page.locator('tbody tr', {
+            has: this.page.locator('td:nth-child(2)', { hasText: trailerNumber })
+        }).first();
+        const docIcon = row.locator('.mdi-file-document-multiple');
         await docIcon.waitFor({ state: 'visible', timeout: 10000 });
         await Promise.all([
             this.page.waitForResponse(

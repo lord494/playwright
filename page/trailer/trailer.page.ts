@@ -79,10 +79,24 @@ export class TrailersPage extends BasePage {
     readonly plateColumn: Locator;
     readonly availabilityColumn: Locator;
     readonly thirdPartyColumn: Locator;
+    readonly tableRows: Locator;
+    // Number of /api/trailers list requests currently in flight (see waitForTableSettled).
+    private trailersInFlight = 0;
+    private trailersRequestsStarted = 0;
 
     constructor(page: Page) {
         super(page);
         this.page = page;
+        this.tableRows = page.locator('tbody tr');
+        const isTrailersList = (url: string) => url.includes('/api/trailers?');
+        page.on('request', req => {
+            if (isTrailersList(req.url())) { this.trailersInFlight++; this.trailersRequestsStarted++; }
+        });
+        const done = (req: { url(): string }) => {
+            if (isTrailersList(req.url())) this.trailersInFlight = Math.max(0, this.trailersInFlight - 1);
+        };
+        page.on('requestfinished', done);
+        page.on('requestfailed', done);
         this.addButton = page.getByRole('button', { name: 'Add', exact: true });
         this.exportButton = page.getByRole('button', { name: 'Export', exact: true });
         this.statsButton = page.getByRole('button', { name: 'Stats', exact: true });
@@ -173,19 +187,36 @@ export class TrailersPage extends BasePage {
     }
 
     async enterTrailerName(trailerNumberFilter: Locator, number: string) {
-        await this.fillInputField(trailerNumberFilter, number);
+        await this.applyTextFilter(trailerNumberFilter, number);
     }
 
     async enterDriverName(driverNameFilter: Locator, name: string) {
-        await this.fillInputField(driverNameFilter, name);
+        await this.applyTextFilter(driverNameFilter, name);
     }
 
     async enterOwnerrName(ownerNameFilter: Locator, name: string) {
-        await this.fillInputField(ownerNameFilter, name);
+        await this.applyTextFilter(ownerNameFilter, name);
     }
 
     async enterDealershiprName(dealershipNameFilter: Locator, name: string) {
-        await this.fillInputField(dealershipNameFilter, name);
+        await this.applyTextFilter(dealershipNameFilter, name);
+    }
+
+    // The header text filters search on every input event and the table re-renders
+    // when each response lands. Typing char by char (fillInputField) loses keystrokes
+    // under load — a trace showed `driver_name=t` sent for "btest". So set the value in
+    // one input event and wait for the /api/trailers response that carries the full text.
+    private async applyTextFilter(filter: Locator, text: string): Promise<void> {
+        const input = filter.locator('input');
+        await input.waitFor();
+        await Promise.all([
+            this.page.waitForResponse(res => {
+                const url = decodeURIComponent(res.url().replace(/\+/g, ' '));
+                return url.includes('/api/trailers?') && url.includes(text)
+                    && (res.status() === 200 || res.status() === 304);
+            }, { timeout: 15000 }),
+            input.fill(text),
+        ]);
     }
 
     async selectTruckInTrailerModal(truckMenu: Locator, truckNumber: string, option: Locator) {
@@ -298,6 +329,21 @@ export class TrailersPage extends BasePage {
     // (by number) and wait on the real /api/trailers response instead of networkidle.
     // Verified against staging.vrlz.app DOM (2026-06-03).
 
+    // After the first page renders, the table infinite-scrolls pages 2-3 to fill the viewport,
+    // and networkidle can resolve before those start. A filter applied while one is still in
+    // flight gets that stale unfiltered page appended above the filtered rows (app bug). Wait
+    // until no /api/trailers list request is in flight and neither the request count nor the
+    // row count changed between two polls (>= 500ms apart).
+    async waitForTableSettled(timeout = 15000): Promise<void> {
+        let previous = '';
+        await expect.poll(async () => {
+            const snapshot = `${this.trailersInFlight}|${this.trailersRequestsStarted}|${await this.tableRows.count()}`;
+            const settled = this.trailersInFlight === 0 && snapshot === previous;
+            previous = snapshot;
+            return settled;
+        }, { intervals: [500], timeout }).toBe(true);
+    }
+
     // Awaits the next /api/trailers response that `action` triggers (filter, save, delete).
     async waitForTrailersResponse(action: () => Promise<void>): Promise<void> {
         await Promise.all([
@@ -320,20 +366,26 @@ export class TrailersPage extends BasePage {
     // Clears any existing value first, so it is safe to call again (e.g. to re-apply the
     // filter after a save that reset it).
     async searchByTrailerNumber(trailerNumber: string): Promise<void> {
-        const filter = this.page.getByLabel('Trailer/VIN #', { exact: true });
+        // Not getByLabel('Trailer/VIN #'): this single-line field hides its label once it is
+        // focused or has a value, so a label locator stops resolving after the first fill.
+        const filter = this.trailerNumberFilter.locator('input');
         await filter.waitFor({ state: 'visible', timeout: 10000 });
-        // The debounced search input re-renders on focus/refetch. Under parallel load a
-        // re-render between focusing and typing drops focus, so the query is never applied
-        // and the target trailer stays off the (paginated, ascending) first page, timing out
-        // the row wait. Retry the whole click → clear → type → confirm-row cycle as a unit:
-        // re-clicking re-focuses, and Ctrl+A/Delete clears any partial left by an interrupted
-        // type. Typing via `page.keyboard` (not a locator) survives the input re-rendering
-        // mid-type — a locator-bound `pressSequentially` would throw on the detached node.
+        // The search input re-renders whenever a /api/trailers response lands. Typing char by
+        // char lost keystrokes under load ("02895" was searched for "002895"), and a row-only
+        // check passed anyway because the trailer was already in the unfiltered list. So set
+        // the value in one input event, wait for the response that carries the exact query,
+        // then confirm the row. Clearing first guarantees a retry fires a fresh request.
         await expect(async () => {
-            await filter.click();
-            await this.page.keyboard.press('Control+A');
-            await this.page.keyboard.press('Delete');
-            await this.page.keyboard.type(trailerNumber, { delay: 40 });
+            await filter.fill('');
+            await Promise.all([
+                this.page.waitForResponse(res => {
+                    const url = decodeURIComponent(res.url());
+                    return url.includes('/api/trailers?') && url.includes(`search=${trailerNumber}`)
+                        && (res.status() === 200 || res.status() === 304);
+                }, { timeout: 10000 }),
+                filter.fill(trailerNumber),
+            ]);
+            await expect(filter).toHaveValue(trailerNumber, { timeout: 2000 });
             await expect(this.getRowByTrailerNumber(trailerNumber).first()).toBeVisible({ timeout: 8000 });
         }).toPass({ timeout: 30000 });
     }
