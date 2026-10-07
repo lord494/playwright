@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
-import { safeRestoreRepresentativeCard } from '../../helpers/dateUtilis';
+import { safeRestoreRepresentativeCard, seedCompanyOnRepresentative } from '../../helpers/dateUtilis';
 import { test } from '../fixtures/fixtures';
 
 test('Korisnik moze da vidi leasing representatives stranicu sa svim elementima', async ({ page, leasingRepresentatives }) => {
@@ -34,11 +34,16 @@ test('Kartica representative-a ima Move All i Untie All buttone', async ({ leasi
 });
 
 test('Move All i Untie All su enabled kada kartica ima kompanije', async ({ leasingRepresentatives }) => {
-    const rep = await leasingRepresentatives.findFirstNonEmptyRepName();
-    const count = await leasingRepresentatives.getCompanyChipCountForRep(rep);
-    expect(count).toBeGreaterThan(0);
-    await leasingRepresentatives.expectMoveAllButtonEnabled(rep);
-    await leasingRepresentatives.expectUntieAllButtonEnabled(rep);
+    const rep = Constants.leasingRepresentativesEmptyRep1;
+    await seedCompanyOnRepresentative(leasingRepresentatives, rep);
+    try {
+        const count = await leasingRepresentatives.getCompanyChipCountForRep(rep);
+        expect(count).toBeGreaterThan(0);
+        await leasingRepresentatives.expectMoveAllButtonEnabled(rep);
+        await leasingRepresentatives.expectUntieAllButtonEnabled(rep);
+    } finally {
+        await safeRestoreRepresentativeCard(leasingRepresentatives, rep);
+    }
 });
 
 test('Move All i Untie All su disabled kada kartica nema kompanije', async ({ leasingRepresentatives }) => {
@@ -85,16 +90,21 @@ test('Unassigned companies pool sadrzi vidljive chip-ove', async ({ leasingRepre
 });
 
 test('Korisnik moze da otvori Move All Companies modal i da ga zatvori dugmetom Cancel', async ({ leasingRepresentatives }) => {
-    const rep = await leasingRepresentatives.findFirstNonEmptyRepName();
-    await leasingRepresentatives.openMoveAllDialog(rep);
-    await expect(leasingRepresentatives.moveAllDialog).toBeVisible();
-    await expect(leasingRepresentatives.moveAllDialogTitle).toContainText(Constants.leasingRepresentativesMoveAllDialogTitle);
-    await expect(leasingRepresentatives.moveAllDialogSelectWrapper).toBeVisible();
-    await expect(leasingRepresentatives.moveAllDialogSubmit).toBeVisible();
-    await expect(leasingRepresentatives.moveAllDialogCancel).toBeVisible();
+    const rep = Constants.leasingRepresentativesEmptyRep1;
+    await seedCompanyOnRepresentative(leasingRepresentatives, rep);
+    try {
+        await leasingRepresentatives.openMoveAllDialog(rep);
+        await expect(leasingRepresentatives.moveAllDialog).toBeVisible();
+        await expect(leasingRepresentatives.moveAllDialogTitle).toContainText(Constants.leasingRepresentativesMoveAllDialogTitle);
+        await expect(leasingRepresentatives.moveAllDialogSelectWrapper).toBeVisible();
+        await expect(leasingRepresentatives.moveAllDialogSubmit).toBeVisible();
+        await expect(leasingRepresentatives.moveAllDialogCancel).toBeVisible();
 
-    await leasingRepresentatives.closeMoveAllDialogWithCancel();
-    await expect(leasingRepresentatives.moveAllDialog).toBeHidden();
+        await leasingRepresentatives.closeMoveAllDialogWithCancel();
+        await expect(leasingRepresentatives.moveAllDialog).toBeHidden();
+    } finally {
+        await safeRestoreRepresentativeCard(leasingRepresentatives, rep);
+    }
 });
 
 test('Move All select prikazuje ostale representative-e iz iste role kao target opcije', async ({ leasingRepresentatives }) => {
@@ -136,43 +146,55 @@ test('Move All select prikazuje ostale representative-e iz iste role kao target 
 });
 
 test('Klik na Untie All otvara native confirm sa odgovarajucim tekstom', async ({ leasingRepresentatives }) => {
-    const rep = await leasingRepresentatives.findFirstNonEmptyRepName();
-    let confirmText = '';
-    let dialogShown = false;
-    leasingRepresentatives.page.once('dialog', async (dialog) => {
-        dialogShown = true;
-        confirmText = dialog.message();
-        await dialog.dismiss();
-    });
-    await leasingRepresentatives.clickUntieAll(rep);
-    await expect.poll(() => dialogShown, { timeout: 5000 }).toBeTruthy();
-    expect(confirmText).toContain(Constants.leasingRepresentativesUntieAllConfirmText);
+    const rep = Constants.leasingRepresentativesEmptyRep1;
+    await seedCompanyOnRepresentative(leasingRepresentatives, rep);
+    try {
+        let confirmText = '';
+        let dialogShown = false;
+        leasingRepresentatives.page.once('dialog', async (dialog) => {
+            dialogShown = true;
+            confirmText = dialog.message();
+            await dialog.dismiss();
+        });
+        await leasingRepresentatives.clickUntieAll(rep);
+        await expect.poll(() => dialogShown, { timeout: 5000 }).toBeTruthy();
+        expect(confirmText).toContain(Constants.leasingRepresentativesUntieAllConfirmText);
+    } finally {
+        await safeRestoreRepresentativeCard(leasingRepresentatives, rep);
+    }
 });
 
 test('Klik na X u chip-u kompanije otvara native confirm sa odgovarajucim tekstom', async ({ leasingRepresentatives }) => {
-    const rep = await leasingRepresentatives.findFirstNonEmptyRepName();
-    const chips = leasingRepresentatives.getCompanyChipsForRep(rep);
-    await expect(chips.first()).toBeVisible();
-    const firstChipText = ((await chips.first().textContent()) ?? '').trim();
-    expect(firstChipText.length).toBeGreaterThan(0);
+    const rep = Constants.leasingRepresentativesEmptyRep1;
+    const companyText = await seedCompanyOnRepresentative(leasingRepresentatives, rep);
+    try {
+        await expect(leasingRepresentatives.getCompanyChipForRep(rep, companyText)).toBeVisible();
 
-    let confirmText = '';
-    let dialogShown = false;
-    leasingRepresentatives.page.once('dialog', async (dialog) => {
-        dialogShown = true;
-        confirmText = dialog.message();
-        await dialog.dismiss();
-    });
-    await leasingRepresentatives.clickCompanyChipClose(rep, firstChipText);
-    await expect.poll(() => dialogShown, { timeout: 5000 }).toBeTruthy();
-    expect(confirmText).toContain(Constants.leasingRepresentativesChipCloseConfirmText);
+        let confirmText = '';
+        let dialogShown = false;
+        leasingRepresentatives.page.once('dialog', async (dialog) => {
+            dialogShown = true;
+            confirmText = dialog.message();
+            await dialog.dismiss();
+        });
+        await leasingRepresentatives.clickCompanyChipClose(rep, companyText);
+        await expect.poll(() => dialogShown, { timeout: 5000 }).toBeTruthy();
+        expect(confirmText).toContain(Constants.leasingRepresentativesChipCloseConfirmText);
+    } finally {
+        await safeRestoreRepresentativeCard(leasingRepresentatives, rep);
+    }
 });
 
 test('Chip kompanije ima Close button koji je vidljiv', async ({ leasingRepresentatives }) => {
-    const rep = await leasingRepresentatives.findFirstNonEmptyRepName();
-    const firstChip = leasingRepresentatives.getCompanyChipsForRep(rep).first();
-    await expect(firstChip).toBeVisible();
-    await expect(firstChip.locator('button[aria-label="Close"]')).toBeVisible();
+    const rep = Constants.leasingRepresentativesEmptyRep1;
+    await seedCompanyOnRepresentative(leasingRepresentatives, rep);
+    try {
+        const firstChip = leasingRepresentatives.getCompanyChipsForRep(rep).first();
+        await expect(firstChip).toBeVisible();
+        await expect(firstChip.locator('button[aria-label="Close"]')).toBeVisible();
+    } finally {
+        await safeRestoreRepresentativeCard(leasingRepresentatives, rep);
+    }
 });
 
 // ===== MUTATING SCENARIOS =====
@@ -254,7 +276,7 @@ test('Korisnik moze da uradi Untie All i sve kompanije se vracaju u pool', async
 });
 
 test('Korisnik moze da prebaci sve kompanije sa jednog representative-a na drugog (Move All)', async ({ leasingRepresentatives }) => {
-    const sourceRep = Constants.leasingRepresentativesEmptyRep4;
+    const sourceRep = Constants.leasingRepresentativesEmptyRep2;
     const targetRep = Constants.leasingRepresentativesEmptyRep1;
     await safeRestoreRepresentativeCard(leasingRepresentatives, sourceRep);
     await safeRestoreRepresentativeCard(leasingRepresentatives, targetRep);
@@ -348,7 +370,7 @@ test('Dismiss potvrde za chip X ne brise chip (read-only verifikacija)', async (
 });
 
 test('Korisnik moze da prevuce kompaniju iz pool-a na karticu sa vec dodijeljenim kompanijama', async ({ leasingRepresentatives }) => {
-    const rep = Constants.leasingRepresentativesEmptyRep4;
+    const rep = Constants.leasingRepresentativesEmptyRep3;
     await safeRestoreRepresentativeCard(leasingRepresentatives, rep);
     await leasingRepresentatives.waitForCardEmpty(rep);
 

@@ -1,54 +1,64 @@
 import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
+import { createTeamOfType, extractUserName, safeDeleteTeam, uniqueTeamName } from '../../helpers/dateUtilis';
 import { test } from '../fixtures/fixtures';
 
-test('Korisnik moze da vidi leasing teams stranicu sa svim sekcijama', async ({ page, leasingTeams }) => {
+// A section exists only while its team type has at least one team, so every test
+// below creates the team(s) it needs and deletes them again — no staging data assumed.
+
+test('Korisnik moze da vidi leasing teams stranicu sa svim sekcijama', async ({ page, leasingTeams, leasingTeamsCreateModal }) => {
     await expect(page).toHaveURL(Constants.leasingTeamsUrlRegex);
     await expect(leasingTeams.createNewButton).toBeVisible();
     await expect(leasingTeams.selectTeamTypeWrapper).toBeVisible();
     await expect(leasingTeams.searchUsersByRoleWrapper).toBeVisible();
     await expect(leasingTeams.usersWithoutTeamHolder).toBeVisible();
 
-    const sections = await leasingTeams.getVisibleSectionNames();
-    expect(sections).toContain(Constants.leasingTeamsSalesTruckSection);
-    expect(sections).toContain(Constants.leasingTeamsSalesTrailerSection);
-    expect(sections).toContain(Constants.leasingTeamsBillingSection);
-});
+    const created: string[] = [];
+    try {
+        created.push(await createTeamOfType(leasingTeams, leasingTeamsCreateModal, Constants.leasingTeamsSalesTruckSection, 1));
+        created.push(await createTeamOfType(leasingTeams, leasingTeamsCreateModal, Constants.leasingTeamsSalesTrailerSection, 2));
+        created.push(await createTeamOfType(leasingTeams, leasingTeamsCreateModal, Constants.leasingTeamsBillingSection, 3));
 
-test('Kartica ima Move all i Delete Team buttone', async ({ leasingTeams }) => {
-    const card = leasingTeams.getCardByTeamName(Constants.leasingTeamsExistingTeamName);
-    await expect(card).toBeVisible();
-    await expect(leasingTeams.getCardTitleText(Constants.leasingTeamsExistingTeamName)).toContainText(Constants.leasingTeamsExistingTeamName);
-    await expect(leasingTeams.getMoveAllButton(Constants.leasingTeamsExistingTeamName)).toBeVisible();
-    await expect(leasingTeams.getDeleteTeamButton(Constants.leasingTeamsExistingTeamName)).toBeVisible();
-});
-
-test('Korisnik moze da izabere Sales Truck team type i prikaze samo Sales Truck sekciju', async ({ leasingTeams }) => {
-    await leasingTeams.selectLeasingTeamType(Constants.leasingTeamsSalesTruckSection);
-    const visible = await leasingTeams.getVisibleSectionNames();
-    expect(visible).toContain(Constants.leasingTeamsSalesTruckSection);
-    for (const section of visible) {
-        expect(section).toBe(Constants.leasingTeamsSalesTruckSection);
+        const sections = await leasingTeams.getVisibleSectionNames();
+        expect(sections).toContain(Constants.leasingTeamsSalesTruckSection);
+        expect(sections).toContain(Constants.leasingTeamsSalesTrailerSection);
+        expect(sections).toContain(Constants.leasingTeamsBillingSection);
+    } finally {
+        for (const teamName of created) await safeDeleteTeam(leasingTeams, teamName);
     }
 });
 
-test('Korisnik moze da izabere Sales Trailer team type i prikaze samo Sales Trailer sekciju', async ({ leasingTeams }) => {
-    await leasingTeams.selectLeasingTeamType(Constants.leasingTeamsSalesTrailerSection);
-    const visible = await leasingTeams.getVisibleSectionNames();
-    expect(visible).toContain(Constants.leasingTeamsSalesTrailerSection);
-    for (const section of visible) {
-        expect(section).toBe(Constants.leasingTeamsSalesTrailerSection);
+test('Kartica ima Move all i Delete Team buttone', async ({ leasingTeams, leasingTeamsCreateModal }) => {
+    const teamName = await createTeamOfType(leasingTeams, leasingTeamsCreateModal, Constants.leasingTeamsSalesTrailerSection);
+    try {
+        await expect(leasingTeams.getCardByTeamName(teamName)).toBeVisible();
+        await expect(leasingTeams.getCardTitleText(teamName)).toContainText(teamName);
+        await expect(leasingTeams.getMoveAllButton(teamName)).toBeVisible();
+        await expect(leasingTeams.getDeleteTeamButton(teamName)).toBeVisible();
+    } finally {
+        await safeDeleteTeam(leasingTeams, teamName);
     }
 });
 
-test('Korisnik moze da izabere Billing team type i prikaze samo Billing sekciju', async ({ leasingTeams }) => {
-    await leasingTeams.selectLeasingTeamType(Constants.leasingTeamsBillingSection);
-    const visible = await leasingTeams.getVisibleSectionNames();
-    expect(visible).toContain(Constants.leasingTeamsBillingSection);
-    for (const section of visible) {
-        expect(section).toBe(Constants.leasingTeamsBillingSection);
-    }
-});
+for (const teamType of [
+    Constants.leasingTeamsSalesTruckSection,
+    Constants.leasingTeamsSalesTrailerSection,
+    Constants.leasingTeamsBillingSection,
+]) {
+    test(`Korisnik moze da izabere ${teamType} team type i prikaze samo ${teamType} sekciju`, async ({ leasingTeams, leasingTeamsCreateModal }) => {
+        const teamName = await createTeamOfType(leasingTeams, leasingTeamsCreateModal, teamType);
+        try {
+            await leasingTeams.selectLeasingTeamType(teamType);
+            const visible = await leasingTeams.getVisibleSectionNames();
+            expect(visible).toContain(teamType);
+            for (const section of visible) {
+                expect(section).toBe(teamType);
+            }
+        } finally {
+            await safeDeleteTeam(leasingTeams, teamName);
+        }
+    });
+}
 
 test('Korisnik moze da pretrazuje korisnike po roli ADMIN', async ({ leasingTeams }) => {
     const initial = await leasingTeams.getAvailableUsersCount();
@@ -64,15 +74,23 @@ test('Korisnik moze da pretrazuje korisnike po roli DISPATCHER', async ({ leasin
     expect(filtered).not.toBe(initial);
 });
 
-test('Korisnik moze da prevuce korisnika iz liste na timsku karticu', async ({ leasingTeams }) => {
-    const teamName = Constants.leasingTeamsExistingTeamName;
-    await leasingTeams.removeAllMembersFromTeam(teamName);
-
+test('Korisnik moze da prevuce korisnika iz liste na timsku karticu', async ({ leasingTeams, leasingTeamsCreateModal }) => {
+    // Own empty team, so the test never touches members of real staging teams.
+    const teamName = uniqueTeamName();
     const availableUsers = await leasingTeams.getAvailableUserTexts();
-    expect(availableUsers.length).toBeGreaterThan(0);
+    expect(availableUsers.length).toBeGreaterThan(1);
+    const lead = extractUserName(availableUsers[availableUsers.length - 1]);
     const userText = availableUsers[0];
 
     try {
+        await leasingTeams.clickCreateNew();
+        await leasingTeamsCreateModal.createTeam({
+            teamType: Constants.leasingTeamsSalesTrailerSection,
+            teamName,
+            teamLead: lead,
+        });
+        await expect(leasingTeams.getCardByTeamName(teamName)).toBeVisible();
+
         await leasingTeams.dragUserToTeamCard(userText, teamName);
         await expect(leasingTeams.getMemberChipForTeam(teamName, userText)).toBeVisible();
 
@@ -80,6 +98,6 @@ test('Korisnik moze da prevuce korisnika iz liste na timsku karticu', async ({ l
         const trimmed = memberTexts.map(m => m.trim());
         expect(trimmed.some(m => m.includes(userText))).toBeTruthy();
     } finally {
-        await leasingTeams.removeAllMembersFromTeam(teamName).catch(() => { });
+        await safeDeleteTeam(leasingTeams, teamName);
     }
 });

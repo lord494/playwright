@@ -21,6 +21,8 @@ export class LeasingTeamsPage extends BasePage {
     readonly billingSection: Locator;
 
     readonly teamCards: Locator;
+    // Each card sits in a .v-lazy that only renders once scrolled into view.
+    readonly teamLazyCards: Locator;
     readonly cardTitle: Locator;
     readonly memberChips: Locator;
     readonly availableUserChips: Locator;
@@ -51,6 +53,7 @@ export class LeasingTeamsPage extends BasePage {
         this.billingSection = this.getSectionByName(Constants.leasingTeamsBillingSection);
 
         this.teamCards = this.teamsContainer.locator('.v-card');
+        this.teamLazyCards = this.teamsContainer.locator('.v-lazy');
         this.cardTitle = this.teamCards.locator('.tl-name');
         this.memberChips = this.teamCards.locator('.members .v-chip');
         this.availableUserChips = this.usersWithoutTeamHolder.locator('.my-chip');
@@ -86,6 +89,24 @@ export class LeasingTeamsPage extends BasePage {
         return this.teamsContainer.locator('.v-card', {
             has: this.page.locator('.tl-name strong', { hasText: teamName }),
         });
+    }
+
+    /** Name of the first rendered team card (the bold part of its title). */
+    async getFirstTeamName(): Promise<string> {
+        const name = this.teamCards.first().locator('.tl-name strong');
+        await name.waitFor({ state: 'visible' });
+        return ((await name.textContent()) ?? '').trim();
+    }
+
+    /** Scrolls lazy placeholders into view one by one until the card of `teamName` is rendered. */
+    async revealTeamCard(teamName: string): Promise<void> {
+        const card = this.getCardByTeamName(teamName);
+        const total = await this.teamLazyCards.count();
+        for (let i = 0; i < total && (await card.count()) === 0; i++) {
+            const lazy = this.teamLazyCards.nth(i);
+            await lazy.scrollIntoViewIfNeeded();
+            await lazy.locator('.v-card').waitFor({ state: 'visible' });
+        }
     }
 
     getCardTitleText(teamName: string): Locator {
@@ -267,6 +288,10 @@ export class LeasingTeamsPage extends BasePage {
         const target = this.getCardByTeamName(teamName);
         await source.waitFor({ state: 'visible', timeout: 5000 });
         await target.waitFor({ state: 'visible', timeout: 5000 });
+        // Mouse coordinates are viewport-relative: bring the card (it may be far
+        // up or down after lazy cards were rendered) and then the chip on screen.
+        await target.scrollIntoViewIfNeeded();
+        await source.scrollIntoViewIfNeeded();
 
         const sourceBox = await source.boundingBox();
         const targetBox = await target.boundingBox();

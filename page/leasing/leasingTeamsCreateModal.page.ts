@@ -29,6 +29,9 @@ export class LeasingTeamsCreateModalPage extends BasePage {
     readonly cancelButton: Locator;
 
     readonly validationMessages: Locator;
+    // Team cards on the page behind the modal — each sits in a .v-lazy that only
+    // renders once scrolled into view.
+    readonly teamLazyCards: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -68,6 +71,7 @@ export class LeasingTeamsCreateModalPage extends BasePage {
         });
 
         this.validationMessages = this.dialog.locator('.v-messages__message');
+        this.teamLazyCards = page.locator('.leasingteams-wrapper .leasing-team-container .v-lazy');
     }
 
     // ===== STATE =====
@@ -191,7 +195,24 @@ export class LeasingTeamsCreateModalPage extends BasePage {
         if (data.people && data.people.length > 0) {
             await this.addPeople(data.people);
         }
-        await this.submit();
+        // The page re-fetches the teams after a create; wait for it, then render
+        // every lazy card — a section below the fold (e.g. a type whose first team
+        // was just created) otherwise never shows the new card.
+        await Promise.all([
+            this.page.waitForResponse(res =>
+                res.url().includes('/ms-leasing/leasing-team/grouped-by-type') && res.status() === 200),
+            this.submit(),
+        ]);
+        await this.renderAllTeamCards();
+    }
+
+    async renderAllTeamCards(): Promise<void> {
+        const total = await this.teamLazyCards.count();
+        for (let i = 0; i < total; i++) {
+            const lazy = this.teamLazyCards.nth(i);
+            await lazy.scrollIntoViewIfNeeded();
+            await lazy.locator('.v-card').waitFor({ state: 'visible' });
+        }
     }
 
     // ===== VALIDATION =====

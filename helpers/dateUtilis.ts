@@ -2,6 +2,7 @@ import fs from 'fs';
 import { expect, Locator, Page } from '@playwright/test';
 import { RecrutimentPage } from '../page/recruitment/recruitmentOverview.page';
 import { LeasingTeamsPage } from '../page/leasing/leasingTeams.page';
+import type { LeasingTeamsCreateModalPage } from '../page/leasing/leasingTeamsCreateModal.page';
 import { LeasingRepresentativesPage } from '../page/leasing/leasingRepresentatives.page';
 import { LeasingClientsOverviewPage } from '../page/leasing/leasingClientsOverview.page';
 import { Constants } from './constants';
@@ -292,7 +293,27 @@ export function extractUserName(chipText: string): string {
     return chipText.split(' - ')[0].trim();
 }
 
+// Creates an empty team of `teamType` through the Create New modal and returns its
+// name. Sections on /leasing/leasing-teams exist only for types that have teams, so
+// section tests create their own team instead of relying on staging data. Leads are
+// picked from the END of the available-users list (`leadOffset` = 1 is the last user)
+// to stay clear of the indexes leasingTeamsCRUD.spec.ts uses. Pair with safeDeleteTeam.
+export async function createTeamOfType(
+    leasingTeams: LeasingTeamsPage,
+    createModal: LeasingTeamsCreateModalPage,
+    teamType: string,
+    leadOffset: number = 1,
+): Promise<string> {
+    const teamName = uniqueTeamName();
+    const availableUsers = await leasingTeams.getAvailableUserTexts();
+    const lead = extractUserName(availableUsers[availableUsers.length - leadOffset]);
+    await leasingTeams.clickCreateNew();
+    await createModal.createTeam({ teamType, teamName, teamLead: lead });
+    return teamName;
+}
+
 export async function safeDeleteTeam(leasingTeams: LeasingTeamsPage, teamName: string): Promise<void> {
+    await leasingTeams.revealTeamCard(teamName).catch(() => { });
     const card = leasingTeams.getCardByTeamName(teamName);
     if ((await card.count()) === 0) return;
     await leasingTeams.removeAllMembersFromTeam(teamName).catch(() => { });
@@ -307,6 +328,18 @@ export async function safeRestoreRepresentativeCard(reps: LeasingRepresentatives
     const card = reps.getCardByRepName(repName);
     if ((await card.count()) === 0) return;
     await reps.removeAllCompaniesFromRep(repName).catch(() => { });
+}
+
+// Gives a sandbox representative exactly one company from the unassigned pool and
+// returns that company's chip text. Tests that need a populated card call this
+// instead of relying on staging data, and undo it with safeRestoreRepresentativeCard
+// in a finally block.
+export async function seedCompanyOnRepresentative(reps: LeasingRepresentativesPage, repName: string): Promise<string> {
+    await safeRestoreRepresentativeCard(reps, repName);
+    await reps.waitForCardEmpty(repName);
+    const companyText = await reps.pickStablePoolChipText();
+    await reps.dragCompanyToRep(companyText, repName);
+    return companyText;
 }
 
 // Deletes orphan PW_Test_<timestamp> saved-filter rows the test account

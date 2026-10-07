@@ -739,7 +739,6 @@ export class Constants {
     static leasingTeamsCreateButtonLabel = 'Create';
     static leasingTeamsCancelButtonLabel = 'Cancel';
 
-    static leasingTeamsExistingTeamName = 'Sales team 1';
     static leasingTeamsRoleAdmin = 'ADMIN';
     static leasingTeamsRoleDispatcher = 'DISPATCHER';
 
@@ -774,8 +773,11 @@ export class Constants {
     static leasingRepresentativesUntieAllConfirmText = 'Are you sure you want to untie all comanies from this representative?';
     static leasingRepresentativesChipCloseConfirmText = 'Are you sure you want to remove representative for this company?';
 
-    static leasingRepresentativesExistingRepName = 'Bosko QA Test';
-    static leasingRepresentativesSearchTerm = 'Bosko';
+    // 'Bosko QA Test' and 'Super truck manager' were removed from staging (2026-10-06),
+    // so the default role now only has the three sandbox reps below.
+    static leasingRepresentativesExistingRepName = 'Managerko Trukic';
+    // Matches 2 of the 3 Sales Truck Managers, and only by name
+    static leasingRepresentativesSearchTerm = 'manager';
 
     // Empty reps on staging in the default Sales Truck Manager role — used as
     // safe sandboxes for mutating tests (drag/move/untie). They start with 0
@@ -783,7 +785,6 @@ export class Constants {
     static leasingRepresentativesEmptyRep1 = 'Managerko Trukic';
     static leasingRepresentativesEmptyRep2 = 'Sales truck manager 2';
     static leasingRepresentativesEmptyRep3 = 'sales truck test';
-    static leasingRepresentativesEmptyRep4 = 'Super truck manager';
 
     // ===== NEW GUARANTOR MODAL (Leasing Clients) =====
     // "New guarantor" on /leasing/clients opens a menu (Company / Owner operator).
