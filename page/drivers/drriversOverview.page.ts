@@ -36,6 +36,7 @@ export class DriverOverviewPage extends BasePage {
     readonly historyList: Locator;
     readonly editButtonInModal: Locator;
     readonly noHistoryLocator: Locator;
+    readonly noEmploymentHistory: Locator;
     readonly snackMessage: Locator;
     readonly tableProgressBar: Locator;
 
@@ -43,8 +44,10 @@ export class DriverOverviewPage extends BasePage {
         super(page);
         this.page = page;
         this.addDriverButton = page.locator('.mdi.mdi-plus');
-        this.driversWithNoTruckOrTrailerFilter = page.locator('//*[@id="inspire"]/div[1]/main/div/div/div/div[1]/div[1]/div[2]');
-        this.searchInputField = page.locator('//*[@id="inspire"]/div[1]/main/div/div/div/div[1]/div[1]/div[3]');
+        this.driversWithNoTruckOrTrailerFilter = page.locator('.v-select').filter({ hasText: 'Drivers with no truck or trailer' });
+        // single-line field: its "Search" label leaves the DOM once the field has a value,
+        // so the accessible name can't be used
+        this.searchInputField = page.locator('.v-card__title .v-text-field:not(.v-select) input');
         this.employmentHistoryIcon = page.locator('.mdi-history');
         this.pencilIcon = page.locator('.mdi-pencil');
         this.deleteIcon = page.locator('.mdi-delete');
@@ -75,6 +78,7 @@ export class DriverOverviewPage extends BasePage {
         this.historyList = page.locator('.EmploymentHistoriesList__item-content');
         this.editButtonInModal = page.getByRole('button', { name: 'Edit', exact: true });
         this.noHistoryLocator = page.locator('.no-history');
+        this.noEmploymentHistory = page.locator('.EmploymentHistoriesList__no-history');
         this.snackMessage = page.locator('.v-snack__wrapper.v-sheet .v-snack__content');
         this.tableProgressBar = page.locator('.v-data-table__progress');
     }
@@ -119,6 +123,47 @@ export class DriverOverviewPage extends BasePage {
         ]);
         await this.waitForTableLoads();
         return response;
+    }
+
+    driverRow(name: string): Locator {
+        return this.page.locator('tr', { has: this.page.locator('td:nth-child(1)', { hasText: name }) });
+    }
+
+    async isDriverListed(name: string): Promise<boolean> {
+        return this.driverRow(name).first()
+            .waitFor({ state: 'visible', timeout: 5000 })
+            .then(() => true, () => false);
+    }
+
+    async openEditForDriver(name: string): Promise<void> {
+        const row = this.driverRow(name).first();
+        await row.waitFor({ state: 'visible', timeout: 10000 });
+        await row.locator('.mdi-pencil').click();
+    }
+
+    async openEmploymentHistory(rowIndex: number): Promise<void> {
+        await Promise.all([
+            this.page.waitForResponse(res =>
+                res.url().includes('/api/employment-history/') &&
+                (res.status() === 200 || res.status() === 304)
+            ),
+            this.clickElement(this.employmentHistoryIcon.nth(rowIndex)),
+        ]);
+        await this.noEmploymentHistory.or(this.historyList).first().waitFor({ state: 'visible', timeout: 10000 });
+    }
+
+    // Every delete fires a native confirm — the caller must register a dialog handler.
+    async deleteAllEmploymentHistory(): Promise<void> {
+        let count = await this.deleteIconInModal.count();
+        while (count > 0) {
+            await this.deleteIconInModal.first().click();
+            await this.deleteIconInModal.nth(count - 1).waitFor({ state: 'detached', timeout: 10000 });
+            count = await this.deleteIconInModal.count();
+        }
+    }
+
+    dayInDatePicker(day: number): Locator {
+        return this.page.getByRole('button', { name: String(day), exact: true });
     }
 
     async selectOptionFromSearchMenu(menu: Locator, option: Locator): Promise<void> {

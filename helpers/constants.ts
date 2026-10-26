@@ -12,6 +12,8 @@ export class Constants {
     static secondDriverTest = 'secondDriverPlaywright';
     static driverNameFraser = 'Fraser Carlson';
     static markLabatDriver = 'Mark Labat';
+    // Prefix for throwaway drivers created (and deleted) per test in tests/drivers
+    static driverTestPrefix = 'PWDriver';
     static johnsonDriver = 'Shontavius Johnson';
     static brianDriver = 'Brian Sampley';
     static owner = '4 Aces Logistics.';

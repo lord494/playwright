@@ -6,7 +6,7 @@ import { EditAndWriteReview } from '../../page/shop/editAndWriteReview.page';
 import { AddShopPage } from '../../page/shop/addShop.page';
 import { ContactsPage } from '../../page/contacts/contactsOverview.page';
 import { AddContactsPage } from '../../page/contacts/addContact.page';
-import { generateRandomString, get17RandomNumbers, get6RandomNumber, waitForPrebookLoads, safeDeleteAvailableTrailer, generateUniqueTrailerNumber } from '../../helpers/dateUtilis';
+import { generateRandomLetters, generateRandomString, get17RandomNumbers, get6RandomNumber, waitForPrebookLoads, safeDeleteAvailableTrailer, generateUniqueTrailerNumber } from '../../helpers/dateUtilis';
 import { BoardsPage } from '../../page/Content/boards.page';
 import { CompaniesPage } from '../../page/Content/companies.page';
 import { DocumentPage } from '../../page/Content/documentModal.page';
@@ -23,6 +23,7 @@ import { DispatchDashboardOverview } from '../../page/dispatchDashboard/dispatch
 import { EditDriver } from '../../page/dispatchDashboard/editDriver.page';
 import { DispatchInfoPage } from '../../page/dispatchInfo/dispatcInfo.page';
 import { DriverOverviewPage } from '../../page/drivers/drriversOverview.page';
+import { EditDriver as DriversEditDriver } from '../../page/drivers/editDrive.page';
 import { DotInspectionsPage } from '../../page/eld/dotInspections.page';
 import { EldTypesPage } from '../../page/eld/eldTypes.page';
 import { EldShiftsPage } from '../../page/eld/shifts.page';
@@ -122,8 +123,9 @@ export const test = base.extend<{
     dispatchInfo: DispatchInfoPage;
     driverOverviewSetup: DriverOverviewPage;
     driverOverview: DriverOverviewPage;
-    addDriverSetup: EditDriver;
-    editDriverSetup: EditDriver;
+    addDriverSetup: DriversEditDriver;
+    editDriverSetup: DriversEditDriver;
+    editCreatedDriverSetup: DriversEditDriver;
     dotInspection: DotInspectionsPage;
     eldTypes: EldTypesPage;
     eldShiftsPage: EldShiftsPage;
@@ -691,29 +693,51 @@ export const test = base.extend<{
     },
 
     addDriverSetup: async ({ loggedPage, driverOverview }, use) => {
-        const addDriver = new EditDriver(loggedPage);
-        await loggedPage.goto(Constants.driverUrl, { waitUntil: 'networkidle', timeout: 20000 })
+        const addDriver = new DriversEditDriver(loggedPage);
+        await loggedPage.goto(Constants.driverUrl, { waitUntil: 'networkidle', timeout: 20000 });
         await driverOverview.driverNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
         await driverOverview.addDriverButton.click();
         await use(addDriver);
     },
 
+    // Opens the Edit modal of the shared "Mark Labat" driver, creating him first if he is
+    // not in the active drivers list. Only for tests that do NOT save changes
+    // (validation, trailer history) — saving tests use editCreatedDriverSetup.
     editDriverSetup: async ({ loggedPage, driverOverview }, use) => {
-        const editDriver = new EditDriver(loggedPage);
+        const editDriver = new DriversEditDriver(loggedPage);
         await loggedPage.goto(Constants.driverUrl, { waitUntil: 'networkidle', timeout: 20000 });
-        await driverOverview.driverNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-        const [response] = await Promise.all([
-            driverOverview.page.waitForResponse(res =>
-                res.url().includes('/api/drivers')
-            ),
-            await driverOverview.enterDriverNameInSearchField(driverOverview.searchInputField, Constants.markLabatDriver)
-        ]);
-        const driverName = driverOverview.page.locator('tr', {
-            has: driverOverview.page.locator('td:nth-child(1)', { hasText: 'Mark Labat' })
-        });
-        await driverName.first().waitFor({ state: 'visible', timeout: 10000 });
-        await driverOverview.pencilIcon.first().click();
+        await driverOverview.waitForTableLoads();
+        await driverOverview.searchDriverByName(Constants.markLabatDriver);
+        if (!(await driverOverview.isDriverListed(Constants.markLabatDriver))) {
+            await driverOverview.addDriverButton.click();
+            await editDriver.createDriver(Constants.markLabatDriver);
+            await driverOverview.searchDriverByName(Constants.markLabatDriver);
+        }
+        await driverOverview.openEditForDriver(Constants.markLabatDriver);
+        await editDriver.driverName.waitFor({ state: 'visible', timeout: 10000 });
         await use(editDriver);
+    },
+
+    // Creates a unique driver, opens its Edit modal and deletes it after the test,
+    // so tests that save changes never touch data other workers rely on.
+    editCreatedDriverSetup: async ({ loggedPage, driverOverview }, use) => {
+        const editDriver = new DriversEditDriver(loggedPage);
+        const driverName = `${Constants.driverTestPrefix} ${generateRandomLetters(8)}`;
+        await loggedPage.goto(Constants.driverUrl, { waitUntil: 'networkidle', timeout: 20000 });
+        await driverOverview.waitForTableLoads();
+        await driverOverview.addDriverButton.click();
+        const driverId = await editDriver.createDriver(driverName);
+        try {
+            await driverOverview.searchDriverByName(driverName);
+            await driverOverview.openEditForDriver(driverName);
+            await editDriver.driverName.waitFor({ state: 'visible', timeout: 10000 });
+            await use(editDriver);
+        } finally {
+            const response = await loggedPage.request.delete(`/api/drivers/${driverId}`);
+            if (!response.ok()) {
+                throw new Error(`Cleanup of driver "${driverName}" (${driverId}) failed: ${response.status()}`);
+            }
+        }
     },
 
     dotInspection: async ({ loggedPage }, use) => {

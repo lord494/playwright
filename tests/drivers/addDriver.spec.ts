@@ -11,8 +11,7 @@ test('Korisnik moze da doda i obrise drivera', async ({ addDriverSetup, driverOv
     await addDriverSetup.fillInputField(addDriverSetup.driverName, driverName);
     await addDriverSetup.fillInputField(addDriverSetup.secondDrverName, Constants.secondDriverTest);
     await addDriverSetup.selectFromMenu(addDriverSetup.owner, addDriverSetup.secondOwnerOption);
-    await addDriverSetup.selectFromMenu(addDriverSetup.board, addDriverSetup.b2Board);
-    await addDriverSetup.page.waitForTimeout(1000);
+    await addDriverSetup.selectBoard(addDriverSetup.b2Board);
     await addDriverSetup.selectFromMenu(addDriverSetup.dispatcher, addDriverSetup.testPassDispatcher);
     await addDriverSetup.fillAndSelectOption(addDriverSetup.substituteDispatcher, Constants.test, addDriverSetup.secondSubstituteDsipatcher);
     await addDriverSetup.selectFromMenu(addDriverSetup.payroll, addDriverSetup.secondPayroll);
@@ -28,15 +27,9 @@ test('Korisnik moze da doda i obrise drivera', async ({ addDriverSetup, driverOv
     await addDriverSetup.fillAndSelectOption(addDriverSetup.trailer, Constants.secondTrailerName, addDriverSetup.secondTrailerName);
     await addDriverSetup.fillInputField(addDriverSetup.trailerType, Constants.secondTrailerType);
     await addDriverSetup.fillInputField(addDriverSetup.noteBox, Constants.noteSecond);
-    await driverOverview.addButtonInModal.click();
+    await addDriverSetup.addButton.click();
     await addDriverSetup.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-    await addDriverSetup.page.waitForLoadState('networkidle');
-    const [response] = await Promise.all([
-        addDriverSetup.page.waitForResponse(res =>
-            res.url().includes('/api/drivers')
-        ),
-        await driverOverview.enterDriverNameInSearchField(driverOverview.searchInputField, driverName)
-    ]);
+    const response = await driverOverview.searchDriverByName(driverName);
     expect([200, 304]).toContain(response.status());
     await expect(driverOverview.driverNameColumn).toContainText(driverName);
     await expect(driverOverview.driverNameColumn).toContainText(Constants.secondOwner);
@@ -48,6 +41,6 @@ test('Korisnik moze da doda i obrise drivera', async ({ addDriverSetup, driverOv
     await expect(driverOverview.trailerColumn).toContainText(Constants.secondTrailerName);
     await expect(driverOverview.phoneColumn).toContainText(Constants.secondPhone);
     await expect(driverOverview.boardColumn).toContainText(Constants.secondBoard);
-    await driverOverview.deleteIcon.click();
+    await driverOverview.driverRow(driverName).locator('.mdi-delete').click();
     await expect(driverOverview.snackMessage).toContainText(driverName + " " + 'successfully deleted')
 });

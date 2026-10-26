@@ -1,8 +1,8 @@
-import { expect, Locator, Page } from "@playwright/test";
+import { Locator, Page } from "@playwright/test";
+import { BasePage } from "../../helpers/base";
 import { Constants } from "../../helpers/constants";
-import { DriverOverviewPage } from "./drriversOverview.page";
 
-export class EditDriver {
+export class EditDriver extends BasePage {
     readonly page: Page;
     readonly driverName: Locator;
     readonly secondDrverName: Locator;
@@ -65,8 +65,12 @@ export class EditDriver {
     readonly editDriverTitle: Locator;
     readonly editDriverModal: Locator;
     readonly dispeckoDispatcherOption: Locator;
+    readonly addButton: Locator;
+    readonly noTrailerHistory: Locator;
+    readonly trailerHistoryDeleteIcons: Locator;
 
     constructor(page: Page) {
+        super(page);
         this.page = page;
         this.driverName = page.locator('#name');
         this.secondDrverName = page.locator('#second_driver');
@@ -129,6 +133,9 @@ export class EditDriver {
         this.cancelButton = page.getByRole('button', { name: 'Cancel' });
         this.editDriverTitle = page.locator('.v-card__title');
         this.editDriverModal = page.locator('.v-dialog.v-dialog--active');
+        this.addButton = this.editDriverModal.getByRole('button', { name: 'Add', exact: true });
+        this.noTrailerHistory = page.locator('.no-history');
+        this.trailerHistoryDeleteIcons = page.locator('.history-actions .v-icon--link.mdi.mdi-delete');
     }
 
     async selectFromMenu(menu: Locator, optionFromMenu: Locator) {
@@ -168,19 +175,6 @@ export class EditDriver {
         await locator2.click();
     }
 
-    async uncheck(toggleButton: Locator): Promise<void> {
-        if (await toggleButton.isChecked()) {
-            await toggleButton.click();
-        }
-    }
-
-    async check(toggleButton: Locator): Promise<void> {
-        const isChecked = await toggleButton.isChecked();
-        if (!isChecked) {
-            await toggleButton.click();
-        }
-    }
-
     async isCheckedFC(): Promise<void> {
         const isChecked = await this.fcTogglebuttonOff.isChecked();
         if (!isChecked) {
@@ -194,42 +188,52 @@ export class EditDriver {
         }
     }
 
-    async returnOnPreviousState(): Promise<void> {
-        const driver = new DriverOverviewPage(this.page);
-        const edit = new EditDriver(this.page);
-        await this.page.goto(Constants.driverUrl, { waitUntil: 'networkidle' });
-        await driver.enterDriverNameInSearchField(driver.searchInputField, Constants.driver);
-        const driverName = this.page.locator('tr', {
-            has: this.page.locator('td:nth-child(1)', { hasText: 'nameDriverTest' })
-        });
-        await driverName.first().waitFor({ state: 'visible', timeout: 10000 });
-        await driver.pencilIcon.first().click();
-        await this.fillInputField(this.driverName, Constants.markLabatDriver);
+    // Board change reloads the Dispatcher list (GET /api/users/get-users-by-board/{id}),
+    // so the dispatcher can only be picked once that response is back.
+    async selectBoard(boardOption: Locator): Promise<void> {
+        await Promise.all([
+            this.page.waitForResponse(res =>
+                res.url().includes('/api/users/get-users-by-board/') &&
+                (res.status() === 200 || res.status() === 304)
+            ),
+            this.selectFromMenu(this.board, boardOption),
+        ]);
+    }
+
+    // Fills only the required fields (Name, Board, Dispatcher, Phone, Truck) + second driver
+    // in an already opened Add Driver modal. Returns the _id of the created driver.
+    async createDriver(name: string): Promise<string> {
+        await this.fillInputField(this.driverName, name);
         await this.fillInputField(this.secondDrverName, Constants.secondDriver);
-        await this.selectFromMenu(this.owner, this.ownerOption);
-        await this.selectFromMenu(this.board, this.b1Board);
-        await this.page.waitForTimeout(1000);
+        await this.selectBoard(this.b1Board);
         await this.selectFromMenu(this.dispatcher, this.adminDispatcher);
-        await this.fillAndSelectOption(this.substituteDispatcher, Constants.dispatcherDispecko, this.dispeckoDispatcherOption);
-        await this.selectFromMenu(this.payroll, this.adminPayroll);
-        await this.selectFromMenu(this.trailerManager, this.adminTrailerManager);
-        await this.fillInputField(this.dissField, Constants.diss);
-        await this.fillInputField(this.diss2Field, Constants.diss);
-        await this.fillInputField(this.diss3Field, Constants.diss);
-        await this.fillInputField(this.diss4Field, Constants.diss);
-        await this.selectFromMenu(this.company, this.adminCompany);
         await this.fillInputField(this.phone, Constants.adminPhone);
-        await this.fillInputField(this.ownerPhone, Constants.ownerPhone);
         await this.fillAndSelectOption(this.truck, Constants.truckName, this.truckName);
-        await this.fillAndSelectOption(this.trailer, Constants.trailerTest, this.trailerName);
-        await this.fillInputField(this.trailerType, Constants.firstTrailerType);
-        await this.fillInputField(this.noteBox, Constants.noteFirst);
-        await this.unCheckFC();
-        await this.uncheck(this.isPriorityToggleButton);
-        await this.uncheck(this.isNewToggleButton);
-        await this.uncheck(this.isCompanyToggleButton);
-        await this.uncheck(this.isTimeToggleButton);
-        await this.saveButton.click();
-        await edit.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
+        const [response] = await Promise.all([
+            this.page.waitForResponse(res =>
+                new URL(res.url()).pathname === '/api/drivers' && res.request().method() === 'POST'
+            ),
+            this.addButton.click(),
+        ]);
+        if (!response.ok()) {
+            throw new Error(`Creating driver "${name}" failed: ${response.status()} ${await response.text()}`);
+        }
+        await this.editDriverModal.waitFor({ state: 'detached', timeout: 10000 });
+        return (await response.json())._id;
+    }
+
+    async openTrailerHistory(): Promise<void> {
+        await this.check(this.showTrailerHistoryToggleButton);
+        await this.noTrailerHistory.or(this.trailerHistoryList).first().waitFor({ state: 'visible', timeout: 10000 });
+    }
+
+    // Every delete fires a native confirm — the caller must register a dialog handler.
+    async deleteAllTrailerHistory(): Promise<void> {
+        let count = await this.trailerHistoryDeleteIcons.count();
+        while (count > 0) {
+            await this.trailerHistoryDeleteIcons.first().click();
+            await this.trailerHistoryDeleteIcons.nth(count - 1).waitFor({ state: 'detached', timeout: 10000 });
+            count = await this.trailerHistoryDeleteIcons.count();
+        }
     }
 }

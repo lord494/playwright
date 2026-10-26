@@ -144,14 +144,12 @@ test('Korisnik moze da otvori truck tabelu kada klikne na ime kamiona', async ({
     expect(currentURL).toContain(truckName);
 });
 
-test('Korisnik moze da otvori trailer tabelu kada klikne na ime trailera', async ({ dispatchDashboardSetup }) => {
+test('Korisnik moze da otvori trailer tabelu kada klikne na ime trailera', async ({ page, dispatchDashboardSetup }) => {
     await dispatchDashboardSetup.fillInputField(dispatchDashboardSetup.trailerSearchInput, Constants.trailerTestNumber);
-    await dispatchDashboardSetup.page.waitForLoadState("networkidle");
-    const trailerName = await dispatchDashboardSetup.trailerColumn.first().textContent();
+    // networkidle can settle before the search response re-renders the table — wait until the first row is the searched trailer
+    await expect(dispatchDashboardSetup.trailerColumn.first()).toContainText(Constants.trailerTestNumber, { timeout: 15000 });
     await dispatchDashboardSetup.trailerColumn.first().click();
-    await dispatchDashboardSetup.page.waitForLoadState('networkidle');
-    const currentURL = dispatchDashboardSetup.page.url();
-    expect(currentURL).toContain(trailerName);
+    await expect(page).toHaveURL(new RegExp(`/trailers\\?search=${Constants.trailerTestNumber}`), { timeout: 10000 });
 });
 
 test('Korisnik moze da otvori edit driver modal kada klikne na ime kamiona', async ({ dispatchDashboardSetup }) => {

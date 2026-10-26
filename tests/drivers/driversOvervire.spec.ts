@@ -51,7 +51,8 @@ test('Korisnik moze da otvori truck sranicu kada klikne na truck broj iz truck k
     await expect(truckOverview.searchInputField).toHaveValue(clickedTruckNumber, { timeout: 10000 });
 });
 
-test('Korisnik moze da otvori truck sranicu kada klikne na trialer broj iz trailer kolone', async ({ driverOverviewSetup }) => {
+test('Korisnik moze da otvori truck sranicu kada klikne na trialer broj iz trailer kolone', async ({ page, driverOverviewSetup }) => {
+    await driverOverviewSetup.waitForTableLoads();
     const trailerCells = await driverOverviewSetup.trailerColumn.all();
     let clickedValue: string | undefined;
     for (let i = 0; i < trailerCells.length; i++) {
@@ -64,29 +65,15 @@ test('Korisnik moze da otvori truck sranicu kada klikne na trialer broj iz trail
         }
     }
     expect(clickedValue).toBeTruthy();
-    await expect(driverOverviewSetup.page).toHaveURL(`trailers?search=${encodeURIComponent(clickedValue!)}`);
+    await expect(page).toHaveURL(`trailers?search=${encodeURIComponent(clickedValue!)}`);
 });
 
 test('Korisnik moze da doda, edituje i brise employment history', async ({ driverOverviewSetup }) => {
-    await driverOverviewSetup.clickElement(driverOverviewSetup.employmentHistoryIcon.nth(2));
     driverOverviewSetup.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
-    const deleteSelector = '.v-menu__content .mdi-delete';
-    try {
-        await driverOverviewSetup.page.locator(deleteSelector).first().waitFor({ state: 'visible', timeout: 3000 });
-        while (await driverOverviewSetup.page.locator(deleteSelector).count() > 0) {
-            const previousCount = await driverOverviewSetup.page.locator(deleteSelector).count();
-            await driverOverviewSetup.page.locator(deleteSelector).first().click();
-            await driverOverviewSetup.page.waitForFunction(
-                ({ selector, prevCount }) => {
-                    return document.querySelectorAll(selector).length < prevCount;
-                },
-                { selector: deleteSelector, prevCount: previousCount }
-            );
-        }
-    } catch (e) {
-    }
+    await driverOverviewSetup.openEmploymentHistory(2);
+    await driverOverviewSetup.deleteAllEmploymentHistory();
     await driverOverviewSetup.clickElement(driverOverviewSetup.addEmploymentHistoryButton);
     await driverOverviewSetup.selectDateFromDatapicker(driverOverviewSetup.terminatedDate, driverOverviewSetup.currentDataInModal);
     await driverOverviewSetup.clickElement(driverOverviewSetup.addButtonInModal);
@@ -98,7 +85,7 @@ test('Korisnik moze da doda, edituje i brise employment history', async ({ drive
     const formattedDate = `${year}-${month}-${day}`;
     await expect(driverOverviewSetup.historyList).toContainText("Terminated: " + formattedDate);
     await driverOverviewSetup.editIconInModal.click();
-    await driverOverviewSetup.selectDateFromDatapicker(driverOverviewSetup.terminatedDate, driverOverviewSetup.page.getByRole('button', { name: '28', exact: true }));
+    await driverOverviewSetup.selectDateFromDatapicker(driverOverviewSetup.terminatedDate, driverOverviewSetup.dayInDatePicker(28));
     await driverOverviewSetup.clickElement(driverOverviewSetup.editButtonInModal);
     await expect(driverOverviewSetup.historyList).toContainText("Terminated: " + year + '-' + month + '-' + '28');
     await driverOverviewSetup.deleteIconInModal.click();
