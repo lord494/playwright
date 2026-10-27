@@ -2,15 +2,6 @@ import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { test } from '../fixtures/fixtures';
 
-// Each test targets a WORKER-SPECIFIC trailer (Constants.workerTrailers[parallelIndex]) and
-// drives its row by NUMBER (via getRowByTrailerNumber), never by reading back the first row.
-// Reading `trailerNameColumn.first()` after a filter was racy — another worker's created
-// trailer (whose random VIN matched the search) could surface as the first row.
-//
-// The upload → date-picker → save → reopen → assert flow is genuinely long; under 4-worker
-// CPU load it can exceed the default 30s, so these tests get a larger budget (the sibling
-// trailerDocument.spec uses 180s for the same reason).
-
 test('Dodavanje dokumenta kojem je istekao datum vazenja', async ({ insertPermitTrailerSetup, trailerOverview, trailerDocument }, testInfo) => {
     test.setTimeout(120000);
     const trailerNumber = Constants.workerTrailers[testInfo.parallelIndex % Constants.workerTrailers.length];

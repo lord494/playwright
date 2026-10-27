@@ -115,8 +115,6 @@ test('Dokument moze da se prebaci na Truck', async ({ trailerDocumentSetup, inse
     await insertPermitBookOverview.doc.last().waitFor({ state: 'visible', timeout: 10000 });
     await insertPermitBookOverview.enterTruckNumber(insertPermitBookOverview.documentReferrerMenu.last(), Constants.truckName, insertPermitBookOverview.truckNumberFromMenu);
     await insertPermitBookOverview.page.waitForLoadState('networkidle');
-    // Wait for the move to persist before navigating to /truck — otherwise the goto cancels
-    // the in-flight save and the document never lands on the truck.
     await Promise.all([
         insertPermitBookOverview.page.waitForResponse(
             r => r.url().includes('/api/permit-books') && (r.status() === 200 || r.status() === 201),

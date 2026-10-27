@@ -38,7 +38,6 @@ test('Korisnik moze da pretrazuje shopove po gradu - Miami', async ({ shopPage }
 test('Korisnik moze da pretrazuje shopove po gradu - New York', async ({ shopPage }) => {
     await shopPage.enterPostalCode(Constants.newYorkPostalCode);
     await shopPage.selectCity(Constants.newYorkCity, shopPage.newYorkOption);
-    // NY postal 07032 is a Kearny, NJ area, so the cards render "NJ 07032".
     await shopPage.expectEveryLocationCardToContain('NJ ' + Constants.newYorkPostalCode);
 });
 

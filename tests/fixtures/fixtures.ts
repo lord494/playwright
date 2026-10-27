@@ -239,24 +239,16 @@ export const test = base.extend<{
         await use(leasingRepresentatives);
     },
 
-    // Does NOT navigate: Manage Sales tests seed companies through the API first,
-    // then call manageSales.open() so the freshly created data is on the page.
     manageSales: async ({ loggedPage }, use) => {
         const manageSales = new LeasingManageSalesPage(loggedPage);
         await use(manageSales);
     },
 
-    // Same service as api.fixture, but on the logged page's request context
-    // (shares auth.json cookies). Soft-deletes every company it created.
     leasingCompanyService: async ({ loggedPage }, use) => {
         const leasingCompanyService = new LeasingCompanyService(loggedPage.request);
         await use(leasingCompanyService);
         await leasingCompanyService.cleanup();
     },
-
-    // Creates a uniquely-named PWMs* company (lands in the Manage Sales "without
-    // sales" pool). Teardown removes its sales rep before leasingCompanyService
-    // cleanup soft-deletes it.
     createSalesCompany: async ({ leasingCompanyService }, use) => {
         const createdIds: number[] = [];
         await use(async () => {
@@ -275,7 +267,6 @@ export const test = base.extend<{
         }
     },
 
-    // Instantiated on /leasing/clients (via leasingClientsOverview) with nothing opened.
     newGuarantorModal: async ({ leasingClientsOverview, loggedPage }, use) => {
         const modal = new NewGuarantorModalPage(loggedPage);
         await use(modal);
@@ -287,13 +278,11 @@ export const test = base.extend<{
         await use(newGuarantorModal);
     },
 
-    // Navigates to /leasing/clients and opens New guarantor -> Owner operator.
     openOwnerOperatorGuarantorModal: async ({ newGuarantorModal }, use) => {
         await newGuarantorModal.openOwnerOperatorGuarantorModal();
         await use(newGuarantorModal);
     },
 
-    // Looks up an existing SALES user (id/name/email) for API-seeded assignments.
     salesRepresentative: async ({ leasingCompanyService }, use) => {
         await use(name => leasingCompanyService.getRepresentativeByName(Constants.manageSalesRoleName, name));
     },
@@ -303,8 +292,6 @@ export const test = base.extend<{
         await use(modal);
     },
 
-    // Navigates to /leasing/clients and opens the New Company modal so each test
-    // starts in a known state.
     openNewCompanyModal: async ({ leasingClientsOverview, newCompanyModal }, use) => {
         await leasingClientsOverview.openNewCompanyModal();
         await newCompanyModal.expectOpen();
@@ -321,8 +308,6 @@ export const test = base.extend<{
         await use(modal);
     },
 
-    // Navigates to /leasing/clients and opens the New Owner Operator modal so
-    // each test starts in a known state.
     openNewOwnerOperatorModal: async ({ leasingClientsOverview, newOwnerOperatorModal }, use) => {
         await leasingClientsOverview.openNewOwnerOperatorModal();
         await newOwnerOperatorModal.expectOpen();
@@ -436,8 +421,6 @@ export const test = base.extend<{
         const upload = new InsertPermitBookPage(loggedPage);
         await loggedPage.goto(Constants.companiesUrl, { waitUntil: 'networkidle', timeout: 20000 });
         await companiesPage.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-        // await companiesPage.clickElement(companiesPage.documentIcon.first());
-        // await document.deleteAllItemsWithDeleteIcon();
         await use(upload);
     },
 
@@ -456,8 +439,6 @@ export const test = base.extend<{
         await use(truck);
     },
 
-    // Plain TruckPage (no navigation) — mirrors `trailerOverview`. Tests/fixtures that need
-    // to drive the /trucks/all table receive an instance and navigate themselves.
     truckOverview: async ({ loggedPage }, use) => {
         const truckOverview = new TruckPage(loggedPage);
         await use(truckOverview);
@@ -473,9 +454,6 @@ export const test = base.extend<{
         await use(truckInsertPermitOverview);
     },
 
-    // Navigates to /trucks/all and returns a TruckInsertPermitBook. Mirror of
-    // `insertPermitTrailerSetup` — the permit-book upload spec relies on it for navigation,
-    // then scopes to its own worker-specific truck row by number.
     insertPermitTruckSetup: async ({ loggedPage }, use) => {
         const truck = new TruckPage(loggedPage);
         const insertPermit = new TruckInsertPermitBook(loggedPage);
@@ -484,28 +462,17 @@ export const test = base.extend<{
         await use(insertPermit);
     },
 
-    // Mirror of `trailerDocumentSetup`. Uploads ONE expired Registration document to the first
-    // /trucks/all row so the document-operations tests (edit status, subtype, preview, QR,
-    // move, validation) always start from a known single-document state. The upload is wrapped
-    // in a retry because under 4-worker load it can fail silently, leaving the truck with no
-    // document (the old flaky `eyeIcon` timeouts).
     truckDocumentSetup: async ({ loggedPage, truckOverview, truckInsertPermitOverview, truckDocument }, use) => {
         const uploadRegistrationDocument = async () => {
             await truckOverview.clickElement(truckOverview.documentIcon.first());
             await truckDocument.deleteAllItemsWithDeleteIconForDrivers();
             await truckOverview.clickElement(truckOverview.uploadDocumentIcon.first());
-            // Wait for the UPLOAD modal (it carries the Save permit book button) — guards
-            // against acting while the documents-list modal is still animating closed.
             await truckInsertPermitOverview.savePermitButton.waitFor({ state: 'visible', timeout: 10000 });
             await truckInsertPermitOverview.uploadDocument();
-            // Wait for the file to actually register (the filename chip appears) before filling
-            // the rest — otherwise the save fires on an incomplete form and persists nothing.
             await expect(loggedPage.locator('.v-file-input__text').first()).toBeVisible({ timeout: 10000 });
             await truckInsertPermitOverview.selectPastExpiringDate();
             await truckInsertPermitOverview.selectSubtypeFromMenu(truckInsertPermitOverview.documentSubtypeField, truckInsertPermitOverview.registrationSubtype);
             await loggedPage.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
-            // Wait for the save to actually persist before reloading — otherwise reload() cancels
-            // the in-flight POST and the document never appears.
             await Promise.all([
                 loggedPage.waitForResponse(
                     r => r.url().includes('/api/permit-books') && (r.status() === 200 || r.status() === 201),
@@ -516,8 +483,6 @@ export const test = base.extend<{
             await loggedPage.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached', timeout: 10000 }).catch(() => { });
         };
 
-        // Reloads, opens the first truck's documents, and reports whether a document is present
-        // (then leaves a clean /trucks/all page so the test reopens the modal itself).
         const firstTruckHasDocument = async (): Promise<boolean> => {
             await loggedPage.reload();
             await loggedPage.waitForLoadState('networkidle');
@@ -532,7 +497,6 @@ export const test = base.extend<{
         await loggedPage.goto(Constants.truckUrl, { waitUntil: 'networkidle' });
         await truckOverview.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
         await uploadRegistrationDocument();
-        // Guarantee the document persisted before the test runs; retry once if it silently failed.
         if (!(await firstTruckHasDocument())) {
             await uploadRegistrationDocument();
             await loggedPage.reload();
@@ -541,12 +505,7 @@ export const test = base.extend<{
         await use(truckDocument);
     },
 
-    // Mirror of `cleanUpSetupTrailerDocument`. Clears any documents that previous runs of the
-    // move tests left on the move-target locations (the second truck, the trailer, the driver
-    // in the permit book, and the company) so those locations don't accumulate stale documents.
-    // Best-effort hygiene; only the first truck-document test depends on it.
     cleanUpSetupTruckDocument: async ({ loggedPage, truckOverview, truckDocument }, use) => {
-        // Second truck (move-to-another-truck target)
         await loggedPage.goto(Constants.truckUrl, { waitUntil: 'networkidle' });
         await truckOverview.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
         await loggedPage.locator('.v-text-field input').first().fill(Constants.secondTruckName);
@@ -564,7 +523,6 @@ export const test = base.extend<{
         await trailerRow.locator('.mdi-file-document-multiple').click();
         await loggedPage.waitForLoadState('networkidle');
         await truckDocument.deleteAllItemsWithDeleteIconForDrivers();
-        // Driver (move-to-driver target) — appears in the permit book under the driver name
         await loggedPage.goto(Constants.permitBookUrl, { waitUntil: 'networkidle' });
         await truckDocument.eyeIcon.first().waitFor({ state: 'visible', timeout: 10000 });
         await loggedPage.locator('.v-text-field input').first().fill(Constants.testUser);
@@ -700,9 +658,6 @@ export const test = base.extend<{
         await use(addDriver);
     },
 
-    // Opens the Edit modal of the shared "Mark Labat" driver, creating him first if he is
-    // not in the active drivers list. Only for tests that do NOT save changes
-    // (validation, trailer history) — saving tests use editCreatedDriverSetup.
     editDriverSetup: async ({ loggedPage, driverOverview }, use) => {
         const editDriver = new DriversEditDriver(loggedPage);
         await loggedPage.goto(Constants.driverUrl, { waitUntil: 'networkidle', timeout: 20000 });
@@ -718,8 +673,6 @@ export const test = base.extend<{
         await use(editDriver);
     },
 
-    // Creates a unique driver, opens its Edit modal and deletes it after the test,
-    // so tests that save changes never touch data other workers rely on.
     editCreatedDriverSetup: async ({ loggedPage, driverOverview }, use) => {
         const editDriver = new DriversEditDriver(loggedPage);
         const driverName = `${Constants.driverTestPrefix} ${generateRandomLetters(8)}`;
@@ -1001,9 +954,6 @@ export const test = base.extend<{
         await expect(addPostTruckSetup.trailerTypeColumn.first()).toContainText('R');
         await expect(addPostTruckSetup.noteColumn.first()).toContainText(Constants.noteFirst);
         const today = new Date();
-        // The avail column renders a zero-padded MM/DD/YYYY (e.g. "06/04/2026"), so pad the
-        // expected date — an unpadded "6/4/2026" is NOT a substring of "06/04/2026" and the
-        // assertion fails on any single-digit month or day.
         const formattedDate = `${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}/${today.getFullYear()}`;
         await expect(addPostTruckSetup.availColumn.first()).toContainText(formattedDate);
         await use(addPostTruckSetup)
@@ -1056,10 +1006,6 @@ export const test = base.extend<{
 
     trailerOverviewSetup: async ({ loggedPage }, use) => {
         const trailerOverviewSetup = new TrailersPage(loggedPage);
-        // After the first page renders, the table keeps loading pages 2-3 to fill the viewport
-        // (infinite scroll). A filter applied while one of those is still in flight gets the
-        // stale unfiltered page appended above the filtered rows (app bug). networkidle alone
-        // proved not enough, so wait until the table has settled before handing it to a test.
         await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
         await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
         await trailerOverviewSetup.waitForTableSettled();
@@ -1076,12 +1022,6 @@ export const test = base.extend<{
         await use(addTrailerSetup);
     },
 
-    // Creates a worker-unique trailer on /trailers, then filters the table down to just
-    // that trailer so a test operates on its OWN row — never the shared first() row that
-    // other parallel workers add/edit/delete. The worker-prefixed number keeps 4 workers
-    // from colliding, and a brand-new trailer starts with no edit/company-history state.
-    // Used by editTrailer (edits the row) and trailerOverview (company-history on a clean
-    // trailer). The created trailer is removed in teardown.
     createdTrailer: async ({ loggedPage, trailerOverview, addTrailer }, use) => {
         const number = generateUniqueTrailerNumber();
         await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
@@ -1096,14 +1036,9 @@ export const test = base.extend<{
         await addTrailer.fillVinNumber(addTrailer.vinNumber, get17RandomNumbers().join(''));
         await addTrailer.clickSaveButton();
         await addTrailer.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
-        // Reload so the Add-Trailer dialog's DOM is fully gone — otherwise its hidden inputs
-        // and date-picker buttons pollute page-global locators (oldState, currentDate, ...).
         await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
-        // Filter down to the just-created trailer so the test's row locators are unambiguous.
         await trailerOverview.searchByTrailerNumber(number);
         await use({ number });
-        // Teardown: remove the trailer (safeDeleteAvailableTrailer filters /trailers by
-        // Trailer/VIN # and clicks the row delete — best-effort, never blocks teardown).
         await safeDeleteAvailableTrailer(loggedPage, number);
     },
 
@@ -1123,10 +1058,6 @@ export const test = base.extend<{
         const insertPermit = new TrailerInsertPermitBookPage(loggedPage)
         await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
         await expect(trailer.documentIcon.first()).toBeVisible({ timeout: 15000 });
-        //await trailer.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-        //await trailer.page.locator('circle').nth(1).waitFor({ state: 'hidden', timeout: 10000 });
-        // await trailer.clickElement(trailer.documentIcon.first());
-        // await document.deleteAllItemsWithDeleteIcon();
         await use(insertPermit);
     },
 
@@ -1174,22 +1105,13 @@ export const test = base.extend<{
     },
 
     trailerDocumentSetup: async ({ loggedPage, trailerOverview, trailerInsertPermitOverview, trailerDocument }, use) => {
-        // Works on a dedicated trailer (Constants.documentTestTrailer), located by number: a
-        // trailer created by another worker can appear on top of /trailers mid-test, so the
-        // old "first row" ended up being a different trailer in the fixture and in the test.
         const trailerNumber = Constants.documentTestTrailer;
 
-        // Reloads /trailers and filters it down to the document trailer, so the test (and the
-        // steps below) always act on that row.
         const reloadFiltered = async () => {
             await loggedPage.reload();
             await loggedPage.waitForLoadState('networkidle');
             await trailerOverview.searchByTrailerNumber(trailerNumber);
         };
-
-        // Uploads one expired Registration document to the document trailer. Extracted so it
-        // can be retried — under 4-worker load the upload occasionally fails silently, leaving
-        // the trailer with no document (the old flaky `eyeIcon` timeouts).
         const uploadRegistrationDocument = async () => {
             await trailerOverview.clickElement(trailerOverview.documentIconForRow(trailerNumber));
             await trailerDocument.deleteAllItemsWithDeleteIconForDrivers();
@@ -1201,14 +1123,10 @@ export const test = base.extend<{
                 return rect.width === 500
             }, { timeout: 10000 });
             await trailerInsertPermitOverview.uploadDocument();
-            // Wait for the file to actually register (the filename chip appears) before filling
-            // the rest — otherwise the save fires on an incomplete form and persists nothing.
             await expect(loggedPage.locator('.v-file-input__text').first()).toBeVisible({ timeout: 10000 });
             await trailerInsertPermitOverview.selectPastExpiringDate();
             await trailerInsertPermitOverview.selectSubtypeFromMenu(trailerInsertPermitOverview.documentSubtypeField, trailerInsertPermitOverview.registrationSubtype);
             await loggedPage.locator('.v-select-list.v-sheet').waitFor({ state: 'hidden', timeout: 5000 });
-            // Wait for the save to actually persist before reloading — otherwise reload() cancels
-            // the in-flight POST and the document never appears.
             await Promise.all([
                 loggedPage.waitForResponse(
                     r => r.url().includes('/api/permit-books') && (r.status() === 200 || r.status() === 201),
@@ -1219,8 +1137,6 @@ export const test = base.extend<{
             await loggedPage.locator('.v-dialog.v-dialog--active').waitFor({ state: 'detached', timeout: 10000 }).catch(() => { });
         };
 
-        // Reloads, opens the document trailer's documents, and reports whether a document is
-        // present (then leaves a clean, filtered /trailers page so the test reopens the modal).
         const trailerHasDocument = async (): Promise<boolean> => {
             await reloadFiltered();
             await trailerDocument.openTrailerDocuments(trailerNumber);
@@ -1233,7 +1149,6 @@ export const test = base.extend<{
         await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle' });
         await trailerOverview.searchByTrailerNumber(trailerNumber);
         await uploadRegistrationDocument();
-        // Guarantee the document persisted before the test runs; retry once if it silently failed.
         if (!(await trailerHasDocument())) {
             await uploadRegistrationDocument();
             await reloadFiltered();
@@ -1254,8 +1169,6 @@ export const test = base.extend<{
     },
 
     editAvailableTrailerSetup: async ({ loggedPage, trailerOverview, availableTrailer, addTrailer }, use) => {
-        // Create the trailer via /trailers (it lands automatically in /available-trailers),
-        // then navigate, search, and open the edit modal.
         const editAvailableTrailerSetup = new EditTrailersPage(loggedPage);
         await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
         await trailerOverview.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
@@ -1276,7 +1189,6 @@ export const test = base.extend<{
         await availableTrailer.searchTrailer(trailerNumber);
         await availableTrailer.openEditModalForRow(trailerNumber);
         await use(editAvailableTrailerSetup);
-        // Cleanup
         await safeDeleteAvailableTrailer(loggedPage, trailerNumber);
     },
 
@@ -1284,12 +1196,6 @@ export const test = base.extend<{
         const availableTrailer = new AvailableTrailersPage(loggedPage);
         await use(availableTrailer);
     },
-
-    // Creates a UNIQUE trailer on /trailers and navigates to /available-trailers.
-    // Trailer number is stored on the returned page object as `.trailerNumber`.
-    // NOTE: This fixture intentionally does NOT add the trailer to /available-trailers via the UI.
-    // The Add-Available-Trailer Save button does not currently dispatch a request on staging,
-    // so the UI add flow is blocked.
     availableTrailerWithUiCreatedTrailer: async ({ loggedPage, trailerOverview, addTrailer }, use) => {
         await loggedPage.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
         await trailerOverview.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
@@ -1313,63 +1219,30 @@ export const test = base.extend<{
 
         await use(availableTrailer);
 
-        // Cleanup: trailer is on /trailers only — safeDeleteAvailableTrailer falls through to /trailers
         await safeDeleteAvailableTrailer(loggedPage, trailerNumber);
     },
 
-    // Provides a guaranteed trailer in /available-trailers for the current worker.
-    // Picks a worker-specific candidate from Constants.workerCandidateAvailableTrailers,
-    // and if that candidate isn't currently in the table, re-adds it via the UI Add flow
-    // (which is actually a PUT to /api/trailers/available/{id} for trailers with an
-    // existing available-trailer record). This guarantees each test starts with the
-    // expected row present, regardless of prior test runs.
-    // Depends on `availableTrailerSetup` so navigation happens once.
-    // Mirrors the existing `trailerData` pattern: { number: string } accessed via property.
     availableTrailerData: async ({ availableTrailerSetup }, use, testInfo) => {
-        // parallelIndex (0..workers-1) is unique among workers running at the same time.
-        // workerIndex is NOT: it grows every time a worker restarts after a failure, so
-        // e.g. workers 4 and 10 both mapped to the same candidate and raced on it.
         const candidates = Constants.workerCandidateAvailableTrailers;
         const number = candidates[testInfo.parallelIndex % candidates.length];
 
-        // Is the trailer already in /available-trailers?
         await availableTrailerSetup.searchTrailer(number);
         const existing = await availableTrailerSetup.getRowByTrailerNumber(number).count();
         if (existing === 0) {
-            // When the search filter narrows to zero rows, the yard sections (and their +
-            // buttons) are hidden. Clear the search so the Add button is reachable, then
-            // re-add via the UI Add flow.
             await availableTrailerSetup.clearSearch();
             await availableTrailerSetup.addToAvailable(number);
-            // Re-search so the test starts in a known filtered state.
             await availableTrailerSetup.searchTrailer(number);
         }
 
         await use({ number });
     },
 
-    // Provides a worker-specific known trailer plus its real /trailers column values,
-    // for tests that need to verify those values elsewhere (e.g. the Add Available Trailer
-    // modal). Mirrors `availableTrailerData`'s candidate selection so each parallel worker
-    // reads a different trailer that has an existing available-trailer record — guaranteeing
-    // it appears in the Add autocomplete and that Save dispatches a PUT.
-    //
-    // /trailers and /available-trailers are mutually exclusive: an available trailer is not
-    // listed on /trailers. A prior test in the same worker may have left the candidate in
-    // /available-trailers, so we first move it back to /trailers (best-effort) before reading.
-    //
-    // Column indices verified against the live /trailers DOM (2026-06-03):
-    //   2=Trl #, 3=Type, 4=Truck, 5=Driver, 6=Third party, 15=Year, 16=VIN,
-    //   28=Availability, 29=Status
     trailerData: async ({ loggedPage }, use, testInfo) => {
         const candidates = Constants.workerCandidateAvailableTrailers;
         const number = candidates[testInfo.parallelIndex % candidates.length];
         const avail = new AvailableTrailersPage(loggedPage);
         const trailers = new TrailersPage(loggedPage);
 
-        // The candidate's baseline is /available-trailers. Remove it there so it moves back
-        // onto /trailers (where its data is read and where the Add-Available autocomplete
-        // offers it). Best-effort.
         const removeFromAvailable = async () => {
             await loggedPage.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
             await avail.waitForTableLoaded();
@@ -1379,8 +1252,6 @@ export const test = base.extend<{
             }
         };
 
-        // Move onto /trailers, retrying because the available→/trailers transition lags under
-        // parallel load (the row can take more than one search to appear).
         let onTrailers = false;
         for (let attempt = 0; attempt < 3 && !onTrailers; attempt++) {
             await removeFromAvailable();
@@ -1391,8 +1262,6 @@ export const test = base.extend<{
 
         const row = trailers.getRowByTrailerNumber(number).first();
         await row.waitFor({ state: 'visible', timeout: 15000 });
-        // Column indices verified against the live /trailers DOM:
-        //   2=Trl #, 3=Type, 4=Truck, 5=Driver, 6=Third party, 15=Year, 28=Availability, 29=Status
         const trailerData: TrailerData = {
             number: (await row.locator('td:nth-child(2)').textContent())?.trim(),
             type: (await row.locator('td:nth-child(3)').textContent())?.trim(),
@@ -1405,9 +1274,6 @@ export const test = base.extend<{
         };
         await use(trailerData);
 
-        // Restore the candidate to its /available-trailers baseline so the available-trailer
-        // specs (which use availableTrailerData) find it where they expect. Best-effort —
-        // availableTrailerData also self-heals by re-adding if it is missing.
         try {
             await loggedPage.goto(Constants.availableTrailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
             await avail.waitForTableLoaded();
@@ -1416,7 +1282,7 @@ export const test = base.extend<{
                 await avail.clearSearch();
                 await avail.addToAvailable(number);
             }
-        } catch { /* availableTrailerData will re-add on next use */ }
+        } catch { }
     },
 });
 

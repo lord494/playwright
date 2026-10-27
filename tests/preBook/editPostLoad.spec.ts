@@ -3,47 +3,6 @@ import { Constants } from '../../helpers/constants';
 import { generateRandomString } from '../../helpers/dateUtilis';
 import { test } from '../fixtures/fixtures';
 
-// test.use({ storageState: 'auth.json' });
-
-// let page: Page;
-
-// test.beforeEach(async ({ page }) => {
-//     const postLoad = new PostLoadsPage(page);
-//     const add = new AddEditPostLoadPage(page);
-//     const loadId = generateRandomString();
-//     await page.goto(Constants.postLoadPrebookUrl);
-//     await page.waitForLoadState('networkidle');
-//     await postLoad.newLoadButton.click();
-//     await add.saveButton.waitFor({ state: 'visible', timeout: 5000 });
-//     await add.enterLoadId(add.loadId, loadId);
-//     await add.selectOrigin(add.originMenu, Constants.deliveryCity, add.originOption);
-//     await add.selecDestination(add.destinatinMenu, Constants.seconDeliveryCity, add.destinationOption);
-//     await add.selectTodayDate(add.pickupDateField, add.todayDate);
-//     await add.selectTodayDate(add.deliveryDateField, add.todayDate.last());
-//     await add.selectCompany(add.companyField, add.companyOption);
-//     await add.enterBrokerName(add.brokerNameField, Constants.playWrightUser);
-//     await add.enterBrokerEmail(add.brokerEmailField, Constants.testEmail);
-//     await add.enterBrokerPhone(add.brokerPhoneField, Constants.phoneNumberOfUserApp);
-//     await add.enterWeight(add.weightField, Constants.weight);
-//     await add.enterRate(add.rateField, Constants.amount);
-//     await add.enterSyggestedRate(add.suggestedRateField, Constants.suggestedRate);
-//     await add.check(add.dedicaterCheckbox);
-//     await add.enterNote(add.noteField, Constants.noteFirst);
-//     await add.saveButton.click();
-//     await add.addEditDialogbox.waitFor({ state: 'detached', timeout: 5000 });
-//     await page.waitForLoadState('networkidle');
-//     await postLoad.loadIdSearchInputField.click();
-//     await page.waitForTimeout(100);
-//     for (const char of loadId) {
-//         await postLoad.loadIdSearchInputField.type(char);
-//         await page.waitForTimeout(300);
-//         await postLoad.loadIdSearchInputField.click();
-//     }
-//     const truckCell = page.locator(`tr:nth-child(1) td:nth-child(1):has-text("${loadId}")`);
-//     await truckCell.waitFor({ state: 'visible', timeout: 10000 });
-//     await expect(postLoad.loadIdColumn.first()).toContainText(loadId);
-// });
-
 test('Korisnik moze da edituje post Load', async ({ editPostLoadSetup, postLoad }) => {
     test.setTimeout(90_000);
     const loadId = generateRandomString();

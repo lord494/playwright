@@ -2,39 +2,6 @@ import { expect, Page } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { test } from '../fixtures/fixtures';
 
-// test.use({ storageState: 'auth.json' });
-
-// let page: Page;
-
-//before all u uvom slucaju se koristi da se napravi load pre nego sto se testovi izvrsavaju
-// test.beforeAll(async ({ browser }) => {
-//     page = await browser.newPage();
-//     const postTruck = new PostTrucksPage(page);
-//     await page.goto(Constants.postTruckPrebookUrl);
-//     await postTruck.addCompnayIcon.waitFor({ state: 'visible', timeout: 10000 });
-//     await postTruck.addCompnayIcon.click();
-//     await postTruck.selectAvail(postTruck.availField, postTruck.todayDateInDatepicker);
-//     await postTruck.selectOrigin(postTruck.originField, Constants.deliveryCity, postTruck.originOption);
-//     await postTruck.selecDestination(postTruck.destinatinField, Constants.seconDeliveryCity, postTruck.destinationOption);
-//     await postTruck.selectTrailerType(postTruck.trailerTypeField, postTruck.trailerTypeOption);
-//     await postTruck.fillNote(postTruck.noteField, Constants.noteFirst);
-//     await postTruck.saveButton.click();
-//     await postTruck.dialogbox.waitFor({ state: 'detached', timeout: 5000 });
-//     await page.waitForLoadState('networkidle');
-//     await page.goto(Constants.postTruckPrebookUrl, { waitUntil: 'networkidle', timeout: 10000 });
-//     await expect(postTruck.originColumn.first()).toContainText(Constants.deliveryCity);
-//     await expect(postTruck.destinationColumn.first()).toContainText(Constants.seconDeliveryCity);
-//     await expect(postTruck.trailerTypeColumn.first()).toContainText('R');
-//     await expect(postTruck.noteColumn.first()).toContainText(Constants.noteFirst);
-//     const today = new Date();
-//     const formattedDate = `${today.getMonth() + 1}/${today.getDate()}/${today.getFullYear()}`;
-//     await expect(postTruck.availColumn.first()).toContainText(formattedDate);
-// });
-
-// test.beforeEach(async ({ page }) => {
-//     await page.goto(Constants.postTruckPrebookUrl, { waitUntil: 'networkidle', timeout: 10000 });
-// });
-
 test('Korisnik moze da edituje post truck', async ({ cleanupSetupAddPostTruck, addPostTruckSetup }) => {
     await addPostTruckSetup.pencilIcon.first().click();
     await addPostTruckSetup.selectAvail(addPostTruckSetup.availField, addPostTruckSetup.page.getByRole('button', { name: '20', exact: true }).locator('div').first());

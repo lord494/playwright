@@ -196,23 +196,13 @@ test('Search button je omoguceno kada unesemo 9 cifara', async ({ recruitmentOve
 });
 
 test('Search polje za broj telefona ignorise nenumericke karaktere', async ({ recruitmentOverviewSetup }) => {
-    // The phone-search input is numeric-only: typing letters/symbols is stripped,
-    // so the input value stays empty (verified against staging).
     await recruitmentOverviewSetup.searchPhoneNumberField.click();
     await recruitmentOverviewSetup.searchPhoneNumberField.type('abcdef');
     await expect(recruitmentOverviewSetup.searchPhoneNumberField.locator('input')).toHaveValue('');
 });
 
-/**
- * SAP kolona (td:nth-child(6), renderuje YES / NO) i SAP filter checkbox u redu sa
- * filterima statusa. Filter je server-side:
- *   oznacen (default) -> nema `sap` parametra -> lista i SAP i non-SAP zaposlene
- *   neoznacen         -> `sap=false`          -> lista SAMO non-SAP zaposlene
- * Testovi za SAP checkbox u add/edit formi su u addEmployee.spec.ts.
- */
+
 test.describe('SAP kolona i SAP filter', () => {
-    // Test koji dodaje SAP zaposlenog + pretraga + cleanup u afterEach ne staju u
-    // podrazumevanih 30s (afterEach deli budzet sa testom).
     test.describe.configure({ timeout: 60_000 });
 
     let createdPhone: string | null = null;
@@ -273,25 +263,3 @@ test('Move akcija je onemogucena dok nije selektovan nijedan red', async ({ recr
     await recruitmentOverviewSetup.progressBar.waitFor({ state: 'hidden', timeout: 8000 }).catch(() => { });
     await expect(recruitmentOverviewSetup.moveButton).toBeDisabled();
 });
-
-
-
-//////////////////////////////////////////// KORISTI SE POVREMENO ZA BRISANJE BAZE /////////////////////////////////////////////////
-// i ovo mozda nece treba jer ce se sada posle svake rotacije ravnomjerno rasporedjivati brojevi
-// test('Korisnik moze da obrise brojeve', async ({ page }) => {
-//     const recruitment = new RecrutimentPage(page);
-//     page.on('dialog', async (dialog) => {
-//         await dialog.accept();
-//     });
-//     await recruitment.recruiterTab.click();
-//     await recruitment.selectRecruiter(recruitment.searchRecruiterMenu, recruitment.secondRecruiterOption);
-//     await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-//     await recruitment.deleteIcon.first().waitFor({ state: 'visible' });
-//     const deleteButtons = await recruitment.deleteIcon;
-//     const count = await deleteButtons.count();
-//     for (let i = 0; i < count; i++) {
-//         await deleteButtons.nth(0).click();
-//         await page.waitForResponse(response => response.url().includes('/api/employees') && response.status() == 200 || response.status() == 304);
-//         await page.waitForTimeout(500);
-//     }
-// });

@@ -6,9 +6,6 @@ test('Korisnik moze da pretrazuje trailer po kompaniji', async ({ trailerOvervie
     await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await trailerOverviewSetup.waitForTrailersResponse(() =>
         trailerOverviewSetup.selectCompanyFromMenu(trailerOverviewSetup.companyFilter, trailerOverviewSetup.testCompanyOption));
-    // Every filtered row must belong to the searched company. Company is the largest filter,
-    // so the filtered /api/trailers response can land later than the default poll window under
-    // parallel load — give the re-read poll extra headroom (it still asserts genuinely-filtered data).
     await trailerOverviewSetup.expectEveryCellMatches(trailerOverviewSetup.companyNameColumn, t => t === Constants.testCompany, 25000);
 });
 
@@ -23,7 +20,6 @@ test('Korisnik moze da pretrazuje trailer po broju trailera', async ({ trailerOv
     await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await trailerOverviewSetup.waitForTrailersResponse(() =>
         trailerOverviewSetup.enterTrailerName(trailerOverviewSetup.trailerNumberFilter, Constants.trailerTest));
-    // Number filter matches on number OR VIN, so assert the searched trailer is present.
     await expect(trailerOverviewSetup.getRowByTrailerNumber(Constants.trailerTest).first()).toBeVisible({ timeout: 15000 });
 });
 
@@ -31,7 +27,6 @@ test('Korisnik moze da pretrazuje trailer po driver name', async ({ trailerOverv
     await trailerOverviewSetup.companyNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await trailerOverviewSetup.waitForTrailersResponse(() =>
         trailerOverviewSetup.enterDriverName(trailerOverviewSetup.driverNameFilter, Constants.driverName));
-    // Every filtered row's driver column must contain the searched driver name.
     await trailerOverviewSetup.expectEveryCellMatches(trailerOverviewSetup.driverNameColumn, t => t.includes(Constants.driverName));
 });
 
@@ -137,10 +132,6 @@ test('Korisnik moze da otvori edit modal iz trailer history', async ({ trailerOv
 });
 
 test('Korisnik moze da doda, edituje i brise company history', async ({ createdTrailer, trailerOverview }) => {
-    // Use a freshly-created, worker-unique trailer: it has ZERO company-history entries, so
-    // the add/edit/delete assertions match exactly this run's entry. The previous version
-    // used nth(3) of a shared trailer whose history accumulated across runs (deletes are
-    // client-side) and shifted as other workers added trailers — both made it flaky.
     await trailerOverview.openCompanyHistoryForRow(createdTrailer.number);
     await trailerOverview.clickElement(trailerOverview.addHistoryButtonModal);
     await trailerOverview.enterOldState(trailerOverview.oldState, Constants.oldStateValue);

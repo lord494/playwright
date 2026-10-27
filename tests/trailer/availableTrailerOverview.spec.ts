@@ -1,8 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/fixtures';
 
-// Wave A1 — page load, layout, Actions column, top buttons, global search.
-
 test('Korisnik moze da otvori Available Trailers stranicu', async ({ availableTrailerSetup }) => {
     await expect(availableTrailerSetup.page).toHaveURL(/available-trailers/);
     await expect(availableTrailerSetup.globalSearchInput).toBeVisible({ timeout: 10000 });
@@ -16,7 +14,6 @@ test('Korisnik vidi sve glavne dugmice (Trailers link, Stats link, Export All, g
 });
 
 test('Korisnik vidi glavne kolone tabele', async ({ availableTrailerSetup }) => {
-    // Header-text based assertions are stable across column-position reshuffles.
     const headers = ['Trailer *', 'Type', 'Year', 'Driver/Third party', 'Truck', 'Availability', 'Status', 'Brokerage', 'Actions'];
     for (const header of headers) {
         await expect(availableTrailerSetup.page.locator('thead th', { hasText: header }).first()).toBeVisible({ timeout: 10000 });

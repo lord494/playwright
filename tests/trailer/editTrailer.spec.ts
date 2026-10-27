@@ -2,10 +2,6 @@ import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { test } from '../fixtures/fixtures';
 
-// `createdTrailer` creates a worker-unique trailer and filters the /trailers table down to
-// it, so every test here edits/asserts/deletes its OWN row. This removes the cross-worker
-// contention that existed when the tests edited and deleted the shared first() trailer.
-
 test('Korisnik moze da edituje trailer - In company', async ({ createdTrailer, editTrailer, trailerOverview }) => {
     await trailerOverview.openEditModalForRow(createdTrailer.number);
     await editTrailer.check(editTrailer.inCompanyCheckbox);
@@ -23,9 +19,6 @@ test('Korisnik moze da edituje trailer - In company', async ({ createdTrailer, e
     await editTrailer.selectAvailability(editTrailer.availabilityMenu, editTrailer.availabilityOption);
     await editTrailer.clickSaveButton();
     await editTrailer.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
-    // Reload /trailers and re-filter to this trailer: the edit save can drop the column filter,
-    // and the trailer sorts off the first page, so assert on the row located by NUMBER (not the
-    // global .first(), which would read whatever row happens to be first).
     await trailerOverview.page.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
     await trailerOverview.searchByTrailerNumber(createdTrailer.number);
     const num = createdTrailer.number;
@@ -55,7 +48,6 @@ test('Korisnik moze da edituje trailer - Out of company', async ({ createdTraile
     await editTrailer.selectAvailability(editTrailer.availabilityMenu, editTrailer.availabilityOption);
     await editTrailer.clickSaveButton();
     await editTrailer.dialogBox.waitFor({ state: 'detached', timeout: 10000 });
-    // Reload + re-filter, then assert on the row located by NUMBER (see In-company test).
     await trailerOverview.page.goto(Constants.trailerUrl, { waitUntil: 'networkidle', timeout: 20000 });
     await trailerOverview.searchByTrailerNumber(createdTrailer.number);
     const num = createdTrailer.number;

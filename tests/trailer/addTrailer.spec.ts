@@ -40,8 +40,6 @@ test('Korisnik moze da doda trailer', async ({ trailerOverviewSetup, addTrailer 
 });
 
 test('Trailer number polje mora biti unique', async ({ trailerOverviewSetup, addTrailer }) => {
-    // Use a stable, known trailer as the duplicate so the test never reads an empty/transient
-    // first-row value under parallel load.
     await trailerOverviewSetup.searchByTrailerNumber(Constants.trailerTest);
     await trailerOverviewSetup.clickElement(trailerOverviewSetup.addButton);
     await trailerOverviewSetup.page.waitForLoadState('networkidle');
@@ -58,7 +56,6 @@ test('Trailer number polje mora biti unique', async ({ trailerOverviewSetup, add
 });
 
 test('Vin number polje mora biti unique', async ({ trailerOverviewSetup, addTrailer }) => {
-    // Read the VIN of a stable, known trailer (avoids empty/transient first-row reads under load).
     await trailerOverviewSetup.searchByTrailerNumber(Constants.trailerTest);
     const vin = (await trailerOverviewSetup.getRowByTrailerNumber(Constants.trailerTest).first().locator('td:nth-child(16)').textContent())?.trim();
     await trailerOverviewSetup.clickElement(trailerOverviewSetup.addButton);

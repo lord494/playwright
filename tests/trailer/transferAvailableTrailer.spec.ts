@@ -16,21 +16,14 @@ test('Klik na Transfer otvara modal sa naslovom koji sadrzi broj trailera (test 
 
 test('Korisnik moze da prebaci trailer u drugu yardu i nazad (test 6.2)', async ({ availableTrailerSetup, availableTrailerData }) => {
     await availableTrailerSetup.searchTrailer(availableTrailerData.number);
-
-    // 1) Read current yard from the edit modal
     await availableTrailerSetup.openEditModalForRow(availableTrailerData.number);
     const originalYard = await availableTrailerSetup.editModalYardField.inputValue();
     await availableTrailerSetup.editModalCancelButton.click();
     await availableTrailerSetup.editModal.waitFor({ state: 'detached', timeout: 10000 });
-
-    // 2) Open Transfer modal and inspect the destination dropdown
     await availableTrailerSetup.openTransferModalForRow(availableTrailerData.number);
     await availableTrailerSetup.transferModalDestinationYard.click();
     const menu = availableTrailerSetup.page.locator('.v-menu__content.menuable__content__active');
     await menu.waitFor({ state: 'visible', timeout: 10000 });
-
-    // Some trailers have no valid destinations (yard type / business rule constraints).
-    // If so, skip the test — this is a real-data limitation, not a regression.
     const noData = menu.locator('.v-list-item', { hasText: 'No data available' });
     if (await noData.isVisible({ timeout: 1000 }).catch(() => false)) {
         await availableTrailerSetup.cancelTransfer();
@@ -44,15 +37,11 @@ test('Korisnik moze da prebaci trailer u drugu yardu i nazad (test 6.2)', async 
     await firstYardOption.click();
     await availableTrailerSetup.transferModalTransferButton.click();
     await availableTrailerSetup.transferModal.waitFor({ state: 'detached', timeout: 10000 });
-
-    // 3) Verify yard changed via edit modal
     await availableTrailerSetup.searchTrailer(availableTrailerData.number);
     await availableTrailerSetup.openEditModalForRow(availableTrailerData.number);
     await expect(availableTrailerSetup.editModalYardField).toHaveValue(destinationYard, { timeout: 10000 });
     await availableTrailerSetup.editModalCancelButton.click();
     await availableTrailerSetup.editModal.waitFor({ state: 'detached', timeout: 10000 });
-
-    // 4) Restore: transfer back to the original yard
     await availableTrailerSetup.openTransferModalForRow(availableTrailerData.number);
     await availableTrailerSetup.transferModalDestinationYard.click();
     await availableTrailerSetup.page.locator('.v-menu__content.menuable__content__active .v-list-item')
