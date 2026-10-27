@@ -49,7 +49,6 @@ test('Korisnik može da pretražuje load po Origin', async ({ postLoadSetup, add
     await waitForPrebookLoads(postLoadSetup.page, async () => {
         postLoadSetup.page.getByRole('button', { name: '21', exact: true }).locator('div').first().click()
     });
-    //await expect(postLoadSetup.page.locator('tr:nth-child(1) td:nth-child(5)')).toContainText(Constants.miamiOriginCity, { timeout: 10000 });
     const originItems = await postLoadSetup.originColumnAfterSearch.all();
     for (const item of originItems) {
         const text = await item.textContent();

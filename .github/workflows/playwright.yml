@@ -1061,6 +1061,10 @@ jobs:
   run-playwright-tests:
     runs-on: ubuntu-latest
 
+    env:
+      # Broj Playwright workera u CI-u. Vrati na 1 ako paralelno izvrsavanje pravi probleme.
+      PLAYWRIGHT_WORKERS: 4
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -1145,6 +1149,7 @@ jobs:
         shell: bash
         run: |
           echo "Running tests for: $TEST_DIRS"
+          echo "Using $PLAYWRIGHT_WORKERS Playwright workers"
 
           mkdir -p playwright-report
           mkdir -p test-results
@@ -1155,6 +1160,7 @@ jobs:
             -e CI=true \
             -e PLAYWRIGHT_HTML_OPEN=never \
             -e TEST_DIRS="$TEST_DIRS" \
+            -e PLAYWRIGHT_WORKERS="$PLAYWRIGHT_WORKERS" \
             -v "${{ github.workspace }}/playwright-report:/app/playwright-report" \
             -v "${{ github.workspace }}/test-results:/app/test-results" \
             "${{ secrets.DOCKER_USERNAME }}/playwright-tests:latest" \
@@ -1163,7 +1169,7 @@ jobs:
 
               echo "Running Playwright tests: $TEST_DIRS"
 
-              npx playwright test $TEST_DIRS
+              npx playwright test $TEST_DIRS --workers="$PLAYWRIGHT_WORKERS"
               TEST_EXIT_CODE=$?
 
               echo "Playwright exit code inside container: $TEST_EXIT_CODE"

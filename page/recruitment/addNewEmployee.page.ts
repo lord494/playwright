@@ -3,12 +3,6 @@ import { BasePage } from "../../helpers/base";
 import { Constants } from "../../helpers/constants";
 import { get6RandomNumber, getRandom10Number } from "../../helpers/dateUtilis";
 
-/**
- * Data for filling the Add/Edit employee modal. `recruiterOption` and
- * `statusOption` are the menu-option locators to pick (declared as readonly
- * fields on this page, or on RecrutimentPage for the "Test Automation"
- * recruiter used by the edit flow).
- */
 export type EmployeeFormData = {
     cdl: string;
     recruiterOption: Locator;
@@ -18,10 +12,6 @@ export type EmployeeFormData = {
     country: string;
     note: string;
     statusOption: Locator;
-    /**
-     * Desired state of the SAP checkbox. Optional — when omitted the checkbox is left
-     * as-is (a fresh Add modal comes up unchecked, i.e. SAP = NO).
-     */
     sap?: boolean;
 };
 
@@ -62,8 +52,6 @@ export class AddNewEmployeePage extends BasePage {
         this.countryField = this.page.getByRole('textbox', { name: 'Country*' });
         this.noteField = this.page.getByRole('textbox', { name: 'Note' });
         this.stausMenu = this.page.getByRole('textbox', { name: 'Status' });
-        // Scoped through `.v-dialog--active` because the /recruitment filter row carries a
-        // SAP checkbox with the same label — unscoped, the locator would match both.
         this.sapCheckbox = this.page.locator('.v-dialog--active label').filter({ hasText: 'SAP' });
         this.sapCheckboxInput = this.page.locator('.v-dialog--active .v-input--checkbox').filter({ hasText: 'SAP' }).locator('input[type="checkbox"]');
         this.saveButton = this.page.getByRole('button', { name: 'Save' });
@@ -113,11 +101,6 @@ export class AddNewEmployeePage extends BasePage {
         return this.selectFromMenu(this.stausMenu, status);
     }
 
-    /**
-     * Sets the SAP checkbox to `enabled` (it maps to the `sap` boolean the API stores and
-     * the YES/NO the SAP column renders). Idempotent — safe on both the Add modal (comes
-     * up unchecked) and the Edit modal (comes up with the saved value).
-     */
     async setSap(enabled: boolean): Promise<void> {
         if (enabled) {
             await this.check(this.sapCheckbox);
@@ -127,7 +110,6 @@ export class AddNewEmployeePage extends BasePage {
         await expect(this.sapCheckboxInput).toBeChecked({ checked: enabled });
     }
 
-    /** Fills every field of a fresh Add Employee modal (does NOT click Save). */
     async fillEmployeeForm(data: EmployeeFormData): Promise<void> {
         await this.enterCdl(data.cdl);
         await this.selectRecruiter(data.recruiterOption);
@@ -142,10 +124,6 @@ export class AddNewEmployeePage extends BasePage {
         }
     }
 
-    /**
-     * Re-fills the Edit Employee modal, clearing each field before typing
-     * (via BasePage.fillInputFieldEdit). Does NOT click Save.
-     */
     async editEmployeeForm(data: EmployeeFormData): Promise<void> {
         await this.fillInputFieldEdit(this.cdlField, data.cdl);
         await this.selectRecruiter(data.recruiterOption);

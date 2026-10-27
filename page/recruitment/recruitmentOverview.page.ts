@@ -95,14 +95,6 @@ export class RecrutimentPage extends BasePage {
         this.recruiterFieldValue = this.page.locator('.v-select__selection').first();
         this.moveAllButton = this.page.getByRole('button', { name: 'Move all', exact: true });
         this.closeButton = this.page.locator('.v-dialog--active .v-btn__content', { hasText: "Close" });
-        // NOTE: This chained Vuetify class selector (incl. the theme class
-        // `.theme--light`, normally discouraged) is intentionally left unchanged.
-        // Two phone-search inputs render across the Employees / Recruiters tabs and
-        // callers rely on this exact selector resolving to a single element on the
-        // Employees tab while disambiguating with .last() on the Recruiters tab.
-        // A role/placeholder-based replacement could not be verified against the
-        // auth-gated staging DOM, so it is flagged as a follow-up rather than
-        // changed blindly.
         this.searchPhoneNumberField = this.page.locator('.v-input.v-input--hide-details.v-input--dense.theme--light');
         this.searchButton = this.page.locator('.v-btn__content', { hasText: 'Search' });
         this.statusCheckboxes = {
@@ -115,9 +107,6 @@ export class RecrutimentPage extends BasePage {
             inContact: this.page.locator('label').filter({ hasText: 'In contact' })
         };
         this.sapHeader = this.page.getByRole('columnheader', { name: 'SAP', exact: true });
-        // The SAP filter sits in the same filter row as the status checkboxes, but the
-        // add/edit modal carries a SAP checkbox with the identical label — scope to
-        // `main` so the filter locator stays single even while a dialog is open.
         this.sapFilterCheckbox = this.page.getByRole('main').locator('label').filter({ hasText: 'SAP' });
         this.sapFilterInput = this.page.getByRole('main').locator('.v-input--checkbox').filter({ hasText: 'SAP' }).locator('input[type="checkbox"]');
         this.pauseIcon = this.page.locator('.mdi-pause-circle-outline');
@@ -134,7 +123,6 @@ export class RecrutimentPage extends BasePage {
         await this.searchButton.click();
     }
 
-    /** Waits for any /api/employees table refresh to settle. */
     async waitForEmployees(): Promise<void> {
         await this.page.waitForResponse(res =>
             res.url().includes('/api/employees') &&
@@ -142,7 +130,6 @@ export class RecrutimentPage extends BasePage {
         );
     }
 
-    /** Waits for the phone-search /api/employees request for `search` to settle. */
     async waitForEmployeesSearch(search: string): Promise<void> {
         await this.page.waitForResponse(res =>
             res.url().includes('/api/employees?page=1&perPage=100&search=' + search) &&
@@ -150,23 +137,17 @@ export class RecrutimentPage extends BasePage {
         );
     }
 
-    /** Types a phone number into the search field, submits, and waits for results. */
     async searchEmployeeByPhone(phone: string): Promise<void> {
         await this.searchPhoneNumber(this.searchPhoneNumberField, phone);
         await this.waitForEmployeesSearch(phone);
     }
 
-    /** Clears whatever is currently in the phone-search field. */
     async clearPhoneSearch(): Promise<void> {
         await this.searchPhoneNumberField.click();
         await this.page.keyboard.press('Control+A');
         await this.page.keyboard.press('Backspace');
     }
 
-    /**
-     * Unchecks the SAP filter. The filter is server-side: unchecked adds `sap=false`
-     * to /api/employees and the table then lists ONLY non-SAP employees.
-     */
     async excludeSapEmployees(): Promise<void> {
         await this.uncheck(this.sapFilterCheckbox);
         await this.page.waitForResponse(res =>
@@ -176,11 +157,6 @@ export class RecrutimentPage extends BasePage {
         );
         await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
     }
-
-    /**
-     * Re-checks the SAP filter. Checked is the default state and sends NO `sap` param
-     * at all, so the table lists SAP and non-SAP employees together.
-     */
     async includeSapEmployees(): Promise<void> {
         await this.check(this.sapFilterCheckbox);
         await this.page.waitForResponse(res =>
@@ -191,11 +167,6 @@ export class RecrutimentPage extends BasePage {
         await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
     }
 
-    /**
-     * Asserts every visible SAP cell reads one of `allowed`. Iterates the whole column
-     * (not just the first row) so a row the SAP filter failed to exclude is caught, and
-     * polls because the table re-renders after the /api/employees response settles.
-     */
     async expectAllSapCellsAre(...allowed: string[]): Promise<void> {
         await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
         await expect.poll(
@@ -207,10 +178,6 @@ export class RecrutimentPage extends BasePage {
         await expect(this.sapColumn.first()).toHaveText(new RegExp(`^(${allowed.join('|')})$`));
     }
 
-    /**
-     * Asserts the first row's SAP cell reads `value`. Polls — after a save or a filter
-     * change the row is re-rendered, so a single immediate read can catch the old value.
-     */
     async expectFirstSapCellIs(value: string): Promise<void> {
         await this.progressBar.waitFor({ state: 'hidden', timeout: 10000 }).catch(() => { });
         await expect.poll(
@@ -230,11 +197,7 @@ export class RecrutimentPage extends BasePage {
         }
     }
 
-    /**
-     * Asserts every visible status cell reads exactly `statusText` and is painted
-     * with `color`. Iterates all rows (not just the first) to catch a stray row
-     * that the status filter failed to exclude.
-     */
+
     async expectAllStatusCellsAre(statusText: string, color: string): Promise<void> {
         await this.progressBar.waitFor({ state: 'hidden' });
         const cells = await this.stausColumn.all();
@@ -245,12 +208,10 @@ export class RecrutimentPage extends BasePage {
         }
     }
 
-    /** Asserts the employees table currently shows no rows (empty result). */
     async expectNoEmployees(): Promise<void> {
         await expect(this.phoneColumn).toHaveCount(0);
     }
 
-    /** Asserts the first employee row matches the expected create/edit values. */
     async expectFirstEmployeeRow(data: EmployeeRowExpectation): Promise<void> {
         await expect(this.cdlColumn.first()).toContainText(data.cdl);
         await expect(this.employeeNameColumn.first()).toContainText(data.name);

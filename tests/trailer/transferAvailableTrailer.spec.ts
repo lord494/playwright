@@ -1,8 +1,6 @@
 import { expect } from '@playwright/test';
 import { test } from '../fixtures/fixtures';
 
-// Wave A1 — transfer modal happy path (6.1) + transfer roundtrip (6.2).
-
 test('Klik na Transfer otvara modal sa naslovom koji sadrzi broj trailera (test 6.1)', async ({ availableTrailerSetup, availableTrailerData }) => {
     await availableTrailerSetup.searchTrailer(availableTrailerData.number);
     await availableTrailerSetup.openTransferModalForRow(availableTrailerData.number);

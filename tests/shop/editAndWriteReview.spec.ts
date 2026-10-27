@@ -44,7 +44,6 @@ test('Korisnik moze da ostavi pubilc review', async ({ reviewPage }) => {
     await reviewPage.postViewButton.waitFor({ state: 'hidden', timeout: 35000 });
     await expect(reviewPage.page.locator('.v-dialog--active').getByText('Your Review')).toBeVisible({ timeout: 15000 });
     await expect(reviewPage.page.locator('.v-dialog--active').getByText('Successfully posted')).toBeVisible({ timeout: 15000 });
-    //await expect(reviewPage.activeDialogbox).toBeVisible();
     await expect(reviewPage.activeDialogbox).toContainText(/Your Review.*Successfully posted/);
     await reviewPage.okButton.click();
     await reviewPage.activeDialogbox.waitFor({ state: 'hidden', timeout: 10000 });
