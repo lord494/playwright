@@ -1062,8 +1062,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # Broj Playwright workera u CI-u. Vrati na 1 ako paralelno izvrsavanje pravi probleme.
-      PLAYWRIGHT_WORKERS: 4
+      # Broj Playwright workera u CI-u. ubuntu-latest ima 4 vCPU; sa 4 workera procesor je
+      # zagusen (Mapbox mapa se renderuje softverskim WebGL-om) i testovi probijaju 30s timeout.
+      PLAYWRIGHT_WORKERS: 2
 
     steps:
       - name: Checkout code
