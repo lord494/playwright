@@ -332,7 +332,8 @@ export const test = base.extend<{
     reviewPage: async ({ loggedPage }, use) => {
         const review = new EditAndWriteReview(loggedPage);
         await loggedPage.goto(Constants.shopUrl, { waitUntil: 'networkidle', timeout: 20_000 });
-        await review.shopCard.first().click();
+        // Skip shops created by addEditShop.spec on another worker — they can be deleted mid-test.
+        await review.shopCard.filter({ hasNotText: Constants.shopName }).first().click();
         await review.editShopButton.waitFor({ state: 'visible', timeout: 10000 });
         await use(review);
     },
@@ -343,6 +344,12 @@ export const test = base.extend<{
         await addShop.addNewShopButton.click();
         await addShop.franchiseMenu.waitFor({ state: 'visible', timeout: 10000 });
         await use(addShop);
+        // Backend rejects a new shop within the same radius (409), so a shop left behind by a
+        // failed test would block every later create. deleteShop() returns to /shop on success.
+        if (/\/shop\/[0-9a-f-]{36}/.test(loggedPage.url())) {
+            await loggedPage.reload({ waitUntil: 'networkidle' });
+            await addShop.deleteShop();
+        }
     },
 
     contactPage: async ({ loggedPage }, use) => {

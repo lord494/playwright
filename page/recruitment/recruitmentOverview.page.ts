@@ -114,6 +114,10 @@ export class RecrutimentPage extends BasePage {
         this.disabledSearchButton = page.locator('.v-btn--disabled.v-btn--has-bg').first();
     }
 
+    recruiterOptionByName(name: string): Locator {
+        return this.page.locator('.v-list-item__title').filter({ hasText: name });
+    }
+
     async selectRecruiter(menu: Locator, recruiter: Locator): Promise<void> {
         return this.selectRecruiterFromMenu(menu, recruiter);
     }

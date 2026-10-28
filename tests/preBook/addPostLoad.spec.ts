@@ -42,8 +42,8 @@ test('Korisnik moze da doda post Load', async ({ addPostLoadSetup, postLoad }) =
     await expect(postLoad.contactPersonColumn.first()).toContainText(Constants.playWrightUser);
     await expect(postLoad.emailColumn.first()).toContainText(Constants.testEmail);
     await expect(postLoad.suggestedRateColumn.first()).toContainText(Constants.suggestedRate);
-    await postLoad.noteIcon.hover();
-    await expect(postLoad.noteIcon).toHaveAttribute('aria-expanded', 'true');
+    await postLoad.noteIcon.first().hover();
+    await expect(postLoad.noteIcon.first()).toHaveAttribute('aria-expanded', 'true');
     const today = new Date();
     const day = String(today.getDate()).padStart(2, '0');
     const month = String(today.getMonth() + 1).padStart(2, '0'); // meseci idu od 0

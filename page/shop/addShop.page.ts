@@ -130,6 +130,8 @@ export class AddShopPage extends BasePage {
         await this.editShopButton.click();
         await this.deleteShopButton.click();
         await this.deleteButtonInModal.click();
-        await this.page.waitForLoadState('networkidle');
+        // The app redirects to /shop only after networkidle; the addShopPage fixture teardown
+        // relies on the URL to know whether the shop still exists.
+        await this.page.waitForURL(url => !/\/shop\/[0-9a-f-]{36}/.test(url.pathname));
     }
 }

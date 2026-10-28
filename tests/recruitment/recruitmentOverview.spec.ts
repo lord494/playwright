@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
-import { get6RandomNumber, get8RandomNumber, get9RandomNumber, getRandom10Number, safeDeleteEmployeeByPhone } from '../../helpers/dateUtilis';
+import { generateRandomLetters, get6RandomNumber, get8RandomNumber, get9RandomNumber, getRandom10Number, safeDeleteEmployeeByPhone } from '../../helpers/dateUtilis';
 import { test } from '../fixtures/fixtures';
 
 test('Korisnik moze da filtrira zaposlene da se prikazu samo unemployed statusi', async ({ recruitmentOverviewSetup }) => {
@@ -81,12 +81,15 @@ test('Test koji dodaje novog usera, radi se Move All akcija i brise se dodati us
         await dialog.accept();
     });
     const email = inviteAddEditModal.generateUniqueEmail();
+    // Unique name: TemporaryUser accounts left by failed runs already hold employees, and picking
+    // one of them as the Move All target fails with 400 (HOLD capacity exceeded).
+    const temporaryUserName = Constants.temporaryUser + generateRandomLetters(6);
     await user.page.goto(Constants.userUrl, { waitUntil: 'networkidle', timeout: 50000 });
     await user.emailColumn.first().waitFor({ state: 'visible', timeout: 10000 });
     await user.clickElement(user.accountIcon);
     await user.clickElement(user.addUserIcon);
     await inviteAddEditModal.enterData(inviteAddEditModal.emailField, email);
-    await inviteAddEditModal.enterData(inviteAddEditModal.nameField, Constants.temporaryUser);
+    await inviteAddEditModal.enterData(inviteAddEditModal.nameField, temporaryUserName);
     await inviteAddEditModal.selectOptionFromMenu(inviteAddEditModal.roleField, inviteAddEditModal.recruitingRole);
     await inviteAddEditModal.enterData(inviteAddEditModal.passwordField, Constants.password);
     await inviteAddEditModal.clickElement(inviteAddEditModal.saveButton);
@@ -100,10 +103,10 @@ test('Test koji dodaje novog usera, radi se Move All akcija i brise se dodati us
     const phoneColumnTexts = await recruitmentOverviewSetup.phoneColumn.allTextContents();
     await recruitmentOverviewSetup.moveAllButton.click();
     await recruitmentOverviewSetup.dialogBox.waitFor({ state: 'visible' });
-    await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenuInMoveModal, recruitmentOverviewSetup.temporaryUserOption.last());
+    await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenuInMoveModal, recruitmentOverviewSetup.recruiterOptionByName(temporaryUserName).last());
     await recruitmentOverviewSetup.okButton.click();
     await recruitmentOverviewSetup.dialogBox.waitFor({ state: 'detached', timeout: 80000 });
-    await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.temporaryUserOption.first());
+    await recruitmentOverviewSetup.selectRecruiter(recruitmentOverviewSetup.searchRecruiterMenu, recruitmentOverviewSetup.recruiterOptionByName(temporaryUserName).first());
     await recruitmentOverviewSetup.waitForEmployees();
     const phoneColumnTextsAfterMove = await recruitmentOverviewSetup.phoneColumn.allTextContents();
     for (const phone of phoneColumnTexts) {

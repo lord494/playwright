@@ -74,7 +74,8 @@ export class EditAndWriteReview extends BasePage {
     async selectStarsInEditReviewModal(star: Locator): Promise<void> {
         const box = await star.boundingBox();
         if (!box) throw new Error('Element boundingBox nije dostupan');
-        const x = Math.max(1, Math.floor(box.width * 1.1));
+        // Right edge of the star (a full star, not a half); 1.1 landed on the next star.
+        const x = Math.max(1, Math.floor(box.width * 0.99));
         const y = Math.floor(box.height / 2);
         await star.click({ position: { x, y } });
     }
