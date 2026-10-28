@@ -89,6 +89,8 @@ export default defineConfig({
           open: 'never',
         },
       ],
+      // Najsporiji koraci palih testova -> test-results/slow-steps.json (čita build-failure-context).
+      ['./scripts/slow-steps-reporter.ts'],
     ]
     : [
       ['line'],

@@ -37,6 +37,8 @@ interface BrowserDiagnostics {
         method: string;
         url: string;
         status: number;
+        requestBody?: string | null;
+        responseBody?: string | null;
     }>;
 }
 

@@ -9,6 +9,12 @@ const INPUT_FILE = path.join(
     'results.json',
 );
 
+const SLOW_STEPS_FILE = path.join(
+    PROJECT_ROOT,
+    'test-results',
+    'slow-steps.json',
+);
+
 const OUTPUT_FILE = path.join(
     PROJECT_ROOT,
     'test-results',
@@ -131,6 +137,19 @@ interface BrowserHttpError {
     method: string;
     url: string;
     status: number;
+    requestBody?: string | null;
+    responseBody?: string | null;
+}
+
+/**
+ * Najsporiji Playwright koraci jednog pokušaja (slow-steps-reporter.ts).
+ */
+interface SlowStep {
+    title: string;
+    category: string;
+    durationMs: number;
+    startOffsetMs: number;
+    failed: boolean;
 }
 
 interface BrowserDiagnostics {
@@ -170,6 +189,7 @@ interface CleanAttempt {
     };
     attachments: CleanAttachment[];
     browserDiagnostics: BrowserDiagnostics | null;
+    slowestSteps: SlowStep[] | null;
 }
 
 interface CleanFailure {
@@ -471,6 +491,7 @@ function cleanAttempt(
         location: cleanLocation(location),
         attachments: cleanAttachments(result.attachments),
         browserDiagnostics: null,
+        slowestSteps: null,
     };
 }
 
@@ -527,9 +548,24 @@ async function enrichFailuresWithDiagnostics(
     }
 }
 
+/**
+ * slow-steps.json postoji samo u CI-u (reporter je uključen samo tada),
+ * pa njegovo odsustvo nije greška.
+ */
+async function readSlowSteps(): Promise<Record<string, SlowStep[]>> {
+    try {
+        const content = await fs.readFile(SLOW_STEPS_FILE, 'utf8');
+        return JSON.parse(content) as Record<string, SlowStep[]>;
+    } catch {
+        console.warn(`Slow steps were not found: ${SLOW_STEPS_FILE}`);
+        return {};
+    }
+}
+
 function collectFailuresFromSuite(
     suite: PlaywrightSuite,
     failures: CleanFailure[],
+    slowSteps: Record<string, SlowStep[]>,
 ): void {
     for (const spec of suite.specs ?? []) {
         for (const test of spec.tests ?? []) {
@@ -544,6 +580,11 @@ function collectFailuresFromSuite(
             }
 
             const attempts = (test.results ?? []).map(cleanAttempt);
+
+            for (const attempt of attempts) {
+                attempt.slowestSteps =
+                    slowSteps[`${spec.id}#${attempt.retry}`] ?? null;
+            }
 
             const failedAttemptsCount = attempts.filter(
                 attempt =>
@@ -597,7 +638,7 @@ function collectFailuresFromSuite(
     }
 
     for (const childSuite of suite.suites ?? []) {
-        collectFailuresFromSuite(childSuite, failures);
+        collectFailuresFromSuite(childSuite, failures, slowSteps);
     }
 }
 
@@ -663,9 +704,10 @@ async function buildFailureContext(): Promise<void> {
     const report = await readJsonFile<PlaywrightReport>(INPUT_FILE);
 
     const failures: CleanFailure[] = [];
+    const slowSteps = await readSlowSteps();
 
     for (const suite of report.suites ?? []) {
-        collectFailuresFromSuite(suite, failures);
+        collectFailuresFromSuite(suite, failures, slowSteps);
     }
 
     await enrichFailuresWithDiagnostics(failures);

@@ -1317,6 +1317,13 @@ jobs:
 
                     "Do not call something an application bug merely because a timeout, missing locator, " +
                     "closed page, or failed assertion occurred.\n" +
+                    "browserDiagnostics.httpErrors carry requestBody and responseBody. When a 4xx/5xx " +
+                    "response explains the failure, quote the server message and base the root cause on it " +
+                    "instead of guessing from the status code.\n" +
+                    "Each attempt may have slowestSteps (Playwright actions/expects with durationMs). If many " +
+                    "unrelated tests time out on simple steps (click, fill, type, waitFor) that take several " +
+                    "seconds each, classify the group as Environment/CI issue (overloaded runner, too many " +
+                    "workers) before considering an application or automation bug.\n" +
                     "Do not recommend waitForTimeout, arbitrary timeout increases, extra retries, " +
                     "weaker assertions, skipping tests, or hiding failures.\n\n" +
 
