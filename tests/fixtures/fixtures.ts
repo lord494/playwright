@@ -66,7 +66,7 @@ import { LeasingManageSalesPage } from '../../page/leasing/leasingManageSales.pa
 import { NewGuarantorModalPage } from '../../page/leasing/newGuarantorModal.page';
 import { LeasingCompanyService } from '../../services/leasingCompanyService';
 import type { LeasingCompany, LeasingRepresentative } from '../../services/leasingCompanyService';
-import { buildLeasingCompanyPayload, uniqueCompanyName } from '../../helpers/dateUtilis';
+import { buildLeasingCompanyPayload, deleteLeftoverTestShops, uniqueCompanyName } from '../../helpers/dateUtilis';
 
 type TrailerData = {
     number?: string | null
@@ -340,16 +340,13 @@ export const test = base.extend<{
 
     addShopPage: async ({ loggedPage }, use) => {
         const addShop = new AddShopPage(loggedPage);
+        // Before as well as after: a run that timed out may not have reached its teardown.
+        await deleteLeftoverTestShops(loggedPage);
         await loggedPage.goto(Constants.shopUrl, { waitUntil: 'networkidle', timeout: 20_000 });
         await addShop.addNewShopButton.click();
         await addShop.franchiseMenu.waitFor({ state: 'visible', timeout: 10000 });
         await use(addShop);
-        // Backend rejects a new shop within the same radius (409), so a shop left behind by a
-        // failed test would block every later create. deleteShop() returns to /shop on success.
-        if (/\/shop\/[0-9a-f-]{36}/.test(loggedPage.url())) {
-            await loggedPage.reload({ waitUntil: 'networkidle' });
-            await addShop.deleteShop();
-        }
+        await deleteLeftoverTestShops(loggedPage);
     },
 
     contactPage: async ({ loggedPage }, use) => {

@@ -213,6 +213,8 @@ export class Constants {
     static deliveryCity = "East Washington, PA";
     static seconDeliveryCity = "East Los Angeles, CA";
     static addressShop = 'CA-1, Long Beach, CA 90804, United States';
+    static addressShopLatitude = 33.78986;
+    static addressShopLongitude = -118.15017;
     static miamiOriginCity = 'Miami, FL';
     static newYorkCity = 'New York, NY';
     static messagTitle = 'Test message title';

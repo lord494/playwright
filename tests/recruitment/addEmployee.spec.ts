@@ -443,7 +443,6 @@ test.describe('SAP checkbox u add/edit formi', () => {
         await recruitmentOverview.searchEmployeeByPhone(randomPhone);
         await recruitmentOverview.expectFirstSapCellIs(Constants.sapNo);
         await recruitmentOverview.pencilIcon.click();
-        // Edit forma cita snimljenu vrednost — za SAP=NO zaposlenog checkbox je neoznacen.
         await expect(addEmployeeSetup.sapCheckboxInput).not.toBeChecked();
         await addEmployeeSetup.setSap(true);
         await addEmployeeSetup.saveButton.click();

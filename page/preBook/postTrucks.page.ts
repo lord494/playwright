@@ -83,4 +83,3 @@ export class PostTrucksPage extends BasePage {
         await this.selectFromMenu(trailerTypeMenu, trailerType);
     }
 }
-//

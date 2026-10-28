@@ -285,6 +285,21 @@ export async function expectIcon(locator: Locator, expectedIcon?: 'mdi-check' | 
     }
 };
 
+// POST /ms-shop/shop returns 409 "Shop already exists within this radius", and every addEditShop
+// test creates its shop at Constants.addressShop. Removes test shops a failed or timed-out run
+// left there; shops with other names are never touched.
+export async function deleteLeftoverTestShops(page: Page): Promise<void> {
+    const response = await page.request.get(
+        `/ms-shop/shop?locationLat=${Constants.addressShopLatitude}&locationLng=${Constants.addressShopLongitude}&radius=2`
+    );
+    if (!response.ok()) throw new Error(`Nearby shop lookup failed: ${response.status()}`);
+    const shops: { id: string; name: string }[] = await response.json();
+    for (const shop of shops.filter(s => s.name.startsWith(Constants.shopName))) {
+        const deleted = await page.request.delete(`/ms-shop/shop/${shop.id}`);
+        if (!deleted.ok()) throw new Error(`Deleting leftover shop ${shop.id} failed: ${deleted.status()}`);
+    }
+}
+
 export function uniqueTeamName(prefix: string = 'PW'): string {
     return `${prefix}_${Date.now()}_${generateRandomString(4)}`;
 }

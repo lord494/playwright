@@ -1,4 +1,4 @@
-import { Locator, Page } from "@playwright/test";
+import { expect, Locator, Page } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 
 export class EditAndWriteReview extends BasePage {
@@ -60,11 +60,7 @@ export class EditAndWriteReview extends BasePage {
     }
 
     async selectStars(star: Locator): Promise<void> {
-        const box = await star.boundingBox();
-        if (!box) throw new Error('Element boundingBox nije dostupan');
-        const x = Math.max(1, Math.floor(box.width * 0.99));
-        const y = Math.floor(box.height / 2);
-        await star.click({ position: { x, y } });
+        await this.clickFullStar(star);
     }
 
     async writeReview(field: Locator, review: string): Promise<void> {
@@ -72,10 +68,24 @@ export class EditAndWriteReview extends BasePage {
     }
 
     async selectStarsInEditReviewModal(star: Locator): Promise<void> {
+        await this.clickFullStar(star);
+    }
+
+    // The rating supports half stars: the left half of a star gives x.5, the right half a full star.
+    // The dialog opens with a scale transition, so a star measured mid-animation is about half its
+    // final size and the click lands in the left half (CI saved rating 1.5 instead of 2). Measure
+    // only once the width stops changing.
+    private async clickFullStar(star: Locator): Promise<void> {
+        let previousWidth = -1;
+        await expect.poll(async () => {
+            const width = (await star.boundingBox())?.width ?? 0;
+            const settled = width > 0 && width === previousWidth;
+            previousWidth = width;
+            return settled;
+        }, { intervals: [100], timeout: 10000 }).toBe(true);
         const box = await star.boundingBox();
         if (!box) throw new Error('Element boundingBox nije dostupan');
-        // Right edge of the star (a full star, not a half); 1.1 landed on the next star.
-        const x = Math.max(1, Math.floor(box.width * 0.99));
+        const x = Math.max(1, Math.floor(box.width * 0.9));
         const y = Math.floor(box.height / 2);
         await star.click({ position: { x, y } });
     }
