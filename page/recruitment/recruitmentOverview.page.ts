@@ -1,14 +1,12 @@
 import { Locator, Page, expect } from "@playwright/test";
 import { BasePage } from "../../helpers/base";
 
-/** Expected values for a single employee row (used by create/edit assertions). */
 export type EmployeeRowExpectation = {
     cdl: string;
     name: string;
     recruiter: string;
     status: string;
     statusColor: string;
-    /** SAP cell text ('YES' / 'NO'). Optional — asserted only when provided. */
     sap?: string;
     email: string;
     phone: string;

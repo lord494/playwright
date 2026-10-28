@@ -56,7 +56,6 @@ export class AddShopPage extends BasePage {
         this.towingTypeCheckbox = page.getByText('Towing');
         this.mobileShopTypeCheckbox = page.getByText('Mobile Shop');
         this.nationalShopToggle = page.getByText('National Shop');
-        //this.addressField = page.getByRole('textbox', { name: 'Address' });
         this.addressField = page.locator('[data-vv-name="address"]');
         this.websiteField = page.getByRole('textbox', { name: 'www.example.com' });
         this.emailField = page.getByRole('textbox', { name: 'example@gmail.com' });

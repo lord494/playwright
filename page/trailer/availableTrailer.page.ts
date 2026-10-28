@@ -15,20 +15,20 @@ export class AvailableTrailersPage extends BasePage {
     readonly globalSearchInput: Locator;
 
     // Table columns (1-based; verified against rendered headers)
-    readonly trailerNumberColumn: Locator;       // 1
-    readonly trailerTypeColumn: Locator;          // 2
-    readonly trailerYearColumn: Locator;          // 3
-    readonly driverThirdPartyColumn: Locator;     // 4
-    readonly salesPersonColumn: Locator;          // 5
-    readonly truckColumn: Locator;                // 6
-    readonly optionColumn: Locator;               // 7
-    readonly availabilityColumn: Locator;         // 13
-    readonly statusColumn: Locator;               // 14
-    readonly brokerageColumn: Locator;            // 16
-    readonly infoColumn: Locator;                 // 18
-    readonly notesColumn: Locator;                // 19
-    readonly towingColumn: Locator;               // 20
-    readonly actionsColumn: Locator;              // 24
+    readonly trailerNumberColumn: Locator;
+    readonly trailerTypeColumn: Locator;
+    readonly trailerYearColumn: Locator;
+    readonly driverThirdPartyColumn: Locator;
+    readonly salesPersonColumn: Locator;
+    readonly truckColumn: Locator;
+    readonly optionColumn: Locator;
+    readonly availabilityColumn: Locator;
+    readonly statusColumn: Locator;
+    readonly brokerageColumn: Locator;
+    readonly infoColumn: Locator;
+    readonly notesColumn: Locator;
+    readonly towingColumn: Locator;
+    readonly actionsColumn: Locator;
 
     // Row-level action icons
     readonly pencilIcon: Locator;
