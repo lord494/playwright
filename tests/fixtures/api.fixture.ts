@@ -6,6 +6,7 @@ import { LoadService } from '../../services/loadService';
 import { LeasingCompanyService } from '../../services/leasingCompanyService';
 import { PrebookLoadService } from '../../services/prebookLoadService';
 import { UserService } from '../../services/userService';
+import { RoleService } from '../../services/roleService';
 
 type ApiFixtures = {
     apiContext: APIRequestContext;
@@ -15,6 +16,7 @@ type ApiFixtures = {
     leasingCompanyService: LeasingCompanyService;
     prebookLoadService: PrebookLoadService;
     userService: UserService;
+    roleService: RoleService;
 };
 
 export const test = base.extend<ApiFixtures>({
@@ -74,6 +76,10 @@ export const test = base.extend<ApiFixtures>({
         const userService = new UserService(apiContext);
         await use(userService);
         await userService.cleanup();
+    },
+
+    roleService: async ({ apiContext }, use) => {
+        await use(new RoleService(apiContext));
     },
 });
 

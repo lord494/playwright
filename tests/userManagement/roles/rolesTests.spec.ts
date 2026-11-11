@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { test } from '../../fixtures/api.fixture';
+import { expect } from '@playwright/test';
 import { Constants } from '../../../helpers/constants';
 import { RolesPage } from '../../../page/userManagement/roles/rolesOverview.page';
 import { get6RandomNumber } from '../../../helpers/dateUtilis';
@@ -81,20 +82,32 @@ test('Korisnik moze da otvori add user modal', async ({ page }) => {
     await expect(roles.editAndAddModal).toBeVisible();
 });
 
-test('Provjera da permisija moze da se doda i vracanje permisije u all permisions box', async ({ page }) => {
-    const roles = new RolesPage(page);
-    await roles.clickElement(roles.pencilIcon.nth(8))
-    await page.waitForLoadState('networkidle');
-    await roles.dragAndDropPermissionToCurrentPermissionsBox();
-    await roles.clickElement(roles.saveButton);
-    await roles.editAndAddModal.waitFor({ state: 'detached', timeout: 5000 });
-    await page.waitForLoadState('networkidle');
-    await roles.clickElement(roles.pencilIcon.nth(8));
-    const permission = await roles.accountingEditPermissionsInCurrentBox.allTextContents();
-    await expect(roles.currentPermissionsBox).toContainText(permission);
-    await roles.dragAndDropPermissionFromCurrentPermissionsBox();
-    await roles.clickElement(roles.saveButton);
-    await roles.editAndAddModal.waitFor({ state: 'detached', timeout: 5000 });
+test.describe('Permisije na postojecoj roli', () => {
+    // The test edits the shared "Read" role: start clean and restore it even if the test fails half-way,
+    // otherwise ACCOUNTING_EDIT stays on the role and every following run fails on the first drag.
+    test.beforeEach(async ({ roleService }) => {
+        await roleService.removePermission(Constants.readRole, Constants.accountingSubject, Constants.editAction);
+    });
+
+    test.afterEach(async ({ roleService }) => {
+        await roleService.removePermission(Constants.readRole, Constants.accountingSubject, Constants.editAction);
+    });
+
+    test('Provjera da permisija moze da se doda i vracanje permisije u all permisions box', async ({ page }) => {
+        const roles = new RolesPage(page);
+        await roles.openEditRoleModal(Constants.readRole);
+        await roles.dragAndDropPermissionToCurrentPermissionsBox();
+        // Verify the drag actually moved the chip before saving (on CI an unchanged role was saved silently).
+        await expect(roles.accountingEditPermissionsInCurrentBox).toBeVisible();
+        await roles.saveRole();
+
+        await roles.openEditRoleModal(Constants.readRole);
+        await expect(roles.accountingEditPermissionsInCurrentBox).toBeVisible();
+        await roles.dragAndDropPermissionFromCurrentPermissionsBox();
+        await expect(roles.accountingEditPermissions).toBeVisible();
+        await expect(roles.accountingEditPermissionsInCurrentBox).toHaveCount(0);
+        await roles.saveRole();
+    });
 });
 
 test('Dodavanje role sa dodavanjem vise permisija', async ({ page }) => {

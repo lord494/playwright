@@ -23,6 +23,7 @@ export class RolesPage extends BasePage {
     readonly snackMessage: Locator;
     readonly secondPermision: Locator;
     readonly errorMessage: Locator;
+    readonly roleRows: Locator;
 
     constructor(page: Page) {
         super(page);
@@ -47,6 +48,41 @@ export class RolesPage extends BasePage {
         this.nameRoleField = page.locator('#name');
         this.snackMessage = page.locator('.v-snack__content');
         this.errorMessage = page.locator('.v-messages.theme--light.error--text');
+        this.roleRows = page.locator('tbody tr');
+    }
+
+    /**
+     * Opens the Edit modal of the role with the given name and waits until the
+     * "All remaining permissions" box is populated. It fills in AFTER networkidle
+     * (from /api/roles/permissions) — dragging before that, as the old
+     * pencilIcon.nth(8) + networkidle flow did, raced the re-render on CI.
+     */
+    async openEditRoleModal(roleName: string): Promise<void> {
+        const pencil = this.roleRows
+            .filter({ has: this.page.locator('td:nth-child(2)', { hasText: new RegExp(`^\\s*${roleName}\\s*$`, 'i') }) })
+            .locator('.mdi-pencil');
+        await Promise.all([
+            this.page.waitForResponse(res =>
+                res.url().includes('/api/roles/permissions') &&
+                (res.status() === 200 || res.status() === 304)
+            ),
+            this.clickElement(pencil),
+        ]);
+        await this.editAndAddModal.waitFor({ state: 'visible' });
+        await this.allRemainingPermissionsBox.locator('.v-chip').first().waitFor({ state: 'visible' });
+    }
+
+    /** Clicks Save and waits for the PUT /api/roles response + modal close. */
+    async saveRole(): Promise<void> {
+        await Promise.all([
+            this.page.waitForResponse(res =>
+                res.url().includes('/api/roles') &&
+                res.request().method() === 'PUT' &&
+                res.status() === 200
+            ),
+            this.clickElement(this.saveButton),
+        ]);
+        await this.editAndAddModal.waitFor({ state: 'detached', timeout: 5000 });
     }
 
     async selectRowsPerPage(rowsPerPageMenu: Locator, optionFromMenu: Locator): Promise<void> {
@@ -59,6 +95,8 @@ export class RolesPage extends BasePage {
     }
 
     async dragAndDropPermissionToCurrentPermissionsBox(): Promise<void> {
+        // Drop onto an existing chip: once the modal is fully loaded the box is ~350px tall and its
+        // center is empty space outside the sortable list, so a drop there is ignored.
         await this.accountingEditPermissions.dragTo(this.currentItem);
     }
 

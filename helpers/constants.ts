@@ -125,6 +125,8 @@ export class Constants {
     static newRole = 'playwright role';
     static driverPlaywright = 'driver playwright';
     static readRole = 'Read';
+    static accountingSubject = 'Accounting';
+    static editAction = 'edit';
     static phoneNumberOfUserApp = '111111';
     static notVerifiedStatus = 'Not Verified';
     static newBoard = 'playwright board';
