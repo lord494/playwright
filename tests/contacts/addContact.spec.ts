@@ -3,7 +3,7 @@ import { Constants } from '../../helpers/constants';
 import { generateRandomString } from '../../helpers/dateUtilis';
 import { test } from '../fixtures/fixtures';
 
-test('Korisnik moze da doda Contact i da ga obrise', async ({ addContactPage, contactPage }) => {
+test('Korisnik moze da doda Contact i da ga obrise', async ({ addContactPage, contactPage, contactAssistant }) => {
     addContactPage.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
@@ -18,7 +18,7 @@ test('Korisnik moze da doda Contact i da ga obrise', async ({ addContactPage, co
     await addContactPage.enterEmail(addContactPage.emailField, email);
     await addContactPage.enterCompany(addContactPage.companyField, Constants.testCompany);
     await addContactPage.enterPosition(addContactPage.positionField, Constants.newRole);
-    await addContactPage.selectAssistant(addContactPage.assistantField, Constants.boskoQA, addContactPage.assistantOption);
+    await addContactPage.selectAssistant(addContactPage.assistantField, contactAssistant.name, addContactPage.assistantOptionByName(contactAssistant.name));
     await addContactPage.isCheckedFC();
     const [response] = await Promise.all([
         addContactPage.page.waitForResponse(res =>
@@ -66,10 +66,10 @@ test('Email je obavezno polje', async ({ addContactPage, contactPage }) => {
     await expect(addContactPage.errorMessage.first()).toContainText('The email field is required');
 });
 
-test('Name, email, position polja se popune kada korisnik izabere opciju iz populate field', async ({ addContactPage, contactPage }) => {
+test('Name, email, position polja se popune kada korisnik izabere opciju iz populate field', async ({ addContactPage, contactPage, contactAssistant }) => {
     await addContactPage.addContactButton.click();
-    await addContactPage.selectPopulatedField(addContactPage.populatedField, Constants.boskoQA, addContactPage.assistantOption);
-    await expect(addContactPage.nameField).toHaveValue(Constants.boskoQA);
-    await expect(addContactPage.emailField).toHaveValue(Constants.boskoQAEmail);
-    await expect(addContactPage.positionField).toHaveValue(Constants.boskoQAPosition);
+    await addContactPage.selectPopulatedField(addContactPage.populatedField, contactAssistant.name, addContactPage.assistantOptionByName(contactAssistant.name));
+    await expect(addContactPage.nameField).toHaveValue(contactAssistant.name);
+    await expect(addContactPage.emailField).toHaveValue(contactAssistant.email);
+    await expect(addContactPage.positionField).toHaveValue(contactAssistant.roleName);
 });

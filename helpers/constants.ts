@@ -92,9 +92,7 @@ export class Constants {
 
     // ===== TEST DATA =====
     static test = 'bosko';
-    static boskoQA = 'Bosko QA Test';
-    static boskoQAEmail = 'dis@l.qq';
-    static boskoQAPosition = 'SALES_TRUCK_MANAGER';
+    static contactAssistantPrefix = 'PW Assistant ';
     static diss = 'dis1';
     static secondDiss = 'scdis2';
     static adminPhone = '0698751163';

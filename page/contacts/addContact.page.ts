@@ -16,7 +16,6 @@ export class AddContactsPage extends BasePage {
     readonly assistantField: Locator;
     readonly isActiveCheckbox: Locator;
     readonly addButton: Locator;
-    readonly assistantOption: Locator;
     readonly errorMessage: Locator;
     readonly saveButton: Locator;
     readonly addContactButton: Locator;
@@ -37,10 +36,14 @@ export class AddContactsPage extends BasePage {
         this.assistantField = page.getByRole('textbox', { name: 'Assistant' });
         this.isActiveCheckbox = page.getByRole('dialog').getByText('Is active');
         this.addButton = page.getByRole('button', { name: 'Add' });
-        this.assistantOption = page.getByRole('option', { name: 'Bosko QA Test' });
         this.errorMessage = page.locator('.v-messages__message');
         this.saveButton = page.getByRole('button', { name: 'Save' });
         this.addContactButton = page.locator('.mdi-plus');
+    }
+
+    /** Option in the Assistant / Populate fields dropdowns (both list all users). */
+    assistantOptionByName(name: string): Locator {
+        return this.page.getByRole('option', { name, exact: true });
     }
 
     async selectPopulatedField(field: Locator, text: string, name: Locator): Promise<void> {

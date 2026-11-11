@@ -1,5 +1,9 @@
 import { test as base, expect } from './diagnostics.fixtures';
 import type { Page, BrowserContext } from '@playwright/test';
+import { request } from '@playwright/test';
+import config from '../../playwright.config';
+import { UserService } from '../../services/userService';
+import type { CreatedUser } from '../../services/userService';
 import { ShopPage } from '../../page/shop/shopOvervirew.page';
 import { Constants } from '../../helpers/constants';
 import { EditAndWriteReview } from '../../page/shop/editAndWriteReview.page';
@@ -95,6 +99,7 @@ export const test = base.extend<{
     contactPage: ContactsPage;
     addContactPage: AddContactsPage;
     createdContact: { email: string };
+    contactAssistant: CreatedUser;
     boardPage: BoardsPage;
     companiesPage: CompaniesPage;
     document: DocumentPage;
@@ -359,7 +364,22 @@ export const test = base.extend<{
         const addContact = new AddContactsPage(loggedPage);
         await use(addContact);
     },
-    createdContact: async ({ contactPage, addContactPage }, use) => {
+    // Own user for the contact Assistant / Populate fields dropdowns. The tests used to depend on a
+    // shared staging user ("Bosko QA Test") that got deleted — every contacts test then failed.
+    // Must exist before the Add/Edit contact modal opens (the modal loads GET /api/users on open).
+    contactAssistant: async ({ }, use) => {
+        const apiContext = await request.newContext({
+            baseURL: config.use?.baseURL as string,
+            storageState: 'auth.json',
+        });
+        const userService = new UserService(apiContext);
+        const user = await userService.createFndUser({ name: Constants.contactAssistantPrefix + generateRandomLetters(8) });
+        await use(user);
+        await userService.cleanup();
+        await apiContext.dispose();
+    },
+
+    createdContact: async ({ contactPage, addContactPage, contactAssistant }, use) => {
         const email = generateRandomString(8) + '@example.com';
         await contactPage.addContactButton.click();
         await addContactPage.enterName(addContactPage.nameField, Constants.driverName);
@@ -371,7 +391,7 @@ export const test = base.extend<{
         await addContactPage.enterEmail(addContactPage.emailField, email);
         await addContactPage.enterCompany(addContactPage.companyField, Constants.testCompany);
         await addContactPage.enterPosition(addContactPage.positionField, Constants.newRole);
-        await addContactPage.selectAssistant(addContactPage.assistantField, Constants.boskoQA, addContactPage.assistantOption);
+        await addContactPage.selectAssistant(addContactPage.assistantField, contactAssistant.name, addContactPage.assistantOptionByName(contactAssistant.name));
         await addContactPage.isCheckedFC();
         const [response] = await Promise.all([
             contactPage.page.waitForResponse(res => res.url().includes('/api/contacts')),

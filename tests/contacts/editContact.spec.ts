@@ -33,15 +33,15 @@ test('Korisnik moze da edituje Contact', async ({ createdContact, contactPage, a
     await expect(contactPage.positionColumn).toContainText(Constants.readRole);
     await expect(contactPage.isActiveColumn).toContainText('NO');
     await contactPage.deleteIcon.click();
-    await expect(contactPage.snackMessage).toContainText(Constants.driverNameFraser + ' 1233332222225sssdsds successfully deleted');
+    await expect(contactPage.snackMessage).toContainText(Constants.driverNameFraser + ' successfully deleted');
 });
 
-test('Korisnik moze da edituje Contact pomocu populate fields', async ({ createdContact, contactPage, addContactPage }) => {
+test('Korisnik moze da edituje Contact pomocu populate fields', async ({ createdContact, contactPage, addContactPage, contactAssistant }) => {
     contactPage.page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
     await contactPage.pencilIcon.click();
-    await addContactPage.selectPopulatedField(addContactPage.populatedField, Constants.boskoQA, addContactPage.assistantOption);
+    await addContactPage.selectPopulatedField(addContactPage.populatedField, contactAssistant.name, addContactPage.assistantOptionByName(contactAssistant.name));
     const [response] = await Promise.all([
         contactPage.page.waitForResponse(res =>
             res.url().includes('/api/contacts')
@@ -49,7 +49,7 @@ test('Korisnik moze da edituje Contact pomocu populate fields', async ({ created
         await addContactPage.clickElement(addContactPage.saveButton)
     ]);
     expect([200, 304]).toContain(response.status());
-    await expect(contactPage.nameColumn).toContainText(Constants.boskoQA);
-    await expect(contactPage.emailColumn).toContainText(Constants.boskoQAEmail);
-    await expect(contactPage.positionColumn).toContainText(Constants.boskoQAPosition);
+    await expect(contactPage.nameColumn).toContainText(contactAssistant.name);
+    await expect(contactPage.emailColumn).toContainText(contactAssistant.email);
+    await expect(contactPage.positionColumn).toContainText(contactAssistant.roleName);
 });

@@ -16,6 +16,7 @@ export type CreatedUser = {
     id: string;
     email: string;
     name: string;
+    roleName: string;
 };
 
 export class UserService {
@@ -60,7 +61,7 @@ export class UserService {
         const created = await response.json();
         expect(created.id).toBeDefined();
         this.createdUserIds.push(created.id);
-        return { id: created.id, email: created.email, name: created.name };
+        return { id: created.id, email: created.email, name: created.name, roleName: created.role?.name ?? role.name };
     }
 
     async deleteUserPermanently(id: string): Promise<number> {
