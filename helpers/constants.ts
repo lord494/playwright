@@ -119,6 +119,8 @@ export class Constants {
     static order = '1';
     static dispatcher = /Dispatcher/;
     static fndUserRole = /Fnd User/
+    static fndUserRoleId = 26;
+    static dispatcherRoleId = 7;
     static teamLeadYes = 'YES';
     static newRole = 'playwright role';
     static driverPlaywright = 'driver playwright';

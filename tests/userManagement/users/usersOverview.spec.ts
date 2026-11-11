@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { test } from '../../fixtures/api.fixture';
+import { expect } from '@playwright/test';
 import { Constants } from '../../../helpers/constants';
 import { UsersPage } from '../../../page/userManagement/users/users.page';
 
@@ -57,17 +58,21 @@ test('Korisnik moze da predje na sledecu stranicu', async ({ browser }) => {
     await page.goto(Constants.userUrl);
     const user = new UsersPage(page);
     await page.waitForLoadState('networkidle');
+    await expect(user.paginationLocator).toHaveText(/^\d+-\d+ of \d+$/);
     let paginationText = await user.getPaginationText();
     const initialMatch = paginationText.match(/^(\d+)-(\d+) of (\d+)$/);
     const [, start, end, total] = initialMatch?.map(Number) ?? [0, 0, 0, 0];
     await user.clickElement(user.rightArrow);
+    // Pagination text re-renders after the response — wait for it instead of reading the old value.
+    await expect(user.paginationLocator).not.toHaveText(paginationText, { timeout: 10000 });
     const newPaginationText = await user.getPaginationText();
     const newMatch = newPaginationText.match(/^(\d+)-(\d+) of (\d+)$/);
     expect(newMatch).toBeTruthy();
     const [, newStart, newEnd, totalUsers] = newMatch?.map(Number) ?? [0, 0, 0, 0];
-    expect(totalUsers).toBe(total);
+    // Total is not compared strictly: other workers create/delete users in parallel.
+    expect(totalUsers).toBeGreaterThan(end);
     expect(newStart).toBe(end + 1);
-    expect(newEnd).toBe(end + 15);
+    expect(newEnd).toBe(Math.min(end + 15, totalUsers));
 });
 
 test('Korisnik moze da se vrati na prethodnu stranicu', async ({ browser }) => {
@@ -77,19 +82,22 @@ test('Korisnik moze da se vrati na prethodnu stranicu', async ({ browser }) => {
     const page = await context.newPage();
     await page.goto(Constants.userUrl);
     const user = new UsersPage(page);
+    await expect(user.paginationLocator).toHaveText(/^1-\d+ of \d+$/, { timeout: 10000 });
     await user.clickElement(user.rightArrow);
-    await page.waitForLoadState('networkidle');
+    await expect(user.paginationLocator).not.toHaveText(/^1-\d+ of \d+$/, { timeout: 10000 });
     let paginationText = await user.getPaginationText();
     const initialMatch = paginationText.match(/^(\d+)-(\d+) of (\d+)$/);
     const [, start, end, total] = initialMatch?.map(Number) ?? [0, 0, 0, 0];
     await user.clickElement(user.leftArrow);
+    await expect(user.paginationLocator).not.toHaveText(paginationText, { timeout: 10000 });
     const newPaginationText = await user.getPaginationText();
     const newMatch = newPaginationText.match(/^(\d+)-(\d+) of (\d+)$/);
     expect(newMatch).toBeTruthy();
     const [, newStart, newEnd, totalUsers] = newMatch?.map(Number) ?? [0, 0, 0, 0];
-    expect(totalUsers).toBe(total);
+    // Total is not compared strictly: other workers create/delete users in parallel.
+    expect(totalUsers).toBeGreaterThan(0);
+    expect(newStart).toBe(start - 15);
     expect(newEnd).toBe(start - 1);
-    expect(newEnd).toBe(end - 15);
 });
 
 test('Kada korisnik klikne na account ikonicu otvore se ikonicu za invite i add usera', async ({ page }) => {
@@ -132,26 +140,27 @@ test('Korisnik moze da otvori devices modal', async ({ page }) => {
     await expect(user.inviteAddUserModal).toBeVisible();
 });
 
-test('Korisnik moze da obrise usera na sivu ikonicu', async ({ page }) => {
+test('Korisnik moze da obrise usera na sivu ikonicu', async ({ page, userService }) => {
+    // Delete only a user this test created — never the first table row (shared between workers).
+    const created = await userService.createFndUser();
     const user = new UsersPage(page);
-    await user.emailColumn.nth(1).waitFor({ state: 'visible', timeout: 5000 });
-    const email = await user.emailColumn.first().allInnerTexts();
     page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
+    await user.searchUser(user.searchInputField, created.email);
+    await expect(user.emailColumn).toHaveText([created.email], { timeout: 15000 });
     await user.clickElement(user.grayDeleteIcon.first());
-    await page.waitForLoadState('networkidle');
-    await expect(user.snackMessage).toContainText("User: " + email + " successfully deleted");
+    await expect(user.snackMessage).toContainText("User: " + created.email + " successfully deleted");
 });
 
-test('Korisnik moze da obrise usera skroz na crvenu ikonicu', async ({ page }) => {
+test('Korisnik moze da obrise usera skroz na crvenu ikonicu', async ({ page, userService }) => {
+    const created = await userService.createFndUser();
     const user = new UsersPage(page);
-    await user.emailColumn.nth(1).waitFor({ state: 'visible', timeout: 5000 });
-    const email = await user.emailColumn.first().allInnerTexts();
     page.on('dialog', async (dialog) => {
         await dialog.accept();
     });
+    await user.searchUser(user.searchInputField, created.email);
+    await expect(user.emailColumn).toHaveText([created.email], { timeout: 15000 });
     await user.clickElement(user.redDeleteIcon.first());
-    await page.waitForLoadState('networkidle');
-    await expect(user.snackMessage).toContainText("User: " + email + " successfully deleted");
+    await expect(user.snackMessage).toContainText("User: " + created.email + " successfully deleted");
 });

@@ -38,7 +38,9 @@ export class ManageAppUserPage extends BasePage {
         this.forbidSelfDispatch = page.locator('.mdi-radiobox-blank');
         this.allowSelfDispatch = page.locator('.mdi-checkbox-marked-circle-outline');;
         this.verifyIconIcon = page.locator('.v-btn--round.theme--light.v-size--small.warning');
-        this.unverifyIcon = page.locator('.v-btn--round.theme--light.v-size--small.success').first();
+        // "Verify this user" button. Filtered by its shield icon: the card has a second .success
+        // button ("Connect driver"), and .first() hit it while the card was still re-rendering.
+        this.unverifyIcon = page.locator('.v-btn--round.v-size--small.success').filter({ has: page.locator('.mdi-shield-check') });
         this.notVerifiedOption = page.getByRole('option', { name: 'Not verified', exact: true });
         this.card = page.locator('.v-card.v-sheet.v-sheet--outlined');
         this.cardTitle = page.locator('.v-card__title');

@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { test } from '../../fixtures/api.fixture';
+import { expect } from '@playwright/test';
 import { Constants } from '../../../helpers/constants';
 import { InviteAddEditModalPage } from '../../../page/userManagement/users/inviteAddEditUser.page';
 import { AddFndUser } from '../../../page/userManagement/fndUsers/addFndUser.page';
@@ -6,15 +7,15 @@ import { FndUserPage } from '../../../page/userManagement/fndUsers/fndUser.page'
 
 test.use({ storageState: 'auth.json' });
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, userService }) => {
+    // Edit a user this test owns — the first FND row is shared between workers and was
+    // sometimes Constants.playWrightUserEmail, which the "unique email" tests depend on.
+    const created = await userService.createFndUser();
     const user = new FndUserPage(page);
-    await page.goto(Constants.fndUserUrl);
-    await user.userNameColumn.first().waitFor({ state: 'visible', timeout: 10000 });
-    await user.pencilIcon.first().click();
-    const fndBoard = page.locator('tr', {
-        has: page.locator('td:nth-child(3)', { hasText: 'Fnd User' })
-    });
-    await fndBoard.first().waitFor({ state: 'visible', timeout: 10000 });
+    await page.goto(Constants.fndUserUrl, { waitUntil: 'networkidle', timeout: 15000 });
+    await user.searchUser(user.searchInputField, created.email);
+    await expect(user.emailColumn).toHaveText([created.email], { timeout: 15000 });
+    await user.clickElement(user.pencilIcon.first());
 });
 
 test('Korisnik moze da edituje usera popunjavanjem svih polja', async ({ page }) => {

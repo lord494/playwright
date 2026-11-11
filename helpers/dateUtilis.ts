@@ -649,3 +649,9 @@ export async function safeDeleteAvailableTrailer(page: Page, trailerNumber: stri
     ]);
 }
 
+
+// Unique test-user email, safe across parallel workers (worker index + timestamp + random).
+export function uniqueUserEmail(): string {
+    const workerIndex = process.env.TEST_PARALLEL_INDEX ?? '0';
+    return `playwrightTest${Date.now()}${workerIndex}${Math.floor(Math.random() * 1000)}@gm.com`;
+}

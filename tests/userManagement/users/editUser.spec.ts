@@ -1,13 +1,19 @@
-import { test, expect } from '@playwright/test';
+import { test } from '../../fixtures/api.fixture';
+import { expect } from '@playwright/test';
 import { Constants } from '../../../helpers/constants';
 import { InviteAddEditModalPage } from '../../../page/userManagement/users/inviteAddEditUser.page';
 import { UsersPage } from '../../../page/userManagement/users/users.page';
 
 test.use({ storageState: 'auth.json' });
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(async ({ page, userService }) => {
+    // Edit a user this test owns — the first table row is shared between workers
+    // (other tests edit/delete it in parallel). userService hard-deletes it after the test.
+    const created = await userService.createFndUser();
     await page.goto(Constants.userUrl, { waitUntil: 'networkidle', timeout: 15000 });
     const user = new UsersPage(page);
+    await user.searchUser(user.searchInputField, created.email);
+    await expect(user.emailColumn).toHaveText([created.email], { timeout: 15000 });
     await user.clickElement(user.pencilIcon.first());
 });
 

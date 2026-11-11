@@ -1,4 +1,5 @@
-import { test, expect } from '@playwright/test';
+import { test } from '../../fixtures/api.fixture';
+import { expect } from '@playwright/test';
 import { Constants } from '../../../helpers/constants';
 import { ManageAppUserPage } from '../../../page/userManagement/manageAppUsers/manageAppUserOverview.page';
 
@@ -17,6 +18,8 @@ test('Korisnik moze da pretrazuje usere po emailu', async ({ page }) => {
         ),
         app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail)
     ]);
+    // The response above can belong to the first typed character — wait for the list to settle on 1 card.
+    await expect(app.card).toHaveCount(1, { timeout: 15000 });
     await expect(app.card).toContainText(Constants.testEmail);
 });
 
@@ -29,6 +32,11 @@ test('Korisnik moze da pretrazuje usere po imenu', async ({ page }) => {
         ),
         app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.appTestUser)
     ]);
+    // Cards re-render after every typed character — poll until every title matches before iterating.
+    await expect.poll(async () => {
+        const titles = await app.cardTitle.allTextContents();
+        return titles.length > 0 && titles.every(title => title.includes(Constants.appTestUser));
+    }, { timeout: 15000 }).toBe(true);
     const count = await app.cardTitle.count();
     for (let i = 0; i < count; i++) {
         const cardText = await app.cardTitle.nth(i).textContent();
@@ -45,6 +53,10 @@ test('Korisnik moze da pretrazuje usere po broju telefona', async ({ page }) => 
         ),
         app.fillPhoneNumberInSearchField(app.phoneNumberSearchInputField, Constants.phoneNumberOfUserApp)
     ]);
+    await expect.poll(async () => {
+        const cards = await app.card.allTextContents();
+        return cards.length > 0 && cards.every(card => card.includes(Constants.phoneNumberOfUserApp));
+    }, { timeout: 15000 }).toBe(true);
     const count = await app.card.count();
     for (let i = 0; i < count; i++) {
         const cardText = await app.card.nth(i).textContent();
@@ -61,6 +73,10 @@ test('Korisnik moze da pretrazuje usere po statusu', async ({ page }) => {
         ),
         app.selectStatusFromMenu(app.statusDropdown, app.notVerifiedOption)
     ]);
+    await expect.poll(async () => {
+        const cards = await app.card.allTextContents();
+        return cards.length > 0 && cards.every(card => card.includes(Constants.notVerifiedStatus));
+    }, { timeout: 15000 }).toBe(true);
     const count = await app.card.count();
     for (let i = 0; i < count; i++) {
         const cardText = await app.card.nth(i).textContent();
@@ -68,19 +84,25 @@ test('Korisnik moze da pretrazuje usere po statusu', async ({ page }) => {
     }
 });
 
-test('Korisnik moze da pretrazuje dispatchere po emailu', async ({ page }) => {
+test('Korisnik moze da pretrazuje dispatchere po emailu', async ({ page, userService }) => {
+    // The dispatcher panel lists only DISPATCHER-role users. Constants.playWrightUserEmail is a
+    // FND_USER, so it can never appear there — the test creates its own dispatcher instead.
+    const dispatcher = await userService.createDispatcherUser();
+    // The panel is loaded on page load (beforeEach ran before the user existed) — reload it.
+    await page.goto(Constants.manageAppUsersUrl, { waitUntil: 'networkidle', timeout: 15000 });
     const app = new ManageAppUserPage(page);
-    await app.fillNameOrEmailSearchField(app.searchDispatcherInputField, Constants.playWrightUserEmail);
-    const dispatcherName = await app.emailOnDispatcherCard.allInnerTexts();
-    await expect(dispatcherName).toContain(Constants.playWrightUserEmail);
+    await app.fillNameOrEmailSearchField(app.searchDispatcherInputField, dispatcher.email);
+    await expect.poll(async () => await app.emailOnDispatcherCard.allInnerTexts(), { timeout: 15000 })
+        .toContain(dispatcher.email);
 });
 
 test('Korisnik moze da pretrazuje dispatchere po imenu', async ({ page }) => {
     const app = new ManageAppUserPage(page);
     await app.fillNameOrEmailSearchField(app.searchDispatcherInputField, Constants.playWrightUser);
-    //await page.waitForTimeout(2000);
-    // const dispatcherName = await app.emailOnDispatcherCard.allInnerTexts();
-    // await expect(dispatcherName).toContain(Constants.playWrightUserEmail);
+    await expect.poll(async () => {
+        const names = await app.nameOnDispatcherCard.allTextContents();
+        return names.length > 0 && names.every(name => name.includes(Constants.playWrightUser));
+    }, { timeout: 15000 }).toBe(true);
     const count = await app.nameOnDispatcherCard.count();
     for (let i = 0; i < count; i++) {
         const cardText = await app.nameOnDispatcherCard.nth(i).textContent();
@@ -130,6 +152,9 @@ test('Korisnik moze da dozvoli self dispatch vozacu', async ({ page }) => {
         ),
         app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail)
     ]);
+    // Toggle icons are page-wide — make sure only the test user's card is left before touching them.
+    await expect(app.card).toHaveCount(1, { timeout: 15000 });
+    await expect(app.card).toContainText(Constants.testEmail);
     if (await app.allowSelfDispatch.isVisible()) {
         await app.allowSelfDispatch.click();
     }
@@ -146,6 +171,9 @@ test('Korisnik moze da verifikuje vozaca', async ({ page }) => {
         ),
         app.fillNameOrEmailSearchField(app.nameOrEmailSearchInputField, Constants.testEmail)
     ]);
+    // Verify/unverify icons are page-wide — make sure only the test user's card is left before clicking.
+    await expect(app.card).toHaveCount(1, { timeout: 15000 });
+    await expect(app.card).toContainText(Constants.testEmail);
     page.on('dialog', async (dialog) => {
         await dialog.accept();
     });

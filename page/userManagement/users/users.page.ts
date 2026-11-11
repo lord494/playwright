@@ -48,7 +48,7 @@ export class UsersPage extends BasePage {
         this.rightArrow = page.locator('.v-btn__content .mdi-chevron-right');
         this.leftArrow = page.locator('.v-btn__content .mdi-chevron-left');
         this.pencilIcon = page.locator('.mdi-pencil');
-        this.keyIcon = page.locator('.mdi-key-chain');
+        this.keyIcon = page.locator('tr .mdi-key-chain');
         this.grayDeleteIcon = page.locator('.mdi-delete');
         this.redDeleteIcon = page.locator('.mdi-delete-forever');
         this.copyIcon = page.locator('.mdi-content-copy');
@@ -68,7 +68,8 @@ export class UsersPage extends BasePage {
     }
 
     async searchUser(searchInput: Locator, text: string): Promise<void> {
-        await this.fillInputField(searchInput, text)
+        // Clears first: after an edit the field still holds the previous search term.
+        await this.fillInputFieldEdit(searchInput, text)
     }
 
     async selectRowsPerPage(rowsPerPageMenu: Locator, optionFromMenu: Locator): Promise<void> {

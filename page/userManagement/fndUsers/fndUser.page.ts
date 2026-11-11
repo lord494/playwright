@@ -35,7 +35,7 @@ export class FndUserPage extends BasePage {
         this.rows10PerPage = page.getByRole('option', { name: '10' });
         this.rows15PerPage = page.getByRole('option', { name: '15' });
         this.pencilIcon = page.locator('.mdi-pencil');
-        this.keyIcon = page.locator('.mdi-key-chain');
+        this.keyIcon = page.locator('tr .mdi-key-chain');
         this.grayDeleteIcon = page.locator('.mdi-delete');
         this.redDeleteIcon = page.locator('.mdi-delete-forever');
         this.userNameColumn = page.locator('tr td:nth-child(1)');
@@ -48,7 +48,8 @@ export class FndUserPage extends BasePage {
     }
 
     async searchUser(searchInput: Locator, text: string): Promise<void> {
-        await this.fillInputField(searchInput, text)
+        // searchInput is the Vuetify wrapper — clear its <input> first (after an edit it still holds the previous term).
+        await this.fillInputFieldEdit(searchInput.locator('input'), text)
     }
 
     async selectRowsPerPage(rowsPerPageMenu: Locator, optionFromMenu: Locator): Promise<void> {

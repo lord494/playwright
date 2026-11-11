@@ -27,18 +27,21 @@ test('Korisnik moze da predje na sledecu stranicu', async ({ browser }) => {
     const page = await context.newPage();
     await page.goto(Constants.rolesUrl, { waitUntil: 'networkidle', timeout: 15000 });
     const roles = new RolesPage(page);
-    await page.waitForLoadState('networkidle');
+    await expect(roles.paginationLocator).toHaveText(/^1-\d+ of \d+$/, { timeout: 10000 });
     let paginationText = await roles.getPaginationText();
     const initialMatch = paginationText.match(/^(\d+)-(\d+) of (\d+)$/);
     const [, start, end, total] = initialMatch?.map(Number) ?? [0, 0, 0, 0];
     await roles.clickElement(roles.rightArrow);
+    // Pagination text re-renders after the response — wait for it instead of reading the old value.
+    await expect(roles.paginationLocator).not.toHaveText(paginationText, { timeout: 10000 });
     const newPaginationText = await roles.getPaginationText();
     const newMatch = newPaginationText.match(/^(\d+)-(\d+) of (\d+)$/);
     expect(newMatch).toBeTruthy();
     const [, newStart, newEnd, totalUsers] = newMatch?.map(Number) ?? [0, 0, 0, 0];
     expect(totalUsers).toBe(total);
     expect(newStart).toBe(end + 1);
-    expect(newEnd).toBe(end + 30);
+    // Last page ends at total (e.g. "31-50 of 50"), not at end + 30.
+    expect(newEnd).toBe(Math.min(end + 30, total));
 });
 
 test('Korisnik moze da se vrati na prethodnu stranicu', async ({ browser }) => {
@@ -48,19 +51,22 @@ test('Korisnik moze da se vrati na prethodnu stranicu', async ({ browser }) => {
     const page = await context.newPage();
     await page.goto(Constants.rolesUrl, { waitUntil: 'networkidle', timeout: 15000 });
     const roles = new RolesPage(page);
+    await expect(roles.paginationLocator).toHaveText(/^1-\d+ of \d+$/, { timeout: 10000 });
     await roles.clickElement(roles.rightArrow);
-    await page.waitForLoadState('networkidle');
+    await expect(roles.paginationLocator).not.toHaveText(/^1-\d+ of \d+$/, { timeout: 10000 });
     let paginationText = await roles.getPaginationText();
     const initialMatch = paginationText.match(/^(\d+)-(\d+) of (\d+)$/);
     const [, start, end, total] = initialMatch?.map(Number) ?? [0, 0, 0, 0];
     await roles.clickElement(roles.leftArrow);
+    await expect(roles.paginationLocator).not.toHaveText(paginationText, { timeout: 10000 });
     const newPaginationText = await roles.getPaginationText();
     const newMatch = newPaginationText.match(/^(\d+)-(\d+) of (\d+)$/);
     expect(newMatch).toBeTruthy();
     const [, newStart, newEnd, totalUsers] = newMatch?.map(Number) ?? [0, 0, 0, 0];
     expect(totalUsers).toBe(total);
+    // Previous page is always a full page: e.g. "31-50" -> "1-30" (end - 30 is wrong on a short last page).
+    expect(newStart).toBe(start - 30);
     expect(newEnd).toBe(start - 1);
-    expect(newEnd).toBe(end - 30);
 });
 
 test('Korisnik moze da otvori edit user modal', async ({ page }) => {

@@ -5,6 +5,7 @@ import { TruckService } from '../../services/truckService';
 import { LoadService } from '../../services/loadService';
 import { LeasingCompanyService } from '../../services/leasingCompanyService';
 import { PrebookLoadService } from '../../services/prebookLoadService';
+import { UserService } from '../../services/userService';
 
 type ApiFixtures = {
     apiContext: APIRequestContext;
@@ -13,6 +14,7 @@ type ApiFixtures = {
     loadService: LoadService;
     leasingCompanyService: LeasingCompanyService;
     prebookLoadService: PrebookLoadService;
+    userService: UserService;
 };
 
 export const test = base.extend<ApiFixtures>({
@@ -66,6 +68,12 @@ export const test = base.extend<ApiFixtures>({
         await use(prebookLoadService);
         await prebookLoadService.cleanup();
         await apiContext.dispose();
+    },
+
+    userService: async ({ apiContext }, use) => {
+        const userService = new UserService(apiContext);
+        await use(userService);
+        await userService.cleanup();
     },
 });
 
