@@ -655,3 +655,11 @@ export function uniqueUserEmail(): string {
     const workerIndex = process.env.TEST_PARALLEL_INDEX ?? '0';
     return `playwrightTest${Date.now()}${workerIndex}${Math.floor(Math.random() * 1000)}@gm.com`;
 }
+
+// True while US Central is on daylight saving time (CDT, UTC-5), false on standard time (CST, UTC-6).
+export function isUsDaylightSavingTime(date: Date = new Date()): boolean {
+    const offset = new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', timeZoneName: 'shortOffset' })
+        .formatToParts(date)
+        .find(part => part.type === 'timeZoneName')?.value;
+    return offset === 'GMT-5';
+}

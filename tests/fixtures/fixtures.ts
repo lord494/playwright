@@ -3,6 +3,8 @@ import type { Page, BrowserContext } from '@playwright/test';
 import { request } from '@playwright/test';
 import config from '../../playwright.config';
 import { UserService } from '../../services/userService';
+import { EldCallService } from '../../services/eldCallService';
+import { DotInspectionService } from '../../services/dotInspectionService';
 import type { CreatedUser } from '../../services/userService';
 import { ShopPage } from '../../page/shop/shopOvervirew.page';
 import { Constants } from '../../helpers/constants';
@@ -719,8 +721,18 @@ export const test = base.extend<{
 
     dotInspection: async ({ loggedPage }, use) => {
         const dotInspection = new DotInspectionsPage(loggedPage);
+        // Track inspections this test creates and delete them afterwards, even when the test fails
+        // before its own UI delete — a leftover inspection keeps the truck locked on the ELD dashboard.
+        const createdIds: string[] = [];
+        loggedPage.on('response', async res => {
+            if (res.request().method() === 'POST' && res.url().includes('/api/dot-inspections') && res.ok()) {
+                const body = await res.json().catch(() => null);
+                if (body?._id) createdIds.push(body._id);
+            }
+        });
         await loggedPage.goto(Constants.dotInspectionUrl, { waitUntil: 'networkidle', timeout: 20000 });
         await use(dotInspection);
+        await new DotInspectionService(loggedPage.request).deleteInspections(createdIds);
     },
 
     eldTypes: async ({ loggedPage }, use) => {
@@ -739,6 +751,8 @@ export const test = base.extend<{
 
     eldDashboard: async ({ loggedPage }, use) => {
         const eldDashboard = new EldDashboardPage(loggedPage);
+        // Locked trucks are disabled in the truck dropdown — clear leftovers before the page loads.
+        await new EldCallService(loggedPage.request).unlockTrucks(Constants.truckName, Constants.secondTruckName);
         await loggedPage.goto(Constants.eldDashboardUrl, { waitUntil: 'networkidle', timeout: 20000 });
         await use(eldDashboard);
     },

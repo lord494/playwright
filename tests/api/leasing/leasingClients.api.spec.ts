@@ -1,6 +1,6 @@
 import { test, expect } from '../../fixtures/api.fixture';
 import { Constants } from '../../../helpers/constants';
-import { generateRandomString } from '../../../helpers/dateUtilis';
+import { buildLeasingCompanyPayload, generateRandomString } from '../../../helpers/dateUtilis';
 
 const uniqueCompanyName = () => `${Constants.leasingApiCompanyNamePrefix}${generateRandomString(8)}`;
 
@@ -87,77 +87,17 @@ test('Korisnik moze da kreira kompaniju sa dodatnim podacima preko API-ja', asyn
     const dot = generateRandomString(6);
     const fain = generateRandomString(9);
     const companyAddress = { address: '123 Test St', city: 'Chicago', state: 'IL', zip: '60601' };
-    const company = await leasingCompanyService.createCompany({
-
-        "name": name,
-        "mc": mc,
-        "dot": dot,
-        "companyAddress": {
-            companyAddress
-        },
-        "ownerAddress": null,
-        "fain": fain,
-        "isMuslim": false,
-        "note": "",
-        "leasingCooperation": true,
-        "recruitingCooperation": false,
-        "maintenanceCooperation": false,
-        "fuelCooperation": false,
-        "leasingCoopStartDate": "2026-08-26T14:26:09.724Z",
-        "maintenanceCoopStartDate": null,
-        "recruitingCoopStartDate": null,
-        "fuelCoopStartDate": null,
-        "status": "PENDING",
-        "salesTrucksManager": null,
-        "salesTrucks": null,
-        "salesTrailersManager": null,
-        "salesTrailers": null,
-        "accTeamLeader": null,
-        "accPerson": null,
-        "collectionPerson": null,
-        "billingInfo": null,
-        "isOwnerOperator": false,
-        "ownerFirstName": null,
-        "ownerMiddleName": null,
-        "ownerLastName": null,
-        "ownerSsn": null,
-        "startDateOfCooperation": null,
-        "insuredAgencyId": null,
-        "insuredAgencyName": null,
-        "insuredAgencyDateOfPlacement": null,
-        "insuredAgencyInsuredAmount": null,
-        "insuredAgencyPolicyNumber": null,
-        "insuredAgencyPolicyStatus": null,
-        "insuredAgencyDateOfClaim": null,
-        "insuredAgencyClaimId": null,
-        "insuredAgencySettlementAmount": null,
-        "insuredAgencySettlementDate": null,
-        "collectionAgencyId": null,
-        "collectionAgencyName": null,
-        "collectionAgencyStatus": null,
-        "collectionAgencyLastReturnCode": null,
-        "plaintiffId": null,
-        "plaintiffName": null,
-        "plaintiffDateFiled": null,
-        "plaintiffLawsuitAmount": null,
-        "plaintiffReceivedAmount": null,
-        "plaintiffPercentageOfAgency": null,
-        "plaintiffCaseStatus": null,
-        "riskLevel": null,
-        "debt": "0",
-        "paid": "0",
-        "draft": "0",
-        "downPayment": "0",
-        "deposit": "0",
-        "isActive": true,
-        "underwritings": [],
-        "billingInfos": [],
-        "contacts": [],
-        "presidents": [],
-        "relatedCompanies": [],
-        "units": [],
-        "commentsCount": 0
-    });
+    // Payload must mirror the modal exactly — the DTO is whitelist-validated, so server-owned
+    // fields (status, debt, isActive, underwritings, ...) make the API return 400.
+    const company = await leasingCompanyService.createCompany(buildLeasingCompanyPayload({
+        name,
+        mc,
+        dot,
+        fain,
+        companyAddress,
+        maintenanceCooperation: true,
+        fuelCooperation: true,
+    }));
     expect(company.id).toBeDefined();
     expect(company.name).toBe(name);
     expect(company.mc).toBe(mc);

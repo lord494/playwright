@@ -109,11 +109,12 @@ test('Korisnik moze da prebaci dokument vozaca', async ({ truckDocumentSetup, in
         has: insertPermitBookOverview.page.locator('td:nth-child(3)', { hasText: Constants.testUser })
     });
     await targetRow.locator('.mdi-eye').click();
-    await expect(truckDocumentSetup.statusColumn).toContainText(Constants.expiredStatus);
-    await expect(truckDocumentSetup.statusColumn).toHaveCSS('background-color', Constants.expiredStatusColor);
-    await expect(truckDocumentSetup.typeColumn).toContainText(Constants.driverType);
-    await expect(truckDocumentSetup.companyColumn).toContainText(Constants.testEmail);
-    await expect(truckDocumentSetup.subTypeColumn).toContainText(Constants.otherSubtype);
+    // The modal lists newest first; the driver keeps documents moved by earlier runs, so check the newest row.
+    await expect(truckDocumentSetup.statusColumn.first()).toContainText(Constants.expiredStatus);
+    await expect(truckDocumentSetup.statusColumn.first()).toHaveCSS('background-color', Constants.expiredStatusColor);
+    await expect(truckDocumentSetup.typeColumn.first()).toContainText(Constants.driverType);
+    await expect(truckDocumentSetup.companyColumn.first()).toContainText(Constants.testEmail);
+    await expect(truckDocumentSetup.subTypeColumn.first()).toContainText(Constants.otherSubtype);
 });
 
 test('Dokument moze da se prebaci na Trailer', async ({ truckDocumentSetup, insertPermitBookOverview, truckOverview }) => {
@@ -152,10 +153,9 @@ test('Dokument moze da se prebaci na Trailer', async ({ truckDocumentSetup, inse
 });
 
 test('Dokument moze da se prebaci na Company', async ({ truckDocumentSetup, insertPermitBookOverview, truckOverview, companiesPage }) => {
-    await companiesPage.page.goto(Constants.companiesUrl, { waitUntil: 'networkidle', timeout: 15000 });
-    await companiesPage.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    const firtsCompanyName = (await companiesPage.companyNameColumn.first().allInnerTexts()).toString();
-    const firstComapnyOption = companiesPage.page.getByRole('option', { name: firtsCompanyName, exact: true });
+    // Dedicated target company — the first company is shared with Content/Companies and trailerDocument.
+    const targetCompany = Constants.truckDocumentTargetCompany;
+    const targetCompanyOption = companiesPage.page.getByRole('option', { name: targetCompany, exact: true });
     await truckOverview.page.goto(Constants.truckUrl, { waitUntil: 'networkidle' });
     await truckOverview.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
     await truckOverview.documentIcon.first().click();
@@ -164,18 +164,18 @@ test('Dokument moze da se prebaci na Company', async ({ truckDocumentSetup, inse
     await insertPermitBookOverview.selectDocumentType(insertPermitBookOverview.documentTypeField, insertPermitBookOverview.companyType);
     await insertPermitBookOverview.selectSubtypeFromMenu(insertPermitBookOverview.documentSubtypeField, insertPermitBookOverview.iftaSubtype);
     await insertPermitBookOverview.doc.last().waitFor({ state: 'visible', timeout: 10000 });
-    await insertPermitBookOverview.enterTruckNumber(insertPermitBookOverview.documentReferrerMenu.last(), firtsCompanyName, firstComapnyOption);
+    await insertPermitBookOverview.enterTruckNumber(insertPermitBookOverview.documentReferrerMenu.last(), targetCompany, targetCompanyOption);
     await insertPermitBookOverview.savePermitButton.click();
     await insertPermitBookOverview.loader.waitFor({ state: 'detached', timeout: 10000 });
     await companiesPage.page.goto(Constants.companiesUrl, { waitUntil: 'networkidle', timeout: 15000 });
     await companiesPage.page.waitForLoadState('networkidle');
-    await companiesPage.documentIcon.first().waitFor({ state: 'visible', timeout: 10000 });
-    await companiesPage.clickElement(companiesPage.documentIcon.first());
-    await expect(truckDocumentSetup.statusColumn).toContainText(Constants.expiredStatus);
-    await expect(truckDocumentSetup.statusColumn).toHaveCSS('background-color', Constants.expiredStatusColor);
-    await expect(truckDocumentSetup.typeColumn).toContainText(Constants.companyType);
-    await expect(truckDocumentSetup.companyColumn).toContainText(Constants.testCompany);
-    await expect(truckDocumentSetup.subTypeColumn).toContainText(Constants.iftaSubtype);
+    await companiesPage.clickElement(companiesPage.documentIconForCompany(targetCompany));
+    // Newest first — the company keeps documents moved by earlier runs.
+    await expect(truckDocumentSetup.statusColumn.first()).toContainText(Constants.expiredStatus);
+    await expect(truckDocumentSetup.statusColumn.first()).toHaveCSS('background-color', Constants.expiredStatusColor);
+    await expect(truckDocumentSetup.typeColumn.first()).toContainText(Constants.companyType);
+    await expect(truckDocumentSetup.companyColumn.first()).toContainText(targetCompany);
+    await expect(truckDocumentSetup.subTypeColumn.first()).toContainText(Constants.iftaSubtype);
 });
 
 test('Korisnik moze da prebaci dokument na drugi truck', async ({ truckDocumentSetup, insertPermitBookOverview, truckOverview }) => {

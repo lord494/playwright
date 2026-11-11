@@ -12,8 +12,6 @@ export class HeaderPage extends BasePage {
     readonly shiftTab: Locator;
     readonly safetyButton: Locator;
     readonly eldFromSafety: Locator;
-    readonly BOBTAILINSURANCE: Locator;
-    readonly cargoClaimsFromSafety: Locator;
     readonly newDriversFromSafety: Locator;
     readonly truckIcon: Locator;
     readonly trailerIcon: Locator;
@@ -36,8 +34,6 @@ export class HeaderPage extends BasePage {
         this.shiftTab = page.locator('.v-btn.v-btn--text.v-size--small');
         this.safetyButton = page.locator('.v-btn.v-btn--text.v-size--small', { hasText: 'SAFETY' });
         this.eldFromSafety = page.getByRole('menuitem', { name: 'ELD' });
-        this.BOBTAILINSURANCE = page.locator('[href="/claims/BOBTAIL_INSURANCE"]');
-        this.cargoClaimsFromSafety = page.getByRole('menuitem', { name: 'CARGO CLAIMS' });
         this.newDriversFromSafety = page.getByRole('menuitem', { name: 'NEW DRIVERS' });
         this.truckIcon = page.locator('.v-icon.mdi-truck.theme--dark');
         this.trailerIcon = page.locator('.v-icon.mdi-truck-trailer.theme--dark');

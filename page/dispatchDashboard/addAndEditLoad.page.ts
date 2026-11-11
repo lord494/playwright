@@ -61,7 +61,8 @@ export class AddAndEditLoadModal {
         this.dateField = page.locator('.v-input.comment-text-field.v-input--is-label-active .v-text-field__slot');
         this.commentTextfield = page.locator('.v-input.mention-input.v-textarea .v-text-field__slot');
         this.addCommentButton = page.getByRole('button', { name: 'Add comment' });
-        this.closeButton = page.getByRole('button', { name: 'Close' });
+        // Scoped to the dialog: a snackbar (from a parallel save) also has a 'Close' button.
+        this.closeButton = page.getByRole('dialog').getByRole('button', { name: 'Close' });
         this.saveButton = page.getByRole('button', { name: 'Save' });
         this.deleteCommentIcon = page.locator('.v-icon.mdi-delete');
         this.deleteLoadButton = page.getByRole('button', { name: 'Delete' });

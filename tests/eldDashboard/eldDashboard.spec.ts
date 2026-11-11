@@ -43,7 +43,6 @@ test('Korisnik moze da mijenja call type', async ({ eldDashboard }) => {
 
 test('Korisnik moze da mijenja truck', async ({ eldDashboard }) => {
     await eldDashboard.handleTruckNumber();
-    await eldDashboard.handleTruckNumberLocked11996();
     await eldDashboard.selectTruck(eldDashboard.truckMenu, Constants.truckName, eldDashboard.truckNumberFromMenu);
     await eldDashboard.enterComment(eldDashboard.commentInput, Constants.noteFirst);
     await eldDashboard.startButton.click();
@@ -51,7 +50,7 @@ test('Korisnik moze da mijenja truck', async ({ eldDashboard }) => {
     await eldDashboard.handleTruckNumberLocked();
     await eldDashboard.handleTruckNumber4721();
     await eldDashboard.firstCellEdit.click({ button: 'right' });
-    await eldDashboard.selectTruck(eldDashboard.truckMenuEdit, Constants.secondTruckName, eldDashboard.secondTruckNumberFromMenu);
+    await eldDashboard.changeTruck(eldDashboard.truckMenuEdit, Constants.secondTruckName, eldDashboard.secondTruckNumberFromMenu);
     await eldDashboard.editButton.click()
     await eldDashboard.dialogBox.waitFor({ state: 'hidden' });
     await expect(eldDashboard.firstCellEdit).toHaveText(Constants.secondTruckName);

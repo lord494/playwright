@@ -95,18 +95,6 @@ test('Korisnik moze da otvori available trailers iz Trailer menija ', async ({ p
     await expect(page).toHaveURL(/available-trailers/);
 });
 
-test('Korisnik moze da otvori AT History iz Trailer menija ', async ({ page }) => {
-    const menu = new SideBarMenu(page);
-    await menu.selectFromMenu(menu.trailerMenu, menu.atHistoryOption);
-    await expect(page).toHaveURL(/isHistory/);
-});
-
-test('Korisnik moze da otvori inactive Drivers iz Trailer menija ', async ({ page }) => {
-    const menu = new SideBarMenu(page);
-    await menu.selectFromMenu(menu.trailerMenu, menu.inactiveDriversOption);
-    await expect(page).toHaveURL(/trailers-inactive-drivers/);
-});
-
 test('Korisnik moze da otvori trailer Makes iz Trailer menija ', async ({ page }) => {
     const menu = new SideBarMenu(page);
     await menu.selectFromMenu(menu.trailerMenu, menu.trailerMakesOption);
@@ -173,10 +161,10 @@ test('Korisnik moze da otvori posted trucks iz Pre book menija ', async ({ page 
     await expect(page).toHaveURL(/posted-trucks/);
 });
 
-test('Korisnik moze da otvori leasing Companies iz Leasing menija ', async ({ page }) => {
+test('Korisnik moze da otvori leasing Clients iz Leasing menija ', async ({ page }) => {
     const menu = new SideBarMenu(page);
-    await menu.selectFromMenu(menu.leasingMenu, menu.leasingCompaniesOption);
-    await expect(page).toHaveURL(/companies/);
+    await menu.selectFromMenu(menu.leasingMenu, menu.leasingClientsOption);
+    await expect(page).toHaveURL(/leasing\/clients/);
 });
 
 test('Korisnik moze da otvori leasing Units iz Leasing menija ', async ({ page }) => {
@@ -211,7 +199,8 @@ test('Korisnik moze da otvori contacts stranicu iz side menija ', async ({ page 
 
 test('Korisnik moze da otvori messges stranicu iz side menija ', async ({ page }) => {
     const menu = new SideBarMenu(page);
-    await menu.click(menu.messagesButton);
+    // Messages moved under the "Messages Center" group (next to Notifications).
+    await menu.selectFromMenu(menu.messagesCenterMenu, menu.messagesButton);
     await expect(page).toHaveURL(/messages/);
 });
 

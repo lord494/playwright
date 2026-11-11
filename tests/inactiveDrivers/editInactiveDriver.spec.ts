@@ -1,6 +1,6 @@
 import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
-import { EditInactiveDriver } from '../../page/inactiveDrivers/editInactiveDriver.page';
+import { DriverService, DriverSnapshot } from '../../services/driverService';
 import { test } from '../fixtures/fixtures';
 
 test.describe('Testovi bez afterAll', () => {
@@ -120,7 +120,21 @@ test.describe('Testovi bez afterAll', () => {
     });
 });
 
-test.describe('Testovi sa afterAll', () => {
+test.describe('Testovi sa vracanjem vozaca', () => {
+    // The edit test renames the shared inactive driver (Constants.johnsonDriver) that every other
+    // test in this file searches for. Snapshot it via API before the test and restore it after,
+    // even when the test fails half-way (replaces the old UI-based afterAll restore).
+    let snapshot: DriverSnapshot;
+
+    test.beforeEach(async ({ request }) => {
+        const drivers = new DriverService(request);
+        snapshot = await drivers.snapshot(await drivers.findInactiveDriverId(Constants.johnsonDriver));
+    });
+
+    test.afterEach(async ({ request }) => {
+        await new DriverService(request).restore(snapshot);
+    });
+
     test('Driver moze da se edituje', async ({ inactiveDriver, editInactiveDriverSetup }) => {
         await editInactiveDriverSetup.fillInputField(editInactiveDriverSetup.driverName, Constants.brianDriver);
         await editInactiveDriverSetup.fillInputField(editInactiveDriverSetup.secondDrverName, Constants.secondDriverTest);
@@ -157,11 +171,4 @@ test.describe('Testovi sa afterAll', () => {
         await expect(inactiveDriver.boardColumn).toContainText(Constants.secondBoard);
     });
 
-    test.afterAll(async ({ browser }) => {
-        const context = await browser.newContext({ storageState: 'auth.json' });
-        const page = await context.newPage();
-        const edit = new EditInactiveDriver(page);
-        await edit.returnOnPreviousState();
-        await context.close();
-    });
 });

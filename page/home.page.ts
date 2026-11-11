@@ -21,8 +21,6 @@ export class HomePage extends BasePage {
     readonly trailerCard: Locator;
     readonly trailersOption: Locator;
     readonly availableTrailers: Locator;
-    readonly aTHistoruOption: Locator;
-    readonly inactiveDrivers: Locator;
     readonly trailerMakes: Locator;
     readonly trailerTypes: Locator;
     readonly trucksCard: Locator;
@@ -37,7 +35,7 @@ export class HomePage extends BasePage {
     readonly postTrucks: Locator;
     readonly postedTrucks: Locator;
     readonly leasingCard: Locator;
-    readonly leasingCompaniesOption: Locator;
+    readonly leasingClientsOption: Locator;
     readonly leasingUnits: Locator;
     readonly driversCard: Locator;
     readonly inActiveDriversCard: Locator;
@@ -86,8 +84,6 @@ export class HomePage extends BasePage {
         this.trailerCard = page.getByRole('main').getByText("Trailer");
         this.trailersOption = page.getByRole('menuitem', { name: 'Trailers', exact: true });
         this.availableTrailers = page.getByRole('menuitem', { name: 'Available Trailers', exact: true });
-        this.aTHistoruOption = page.getByRole('menuitem', { name: 'AT History', exact: true });
-        this.inactiveDrivers = page.getByRole('menuitem', { name: 'Inactive Drivers', exact: true });
         this.trailerMakes = page.getByRole('menuitem', { name: 'Trailer Makes', exact: true });
         this.trailerTypes = page.getByRole('menuitem', { name: 'Trailer Types', exact: true });
         this.trucksCard = page.getByRole('main').getByText("Trucks");
@@ -102,7 +98,7 @@ export class HomePage extends BasePage {
         this.postTrucks = page.getByRole('menuitem', { name: 'Post trucks', exact: true });
         this.postedTrucks = page.getByRole('menuitem', { name: 'Posted trucks', exact: true });
         this.leasingCard = page.getByRole('main').getByText("Leasing");
-        this.leasingCompaniesOption = page.getByRole('menuitem', { name: 'Leasing Companies', exact: true });
+        this.leasingClientsOption = page.getByRole('menuitem', { name: 'Leasing Clients', exact: true });
         this.leasingUnits = page.getByRole('menuitem', { name: 'Leasing Units', exact: true });
         this.driversCard = page.getByRole('main').getByText("Drivers").first();
         this.inActiveDriversCard = page.locator("div .nav-card .v-icon.mdi-card-account-details-outline");
@@ -133,6 +129,10 @@ export class HomePage extends BasePage {
 
     async hoverAndClick(mainLocator: Locator, subLocator?: Locator) {
         await mainLocator.waitFor({ state: 'visible', timeout: 3000 });
+        // Center the card first so its hover menu (rendered below the card) fits on screen.
+        // Otherwise clicking the menu item scrolls the page, the pointer lands on another
+        // card, the hover moves there and the menu closes (flaky for lower-row cards).
+        await mainLocator.evaluate(el => el.scrollIntoView({ block: 'center' }));
         await mainLocator.hover();
         await subLocator?.waitFor({ state: 'visible', timeout: 3000 });
         await subLocator?.click();

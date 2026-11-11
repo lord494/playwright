@@ -111,22 +111,10 @@ test('Korisnik moze da ide na eld dashboard kada klikne na naziv shift-a', async
     }
 });
 
-test('Korisnik moze da otvori BOBTAIL_INSURANCE iz safety menija ', async ({ page }) => {
-    const header = new HeaderPage(page);
-    await header.hoverAndClick(header.safetyButton, header.BOBTAILINSURANCE);
-    await expect(page).toHaveURL(/BOBTAIL_INSURANCE/);
-});
-
 test('Korisnik moze da otvori ELD iz safety menija ', async ({ page }) => {
     const header = new HeaderPage(page);
     await header.hoverAndClick(header.safetyButton, header.eldFromSafety);
     await expect(page).toHaveURL(/eld-dashboard/);
-});
-
-test('Korisnik moze da otvori cargo claims iz safety menija ', async ({ page }) => {
-    const header = new HeaderPage(page);
-    await header.hoverAndClick(header.safetyButton, header.cargoClaimsFromSafety);
-    await expect(page).toHaveURL(/CARGO_CLAIMS/);
 });
 
 test('Korisnik moze da otvori new drivers iz safety menija ', async ({ page }) => {

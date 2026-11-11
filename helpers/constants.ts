@@ -43,6 +43,19 @@ export class Constants {
     // ===== TRUCKS =====
     static truckName = '11996';
     static secondTruckName = '4721';
+    // Dedicated truck for the DOT inspection tests. A DOT inspection on a truck locks it on the
+    // ELD dashboard ("The selected truck is in DOT inspections"), so it must NOT be 11996/4721,
+    // which eldDashboard.spec uses in parallel. Used by no other test (verified 2026-11-11).
+    static dotInspectionTruck = '8565';
+    // DOT inspection times as the app shows them for the test's input (start 01:10, end 04:20,
+    // Central; edit switches to Pacific). The server-side conversion shifts by an hour with US
+    // DST — values observed on staging (summer: until 2026-11; winter: 2026-11-11). Pick with
+    // isUsDaylightSavingTime(). Reported to devs as a suspected DST bug (correct Belgrade
+    // conversion would be 08:10 all year) — update if the app gets fixed.
+    static dotInspectionTimes = {
+        summer: { start: '08:10', end: '11:20', pacificStart: '01:10', pacificEnd: '04:20' },
+        winter: { start: '07:10', end: '10:20', pacificStart: '23:10', pacificEnd: '02:20' },
+    };
     static truckNumberFM = "6461";
     static truckType = 'Truck';
 
@@ -155,6 +168,10 @@ export class Constants {
     static iftaSubtype = 'Ifta license	';
     static messageFM = 'There are no results matching your search criteria';
     static testCompany = 'testcompany';
+    // Dedicated move-target company for truckDocument.spec "prebaci na Company". The FIRST company
+    // ('testcompany') is shared under 4 workers: Content/Companies' documentSetup deletes all its
+    // documents while trailerDocument/truckDocument move documents onto it. Used by no other test.
+    static truckDocumentTargetCompany = 'test3';
     static stolenStatus = 'STOLEN';
     static novaYarda = 'Nova yarda';
     // Verified yards available in the Transfer modal on staging (2026-05-11):

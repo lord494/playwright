@@ -1,4 +1,5 @@
 import { Locator, Page } from "@playwright/test";
+import { Constants } from '../../helpers/constants';
 import { BasePage } from "../../helpers/base";
 
 export class DotInspectionsPage extends BasePage {
@@ -39,7 +40,8 @@ export class DotInspectionsPage extends BasePage {
         this.editIcon = page.locator('.mdi-pencil');
         this.deleteIcon = page.locator('.mdi-delete');
         this.truckMenu = page.getByRole('textbox', { name: 'Truck*' });
-        this.truckOption = page.getByRole('option').getByText('11996 - btest / secondDriver (ALZ Express Ohio LLC)');
+        // Match by truck number only: the label also shows the truck's CURRENT driver, which other features reassign.
+        this.truckOption = page.getByRole('option', { name: new RegExp(`^${Constants.dotInspectionTruck} - `) });
         this.timezoneMenu = page.getByRole('textbox', { name: 'Select Timezone' });
         this.timeZoneMenuEdit = page.locator('.v-dialog--active .v-select__selection--comma');
         this.centralTimezoneOption = page.getByRole('option').getByText('Central');

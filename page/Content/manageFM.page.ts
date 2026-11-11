@@ -64,4 +64,44 @@ export class MenageFM extends BasePage {
         await this.page.waitForLoadState('networkidle');
         await this.driverNumberAndDriversWithoutFM.dragTo(this.card.first());
     }
+
+    /** "Drivers without FM" chip for this truck number (chip text: "<truck> - <driver>"). */
+    unassignedChip(truckNumber: string): Locator {
+        return this.driverNumberAndDriversWithoutFM.filter({ hasText: new RegExp(`^\\s*${truckNumber}\\b`) });
+    }
+
+    /** Chip for this truck number inside a fleet-manager card. */
+    assignedChip(truckNumber: string): Locator {
+        return this.driverNumberAndDriver.filter({ hasText: new RegExp(`^\\s*${truckNumber}\\b`) });
+    }
+
+    /**
+     * Types into the "drivers without FM" search and waits for the response of the FULL term —
+     * every keystroke fires its own request, so waiting for "any" response caught the first letter.
+     */
+    async searchDriversWithoutFm(term: string): Promise<void> {
+        await Promise.all([
+            this.page.waitForResponse(res =>
+                res.url().includes('/api/drivers/get-drivers-has-no-fleet-manager') &&
+                res.url().includes(`search=${encodeURIComponent(term)}`) &&
+                (res.status() === 200 || res.status() === 304)
+            ),
+            this.fillInputField(this.searchDrivers, term),
+        ]);
+    }
+
+    async dragTruckToFirstCard(truckNumber: string): Promise<void> {
+        await this.unassignedChip(truckNumber).dragTo(this.card.first());
+    }
+
+    /** Removes the truck from whichever FM card holds it (no-op if unassigned). Confirms the native dialog. */
+    async removeTruckFromFm(truckNumber: string): Promise<void> {
+        const chip = this.assignedChip(truckNumber);
+        if (await chip.count() === 0) {
+            return;
+        }
+        this.page.once('dialog', dialog => dialog.accept());
+        await chip.first().locator('.mdi-close-circle').click();
+        await chip.first().waitFor({ state: 'detached' });
+    }
 }

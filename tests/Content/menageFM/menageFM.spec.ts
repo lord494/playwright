@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { Constants } from '../../../helpers/constants';
 import { MenageFM } from '../../../page/Content/manageFM.page';
-import { waitForDriver } from '../../../helpers/dateUtilis';
 
 test.use({ storageState: 'auth.json' });
 
@@ -9,35 +8,41 @@ test.beforeEach(async ({ page }) => {
     await page.goto(Constants.menageFMUrl, { waitUntil: 'networkidle', timeout: 20000 });
 });
 
-test('Korisnik moze da uradi drag and drop kamiona koji nema fm u neku karticu', async ({ page }) => {
-    const fm = new MenageFM(page);
-    await fm.card.first().waitFor({ state: 'visible', timeout: 5000 });
-    await fm.card.first().hover();
-    await waitForDriver(page, async () => {
-        fm.searchTruckNumberAndFM(fm.searchDrivers, Constants.truckNumberFM)
-    });
-    await fm.driverNumberAndDriversWithoutFM.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
-    await waitForDriver(page, async () => {
-        fm.dragAndDrop()
-    });
-    await expect(fm.card.first()).toContainText(Constants.truckNumberFM);
-    const numbers = await fm.driverNumberAndDriver.allTextContents();
-    page.on('dialog', async (dialog) => {
-        await dialog.accept();
+test.describe('Drag and drop kamiona bez fm-a', () => {
+    // Both tests drag Constants.truckNumberFM into the first card. Make sure it starts unassigned and
+    // is unassigned again afterwards — a run that failed half-way used to leave it in a card, so it
+    // no longer appeared under "drivers without FM" and every following run failed.
+    test.beforeEach(async ({ page }) => {
+        const fm = new MenageFM(page);
+        await fm.card.first().waitFor({ state: 'visible', timeout: 10000 });
+        await fm.removeTruckFromFm(Constants.truckNumberFM);
     });
 
-    for (let i = 0; i < numbers.length; i++) {
-        const trimmed = numbers[i].trim();
-        const match = trimmed.match(/^(\d+)\s*-/);
-        if (match && match[1] === '6461') {
-            const deleteButton = page.locator(`.mdi.mdi-close-circle`).nth(i);
-            await waitForDriver(page, async () => {
-                deleteButton.click()
-            });
-            break;
-        }
-    }
-    await page.waitForLoadState('networkidle');
+    test.afterEach(async ({ page }) => {
+        await new MenageFM(page).removeTruckFromFm(Constants.truckNumberFM);
+    });
+
+    test('Korisnik moze da uradi drag and drop kamiona koji nema fm u neku karticu', async ({ page }) => {
+        const fm = new MenageFM(page);
+        await fm.searchDriversWithoutFm(Constants.truckNumberFM);
+        await expect(fm.unassignedChip(Constants.truckNumberFM)).toBeVisible();
+        await fm.dragTruckToFirstCard(Constants.truckNumberFM);
+        await expect(fm.card.first()).toContainText(Constants.truckNumberFM);
+        await fm.removeTruckFromFm(Constants.truckNumberFM);
+        await expect(fm.assignedChip(Constants.truckNumberFM)).toHaveCount(0);
+    });
+
+    test('Broj u counteru se povecava i smanjuje nakon dodavanja i brisanja', async ({ page }) => {
+        const fm = new MenageFM(page);
+        await fm.searchDriversWithoutFm(Constants.truckNumberFM);
+        await expect(fm.unassignedChip(Constants.truckNumberFM)).toBeVisible();
+        const beforeAdd = Number((await fm.counter.first().textContent())?.trim());
+        await fm.dragTruckToFirstCard(Constants.truckNumberFM);
+        await expect(fm.card.first()).toContainText(Constants.truckNumberFM);
+        await expect(fm.counter.first()).toHaveText(String(beforeAdd + 1));
+        await fm.removeTruckFromFm(Constants.truckNumberFM);
+        await expect(fm.counter.first()).toHaveText(String(beforeAdd));
+    });
 });
 
 test('Korisnik moze da pretrazuje kamione koji imaju fm', async ({ page }) => {
@@ -78,52 +83,21 @@ test('Inactive Drivers su prikazu kada korisnik cekira Show Inactive radio butto
 test('Korisnik moze da pretrazuje vozace koji nemaju fm', async ({ page }) => {
     const fm = new MenageFM(page);
     const truckNumber = await fm.getTruckNumberWithoutFM();
-    await waitForDriver(page, async () => {
-        fm.searchTruckNumberAndFM(fm.searchDrivers, truckNumber)
-    });
-    await fm.driverNumberAndDriversWithoutFM.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
-    await expect(fm.driverNumberAndDriversWithoutFM).toContainText(truckNumber);
-});
-
-test('Broj u counteru se povecava i smanjuje nakon dodavanja i brisanja', async ({ page }) => {
-    const fm = new MenageFM(page);
-    await fm.card.first().waitFor({ state: 'visible', timeout: 5000 });
-    await waitForDriver(page, async () => {
-        fm.searchTruckNumberAndFM(fm.searchDrivers, Constants.truckNumberFM)
-    });
-    await fm.driverNumberAndDriversWithoutFM.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
-    const beforeAddTrukc = await fm.counter.first().textContent();
-    const beforeAddTruckNumber = Number(beforeAddTrukc?.trim());
-    await waitForDriver(page, async () => {
-        fm.dragAndDrop()
-    });
-    await expect(fm.card.first()).toContainText(Constants.truckNumberFM);
-    const afterAddTruck = await fm.counter.first().textContent();
-    const afterAddTruckNumber = Number(afterAddTruck?.trim());
-    await expect(afterAddTruckNumber).toBe(beforeAddTruckNumber + 1);
-    const numbers = await fm.driverNumberAndDriver.allTextContents();
-    page.on('dialog', async (dialog) => {
-        await dialog.accept();
-    });
-    for (let i = 0; i < numbers.length; i++) {
-        const trimmed = numbers[i].trim();
-        const match = trimmed.match(/^(\d+)\s*-/);
-        if (match && match[1] === '6461') {
-            const deleteButton = page.locator(`.mdi.mdi-close-circle`).nth(i);
-            await deleteButton.click();
-            await expect(fm.card.first().locator('text=6461')).toHaveCount(0, { timeout: 5000 });
-            break;
-        }
-    }
-    await page.waitForLoadState('networkidle');
+    await fm.searchDriversWithoutFm(truckNumber);
+    // Every remaining chip must match the search (the list re-renders after the response — poll).
+    await expect.poll(async () => {
+        const chips = await fm.driverNumberAndDriversWithoutFM.allTextContents();
+        return chips.length > 0 && chips.every(chip => chip.includes(truckNumber));
+    }, { timeout: 10000 }).toBe(true);
 });
 
 test('Korisnik moze da pretrazuje kamione koji nemaju fm', async ({ page }) => {
     const fm = new MenageFM(page);
     const truckNumber = await fm.getTruckNumberWithoutFM();
-    await waitForDriver(page, async () => {
-        fm.searchTruckNumberAndFM(fm.searchDrivers, truckNumber)
-    });
-    await fm.driverNumberAndDriversWithoutFM.nth(5).waitFor({ state: 'hidden', timeout: 10000 });
-    await expect(fm.driverNumberAndDriversWithoutFM).toContainText(truckNumber);
+    await fm.searchDriversWithoutFm(truckNumber);
+    // Every remaining chip must match the search (the list re-renders after the response — poll).
+    await expect.poll(async () => {
+        const chips = await fm.driverNumberAndDriversWithoutFM.allTextContents();
+        return chips.length > 0 && chips.every(chip => chip.includes(truckNumber));
+    }, { timeout: 10000 }).toBe(true);
 });

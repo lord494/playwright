@@ -1,13 +1,16 @@
 import { expect } from '@playwright/test';
 import { Constants } from '../../helpers/constants';
 import { test } from '../fixtures/fixtures';
+import { isUsDaylightSavingTime } from '../../helpers/dateUtilis';
+
+const times = isUsDaylightSavingTime() ? Constants.dotInspectionTimes.summer : Constants.dotInspectionTimes.winter;
 
 test('Korisnik moze da doda dot inspection', async ({ dotInspection }) => {
     dotInspection.page.on('dialog', async dialog => {
         await dialog.accept();
     });
     await dotInspection.addDotInspections.click();
-    await dotInspection.selectTruck(dotInspection.truckMenu, Constants.truckName, dotInspection.truckOption);
+    await dotInspection.selectTruck(dotInspection.truckMenu, Constants.dotInspectionTruck, dotInspection.truckOption);
     await dotInspection.selectTimezone(dotInspection.timezoneMenu, dotInspection.centralTimezoneOption);
     await dotInspection.selectTime(dotInspection.startTimeButton, dotInspection.minutesInClockPicker.nth(1), dotInspection.minutesInClockPicker.nth(2));
     await dotInspection.selectTime(dotInspection.endTimeButton, dotInspection.minutesInClockPicker.nth(4), dotInspection.minutesInClockPicker.nth(4));
@@ -17,10 +20,10 @@ test('Korisnik moze da doda dot inspection', async ({ dotInspection }) => {
     await dotInspection.enterLocation(dotInspection.locationField, Constants.miamiOriginCity);
     await dotInspection.addButtonInModal.click();
     await dotInspection.dailogBox.waitFor({ state: 'hidden', timeout: 10000 });
-    await expect(dotInspection.truckNumberColumn.last()).toContainText(Constants.truckName);
+    await expect(dotInspection.truckNumberColumn.last()).toContainText(Constants.dotInspectionTruck);
     await expect(dotInspection.timeZoneColumn.last()).toContainText(Constants.centralTimezone);
-    await expect(dotInspection.startTimeColumn.last()).toContainText('08:10');
-    await expect(dotInspection.endDateColumn.last()).toContainText('11:20');
+    await expect(dotInspection.startTimeColumn.last()).toContainText(times.start);
+    await expect(dotInspection.endDateColumn.last()).toContainText(times.end);
     await expect(dotInspection.originColumn.last()).toContainText(Constants.miamiOriginCity);
     await expect(dotInspection.destinationColumn.last()).toContainText(Constants.newYorkCity);
     await expect(dotInspection.locationColumn.last()).toContainText(Constants.miamiOriginCity);
@@ -33,7 +36,7 @@ test('Korisnik moze da edituje dot inspection i da ga obrise', async ({ dotInspe
         await dialog.accept();
     });
     await dotInspection.addDotInspections.click();
-    await dotInspection.selectTruck(dotInspection.truckMenu, Constants.truckName, dotInspection.truckOption);
+    await dotInspection.selectTruck(dotInspection.truckMenu, Constants.dotInspectionTruck, dotInspection.truckOption);
     await dotInspection.selectTimezone(dotInspection.timezoneMenu, dotInspection.centralTimezoneOption);
     await dotInspection.selectTime(dotInspection.startTimeButton, dotInspection.minutesInClockPicker.nth(1), dotInspection.minutesInClockPicker.nth(2));
     await dotInspection.selectTime(dotInspection.endTimeButton, dotInspection.minutesInClockPicker.nth(4), dotInspection.minutesInClockPicker.nth(4));
@@ -43,7 +46,7 @@ test('Korisnik moze da edituje dot inspection i da ga obrise', async ({ dotInspe
     await dotInspection.enterLocation(dotInspection.locationField, Constants.miamiOriginCity);
     await dotInspection.addButtonInModal.click();
     await dotInspection.dailogBox.waitFor({ state: 'hidden', timeout: 10000 });
-    await expect(dotInspection.truckNumberColumn.last()).toContainText(Constants.truckName);
+    await expect(dotInspection.truckNumberColumn.last()).toContainText(Constants.dotInspectionTruck);
     await dotInspection.editIcon.last().click()
     await dotInspection.dailogBox.waitFor({ state: 'visible', timeout: 10000 });
     await dotInspection.selectTimezone(dotInspection.timeZoneMenuEdit, dotInspection.pacificTimeZone);
@@ -52,8 +55,8 @@ test('Korisnik moze da edituje dot inspection i da ga obrise', async ({ dotInspe
     await dotInspection.originField.clear();
     await dotInspection.clickSaveButton();
     await dotInspection.dailogBox.waitFor({ state: 'hidden', timeout: 10000 });
-    await expect(dotInspection.startTimeColumn.last()).toContainText('01:10');
-    await expect(dotInspection.endDateColumn.last()).toContainText('04:20');
+    await expect(dotInspection.startTimeColumn.last()).toContainText(times.pacificStart);
+    await expect(dotInspection.endDateColumn.last()).toContainText(times.pacificEnd);
     await expect(dotInspection.noteColumn.last()).toContainText(Constants.noteSecond);
     await dotInspection.deleteIcon.last().click();
 });

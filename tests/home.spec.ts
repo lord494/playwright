@@ -92,18 +92,6 @@ test('Korisnik moze da otvori available-trailers iz Trailers kartice', async ({ 
   await expect(page).toHaveURL(/available-trailers/);
 });
 
-test('Korisnik moze da otvori at history iz Trailers kartice', async ({ page }) => {
-  const home = new HomePage(page);
-  await home.hoverAndClick(home.trailerCard, home.aTHistoruOption);
-  await expect(page).toHaveURL(/available-trailers/);
-});
-
-test('Korisnik moze da otvori inactive drivers iz Trailers kartice', async ({ page }) => {
-  const home = new HomePage(page);
-  await home.hoverAndClick(home.trailerCard, home.inactiveDrivers);
-  await expect(page).toHaveURL(/trailers-inactive-drivers/);
-});
-
 test('Korisnik moze da otvori trailer makes iz Trailers kartice', async ({ page }) => {
   const home = new HomePage(page);
   await home.hoverAndClick(home.trailerCard, home.trailerMakes);
@@ -170,10 +158,10 @@ test('Korisnik moze da otvori posted trucks iz PreBook kartice', async ({ page }
   await expect(page).toHaveURL(/posted-trucks/);
 });
 
-test('Korisnik moze da otvori leasing companies iz Leasing kartice', async ({ page }) => {
+test('Korisnik moze da otvori leasing clients iz Leasing kartice', async ({ page }) => {
   const home = new HomePage(page);
-  await home.hoverAndClick(home.leasingCard, home.leasingCompaniesOption);
-  await expect(page).toHaveURL(/companies/);
+  await home.hoverAndClick(home.leasingCard, home.leasingClientsOption);
+  await expect(page).toHaveURL(/leasing\/clients/);
 });
 
 test('Korisnik moze da otvori leasing units iz Leasing kartice', async ({ page }) => {

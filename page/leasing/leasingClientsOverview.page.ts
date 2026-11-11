@@ -320,6 +320,8 @@ export class LeasingClientsOverviewPage extends BasePage {
     }
 
     async setRowsPerPage10(): Promise<void> {
+        // The footer can be below the fold — force-click does not scroll, so scroll it in first.
+        await this.rowsPerPageDropdown.scrollIntoViewIfNeeded();
         await this.rowsPerPageDropdown.click({ force: true });
         const option = this.page.locator('.menuable__content__active').last().locator('.v-list-item').filter({ hasText: Constants.leasingClientsRowsPerPage10 }).first();
         await option.waitFor({ state: 'visible', timeout: 5000 });

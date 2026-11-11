@@ -17,6 +17,10 @@ test('Korisnik moze da se prebaci na private shop view', async ({ reviewPage }) 
 });
 
 test('Korisnik moze da ostavi private review', async ({ reviewPage }) => {
+    // POST /ms-shop/review takes 15-17 s on staging even with a single worker (measured
+    // 2026-11-11: 15.0 s / 16.1 s alone, 16.7 s under 4 workers). With ~9 s of shop setup that
+    // overruns the 30 s default — test.slow() covers the measured latency; assertions unchanged.
+    test.slow();
     await reviewPage.writeReviewButton.click();
     await reviewPage.stars.first().waitFor({ state: 'visible', timeout: 10000 })
     await reviewPage.selectStars(reviewPage.stars.nth(3));
@@ -36,6 +40,10 @@ test('Korisnik moze da ostavi private review', async ({ reviewPage }) => {
 });
 
 test('Korisnik moze da ostavi pubilc review', async ({ reviewPage }) => {
+    // POST /ms-shop/review takes 15-17 s on staging even with a single worker (measured
+    // 2026-11-11: 15.0 s / 16.1 s alone, 16.7 s under 4 workers). With ~9 s of shop setup that
+    // overruns the 30 s default — test.slow() covers the measured latency; assertions unchanged.
+    test.slow();
     await reviewPage.writeReviewButton.click();
     await reviewPage.stars.first().waitFor({ state: 'visible', timeout: 10000 });
     await reviewPage.selectStars(reviewPage.stars.nth(3));
@@ -69,6 +77,10 @@ test('Ocjenjivanje shopa je obavezno', async ({ reviewPage }) => {
 });
 
 test('Korisnik moze da edituje review', async ({ reviewPage }) => {
+    // POST /ms-shop/review takes 15-17 s on staging even with a single worker (measured
+    // 2026-11-11: 15.0 s / 16.1 s alone, 16.7 s under 4 workers). With ~9 s of shop setup that
+    // overruns the 30 s default — test.slow() covers the measured latency; assertions unchanged.
+    test.slow();
     test.setTimeout(60000);
     await reviewPage.writeReviewButton.click();
     await reviewPage.stars.first().waitFor({ state: 'visible', timeout: 10000 });

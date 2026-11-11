@@ -64,4 +64,11 @@ export class CompaniesPage extends BasePage {
     async fillShortName(board: Locator, name: string): Promise<void> {
         await this.fillInputField(board, name);
     }
+
+    /** Documents icon in the row of the company with exactly this name. */
+    documentIconForCompany(name: string): Locator {
+        return this.page
+            .locator('tr', { has: this.page.locator('td:nth-child(1)', { hasText: new RegExp(`^\\s*${name}\\s*$`) }) })
+            .locator('.mdi.mdi-file-document-multiple');
+    }
 }

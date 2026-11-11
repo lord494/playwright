@@ -21,8 +21,6 @@ export class SideBarMenu extends BasePage {
     readonly trailerMenu;
     readonly trailersOption;
     readonly availableTrailersOption;
-    readonly atHistoryOption;
-    readonly inactiveDriversOption;
     readonly trailerMakesOption;
     readonly trailerTypesOption;
     readonly truckMenu;
@@ -37,7 +35,7 @@ export class SideBarMenu extends BasePage {
     readonly postTrucksOption;
     readonly postedTruckOption;
     readonly leasingMenu;
-    readonly leasingCompaniesOption;
+    readonly leasingClientsOption;
     readonly leasingUnitsOptionl;
     readonly driversButton;
     readonly inactiveDriversButton;
@@ -45,6 +43,7 @@ export class SideBarMenu extends BasePage {
     readonly bgBoard;
     readonly contactsButton;
     readonly messagesButton;
+    readonly messagesCenterMenu;
     readonly thirdPartyButton;
     readonly ownersButton;
     readonly dealershipsButton;
@@ -81,8 +80,6 @@ export class SideBarMenu extends BasePage {
         this.trailerMenu = page.getByRole('button', { name: 'Trailer' });
         this.trailersOption = page.getByRole('navigation').getByRole('link', { name: 'Trailers', exact: true });
         this.availableTrailersOption = page.getByRole('navigation').getByRole('link', { name: 'Available Trailers' });
-        this.atHistoryOption = page.getByRole('navigation').getByRole('link', { name: 'AT History' });
-        this.inactiveDriversOption = page.getByRole('navigation').getByRole('link', { name: 'Inactive Drivers' }).first();
         this.trailerMakesOption = page.getByRole('navigation').getByRole('link', { name: 'Trailer Makes' });
         this.trailerTypesOption = page.getByRole('navigation').getByRole('link', { name: 'Trailer Types' });
         this.truckMenu = page.getByRole('button', { name: 'Trucks' });
@@ -97,14 +94,15 @@ export class SideBarMenu extends BasePage {
         this.postTrucksOption = page.getByRole('navigation').getByRole('link', { name: 'Post trucks' });
         this.postedTruckOption = page.getByRole('navigation').getByRole('link', { name: 'Posted trucks' });
         this.leasingMenu = page.getByRole('button', { name: 'Leasing' });
-        this.leasingCompaniesOption = page.getByRole('navigation').getByRole('link', { name: 'Leasing Companies' });
+        this.leasingClientsOption = page.getByRole('navigation').getByRole('link', { name: 'Leasing Clients' });
         this.leasingUnitsOptionl = page.getByRole('navigation').getByRole('link', { name: 'Leasing Units' });
         this.driversButton = page.getByRole('navigation').getByRole('link', { name: 'Drivers', exact: true });
         this.inactiveDriversButton = page.getByRole('navigation').getByRole('link', { name: 'Inactive Drivers' });
         this.fmBoardMenu = page.getByRole('button', { name: 'FM board' });
         this.bgBoard = page.getByRole('navigation').getByRole('link', { name: 'BG', exact: true });
         this.contactsButton = page.getByRole('navigation').getByRole('link', { name: 'Contacts' });
-        this.messagesButton = page.getByRole('navigation').getByRole('link', { name: 'Messages' });
+        this.messagesButton = page.getByRole('navigation').getByRole('link', { name: 'Messages', exact: true });
+        this.messagesCenterMenu = page.getByRole('navigation').getByRole('button', { name: 'Messages Center' });
         this.thirdPartyButton = page.getByRole('navigation').getByRole('link', { name: 'Third party' });
         this.ownersButton = page.getByRole('navigation').getByRole('link', { name: 'Owners' });
         this.dealershipsButton = page.getByRole('navigation').getByRole('link', { name: 'Dealerships' });

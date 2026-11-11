@@ -194,43 +194,4 @@ export class EditInactiveDriver {
         }
     }
 
-    async returnOnPreviousState(): Promise<void> {
-        const driver = new InactiveDriverPage(this.page);
-        const edit = new EditInactiveDriver(this.page);
-        await this.page.goto(Constants.driverUrl, { waitUntil: 'networkidle' });
-        const [response] = await Promise.all([
-            this.page.waitForResponse(res =>
-                res.url().includes('/api/drivers')
-            ),
-            await driver.enterDriverNameInSearchField(driver.searchInputField, Constants.brianDriver)
-        ]);
-        await driver.pencilIcon.first().click();
-        await this.fillInputField(this.driverName, Constants.johnsonDriver);
-        await this.fillInputField(this.secondDrverName, Constants.secondDriver);
-        await this.selectFromMenu(this.owner, this.ownerOption);
-        await this.selectFromMenu(this.board, this.b1Board);
-        await this.page.waitForTimeout(1000);
-        await this.selectFromMenu(this.dispatcher, this.adminDispatcher);
-        await this.fillAndSelectOption(this.substituteDispatcher, Constants.dispatcherDispecko, this.dispeckoDispatcherOption);
-        await this.selectFromMenu(this.payroll, this.adminPayroll);
-        await this.selectFromMenu(this.trailerManager, this.adminTrailerManager);
-        await this.fillInputField(this.dissField, Constants.diss);
-        await this.fillInputField(this.diss2Field, Constants.diss);
-        await this.fillInputField(this.diss3Field, Constants.diss);
-        await this.fillInputField(this.diss4Field, Constants.diss);
-        await this.selectFromMenu(this.company, this.adminCompany);
-        await this.fillInputField(this.phone, Constants.adminPhone);
-        await this.fillInputField(this.ownerPhone, Constants.ownerPhone);
-        await this.fillAndSelectOption(this.truck, Constants.truckName, this.truckName);
-        await this.fillAndSelectOption(this.trailer, Constants.trailerTest, this.trailerName);
-        await this.fillInputField(this.trailerType, Constants.firstTrailerType);
-        await this.fillInputField(this.noteBox, Constants.noteFirst);
-        await this.unCheckFC();
-        await this.uncheck(this.isPriorityToggleButton);
-        await this.uncheck(this.isNewToggleButton);
-        await this.uncheck(this.isCompanyToggleButton);
-        await this.uncheck(this.isTimeToggleButton);
-        await this.saveButton.click();
-        await edit.editDriverModal.waitFor({ state: 'detached', timeout: 5000 });
-    }
 }

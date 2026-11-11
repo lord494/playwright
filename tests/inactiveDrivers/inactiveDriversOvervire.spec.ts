@@ -120,6 +120,11 @@ test('korisnik moze da pretrazuje drivere po imenu', async ({ inactiveDriverSetu
         await inactiveDriverSetup.enterDriverNameInSearchField(inactiveDriverSetup.searchInputField, Constants.markLabatDriver)
     ]);
     expect([200, 304]).toContain(response.status());
+    // The response above can belong to the first typed character — poll until every row matches.
+    await expect.poll(async () => {
+        const names = await inactiveDriverSetup.driverNameColumn.allInnerTexts();
+        return names.length > 0 && names.every(name => name.includes(Constants.markLabatDriver));
+    }, { timeout: 15000 }).toBe(true);
     const driverNumber = await inactiveDriverSetup.driverNameColumn.all();
     for (let i = 0; i < driverNumber.length; i++) {
         const text = await inactiveDriverSetup.driverNameColumn.nth(i).innerText();
